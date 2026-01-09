@@ -1,0 +1,43 @@
+# Config file for Air (Windows-friendly)
+# https://github.com/air-verse/air
+
+root = "."
+tmp_dir = "tmp"
+
+[build]
+# Build command (important: point to main entry)
+cmd = "go build -o ./tmp/server.exe ./cmd/server"
+
+# Binary location
+bin = "tmp/server.exe"
+
+# Extensions to watch
+include_ext = ["go", "env"]
+
+# Directories to ignore
+exclude_dir = ["tmp", "vendor", "frontend", "node_modules", "migrations"]
+
+# Ignore test files
+exclude_regex = ["_test\\.go"]
+
+# Stop old process on build error
+stop_on_error = true
+
+# Rebuild delay (ms)
+delay = 300
+
+[log]
+time = true
+
+[color]
+main = "green"
+watcher = "cyan"
+build = "yellow"
+runner = "magenta"
+
+[misc]
+clean_on_exit = true
+
+[screen]
+clear_on_rebuild = true
+keep_scroll = true
