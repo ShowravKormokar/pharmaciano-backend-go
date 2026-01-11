@@ -4,7 +4,9 @@ import (
 	"backend/internal/cache"
 	"backend/internal/config"
 	"backend/internal/database"
+	"backend/internal/handlers"
 	"backend/internal/logger"
+	"backend/internal/middlewares"
 	"log"
 	"time"
 
@@ -44,12 +46,15 @@ func main() {
 	_ = r.SetTrustedProxies(nil)
 	// r.SetTrustedProxies([]string{"192.168.1.0/24"}) // Example of setting trusted proxies
 
-	// Test Server running: Health check
-	r.GET("/health", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"status": "ok",
+	r.POST("/login", handlers.Login)
+
+	protected := r.Group("/api")
+	protected.Use(middlewares.JWTAuth())
+	{
+		protected.GET("/profile", func(c *gin.Context) {
+			c.JSON(200, gin.H{"msg": "Authorized"})
 		})
-	})
+	}
 
 	// Test Redis
 	cache.RedisClient.Set(cache.Ctx, "ping", "pong", time.Minute)

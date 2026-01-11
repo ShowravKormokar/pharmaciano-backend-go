@@ -19,6 +19,6 @@ type User struct {
 	Organization  Organization `gorm:"foreignKey:OrganizationID"`
 	Branch        Branch       `gorm:"foreignKey:BranchID"`
 	Role          Role         `gorm:"foreignKey:RoleID"`
-	Sales         []Sale
+	Sales         []Sale       `gorm:"foreignKey:CashierID"`
 	Notifications []Notification
 }
