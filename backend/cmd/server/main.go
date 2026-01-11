@@ -1,6 +1,9 @@
 package main
 
 import (
+	"backend/internal/config"
+	"backend/internal/database"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -9,6 +12,11 @@ func main() {
 	gin.SetMode(gin.DebugMode) // DebugMode in dev
 	//gin.SetMode(gin.TestMode) // TestMode in dev
 	//gin.SetMode(gin.ReleaseMode) // change to ReleaseMode in prod
+
+	// Load configuration
+	config.LoadConfig()
+	// Connebct to PostgreSQL
+	database.ConnectPostgres()
 
 	// Create router WITHOUT default middleware
 	r := gin.New()
