@@ -24,8 +24,11 @@ func main() {
 	logger.InitLogger()
 	defer logger.Log.Sync()
 
-	// Connebct to PostgreSQL
+	// Connect to PostgreSQL
 	database.ConnectPostgres()
+
+	// Run Migration
+	database.RunMigrations()
 
 	// Connect to Redis
 	cache.ConnectRedis()
