@@ -6,7 +6,9 @@ import (
 
 func main() {
 	// Set Gin mode
-	gin.SetMode(gin.DebugMode) // change to ReleaseMode in prod
+	gin.SetMode(gin.DebugMode) // DebugMode in dev
+	//gin.SetMode(gin.TestMode) // TestMode in dev
+	//gin.SetMode(gin.ReleaseMode) // change to ReleaseMode in prod
 
 	// Create router WITHOUT default middleware
 	r := gin.New()
@@ -17,6 +19,7 @@ func main() {
 
 	// Security: do not trust all proxies
 	_ = r.SetTrustedProxies(nil)
+	// r.SetTrustedProxies([]string{"192.168.1.0/24"}) // Example of setting trusted proxies
 
 	// Health check
 	r.GET("/health", func(c *gin.Context) {
