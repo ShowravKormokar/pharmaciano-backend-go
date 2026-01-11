@@ -1,8 +1,11 @@
 package main
 
 import (
+	"backend/internal/cache"
 	"backend/internal/config"
 	"backend/internal/database"
+	"log"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -17,6 +20,8 @@ func main() {
 	config.LoadConfig()
 	// Connebct to PostgreSQL
 	database.ConnectPostgres()
+	// Connect to Redis
+	cache.ConnectRedis()
 
 	// Create router WITHOUT default middleware
 	r := gin.New()
@@ -29,12 +34,17 @@ func main() {
 	_ = r.SetTrustedProxies(nil)
 	// r.SetTrustedProxies([]string{"192.168.1.0/24"}) // Example of setting trusted proxies
 
-	// Health check
+	// Test Server running: Health check
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"status": "ok",
 		})
 	})
+
+	// Test Redis
+	cache.RedisClient.Set(cache.Ctx, "ping", "pong", time.Minute)
+	val, _ := cache.RedisClient.Get(cache.Ctx, "ping").Result()
+	log.Println(val)
 
 	// Start server
 	r.Run(":8080")
