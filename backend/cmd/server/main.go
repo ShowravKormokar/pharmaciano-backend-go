@@ -4,6 +4,7 @@ import (
 	"backend/internal/cache"
 	"backend/internal/config"
 	"backend/internal/database"
+	"backend/internal/logger"
 	"log"
 	"time"
 
@@ -18,8 +19,14 @@ func main() {
 
 	// Load configuration
 	config.LoadConfig()
+
+	// Connect to Logger(zap)
+	logger.InitLogger()
+	defer logger.Log.Sync()
+
 	// Connebct to PostgreSQL
 	database.ConnectPostgres()
+
 	// Connect to Redis
 	cache.ConnectRedis()
 
