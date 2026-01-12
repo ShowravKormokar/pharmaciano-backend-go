@@ -1,24 +1,18 @@
 package models
 
-import "time"
-
 type Organization struct {
-    ID                uint      `gorm:"primaryKey"`
-    Name              string    `gorm:"not null"`
-    TradeLicenseNo    string    
-    DrugLicenseNo     string    
-    VATRegistrationNo string    
-    Address           string    
-    Contact           Contact   `gorm:"embedded"`
-    SubscriptionPlan  string    
-    IsActive          bool      `gorm:"default:true"`
-    CreatedAt         time.Time
-    
-    // Relations
-    Branches []Branch
-}
+	BaseModel
 
-type Contact struct {
-    Phone string
-    Email string
+	Name              string `gorm:"not null"`
+	TradeLicenseNo    string
+	DrugLicenseNo     string
+	VATRegistrationNo string
+	SubscriptionPlan  string
+	IsActive          bool `gorm:"default:true"`
+
+	ContactPhone string
+	ContactEmail string
+
+	Branches []Branch
+	Users    []User
 }

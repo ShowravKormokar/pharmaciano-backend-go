@@ -3,22 +3,20 @@ package models
 import "time"
 
 type User struct {
-	ID             uint   `gorm:"primaryKey"`
-	OrganizationID uint   `gorm:"index;not null"`
-	BranchID       uint   `gorm:"index"`
-	RoleID         uint   `gorm:"index;not null"`
-	Name           string `gorm:"not null"`
-	Email          string `gorm:"unique;not null"`
-	Phone          string
-	PasswordHash   string `gorm:"not null"`
-	Status         string `gorm:"default:'active'"`
-	LastLogin      *time.Time
-	CreatedAt      time.Time
+	BaseModel
 
-	// Relations
-	Organization  Organization `gorm:"foreignKey:OrganizationID"`
-	Branch        Branch       `gorm:"foreignKey:BranchID"`
-	Role          Role         `gorm:"foreignKey:RoleID"`
-	Sales         []Sale       `gorm:"foreignKey:CashierID"`
-	Notifications []Notification
+	OrganizationID uint `gorm:"not null;index"`
+	BranchID       *uint
+	RoleID         uint `gorm:"not null;index"`
+
+	Name         string `gorm:"not null"`
+	Email        string `gorm:"unique;not null"`
+	Phone        string `gorm:"size:20"`
+	PasswordHash string `gorm:"not null"`
+	Status       string `gorm:"type:varchar(20);default:'active'"`
+	LastLoginAt  *time.Time
+
+	Organization Organization `gorm:"foreignKey:OrganizationID"`
+	Branch       *Branch      `gorm:"foreignKey:BranchID"`
+	Role         Role         `gorm:"foreignKey:RoleID"`
 }

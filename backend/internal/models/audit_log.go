@@ -1,15 +1,10 @@
 package models
 
-import "time"
-
 type AuditLog struct {
-	ID        uint   `gorm:"primaryKey"`
-	UserID    uint   `gorm:"index;not null"`
-	Action    string `gorm:"not null"`
-	Module    string `gorm:"not null"`
-	IPAddress string
-	CreatedAt time.Time
+	BaseModel
 
-	// Relations
-	User User `gorm:"foreignKey:UserID"`
+	UserID uint
+	Action string
+	Module string
+	IP     string
 }

@@ -12,28 +12,32 @@ func RunMigrations() {
 		&models.Organization{},
 		&models.Branch{},
 		&models.Role{},
+		&models.Permission{},
 		&models.User{},
+
+		&models.Supplier{},
 		&models.Category{},
 		&models.Brand{},
 		&models.Medicine{},
-		&models.InventoryBatch{},
+
 		&models.Warehouse{},
+		&models.InventoryBatch{},
+
+		&models.Customer{},
 		&models.Sale{},
 		&models.SaleItem{},
 		&models.SalesReturn{},
-		&models.ReturnItem{},
-		&models.Customer{},
-		&models.Supplier{},
+
 		&models.Purchase{},
 		&models.PurchaseItem{},
+
 		&models.Account{},
 		&models.JournalEntry{},
-		&models.Report{},
-		&models.AIInsight{},
-		&models.Notification{},
+
 		&models.AuditLog{},
-		&models.SystemSetting{},
 		&models.BackupLog{},
+		&models.SystemSetting{},
+		&models.AIInsight{},
 	)
 
 	if err != nil {
