@@ -48,12 +48,10 @@ func main() {
 
 	r.POST("/login", handlers.Login)
 
-	protected := r.Group("/api")
-	protected.Use(middlewares.JWTAuth())
+	auth := r.Group("/api")
+	auth.Use(middlewares.JWTAuth())
 	{
-		protected.GET("/profile", func(c *gin.Context) {
-			c.JSON(200, gin.H{"msg": "Authorized"})
-		})
+		// auth.GET("/me", handlers.Me)
 	}
 
 	// Test Redis

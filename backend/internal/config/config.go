@@ -34,9 +34,9 @@ type RedisConfig struct {
 
 // JWT configuration
 type JWTConfig struct {
-	Secret     string
-	AccessTTL  int // minutes
-	RefreshTTL int // minutes
+	JWTSecret     string
+	JWTAccessTTL  int // minutes
+	JWTRefreshTTL int // minutes
 }
 
 // Casbin configuration
@@ -75,9 +75,9 @@ func LoadConfig() {
 		},
 
 		JWT: JWTConfig{
-			Secret:     getEnv("JWT_SECRET", ""),
-			AccessTTL:  accessTTL,
-			RefreshTTL: refreshTTL,
+			JWTSecret:     getEnv("JWT_SECRET", ""),
+			JWTAccessTTL:  accessTTL,
+			JWTRefreshTTL: refreshTTL,
 		},
 
 		Casbin: CasbinConfig{

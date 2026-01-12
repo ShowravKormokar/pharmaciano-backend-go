@@ -7,21 +7,27 @@ import (
 )
 
 type JWTClaims struct {
-	UserID uint   `json:"user_id"`
-	Role   string `json:"role"`
+	UserID uint
+	Role   string
 	jwt.RegisteredClaims
 }
 
-func GenerateAccessToken(userID uint, role string, secret string, ttl int) (string, error) {
+func GenerateAccessToken(userID uint, role string, secret string, ttl time.Duration) (string, error) {
 	claims := JWTClaims{
 		UserID: userID,
 		Role:   role,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Minute * time.Duration(ttl))),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(ttl)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		},
 	}
+	return jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(secret))
+}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(secret))
+func GenerateRefreshToken(userID uint, secret string, ttl time.Duration) (string, error) {
+	claims := jwt.RegisteredClaims{
+		Subject:   string(rune(userID)),
+		ExpiresAt: jwt.NewNumericDate(time.Now().Add(ttl)),
+	}
+	return jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(secret))
 }
