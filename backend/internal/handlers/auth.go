@@ -17,6 +17,13 @@ type LoginRequest struct {
 	Password string `json:"password" binding:"required"`
 }
 
+func Me(c *gin.Context) {
+	c.JSON(200, gin.H{
+		"user_id": c.GetUint("user_id"),
+		"role":    c.GetString("role"),
+	})
+}
+
 func Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

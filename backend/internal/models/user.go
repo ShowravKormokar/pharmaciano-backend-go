@@ -9,14 +9,14 @@ type User struct {
 	BranchID       *uint
 	RoleID         uint `gorm:"not null;index"`
 
-	Name         string `gorm:"not null"`
-	Email        string `gorm:"unique;not null"`
-	Phone        string `gorm:"size:20"`
-	PasswordHash string `gorm:"not null"`
-	Status       string `gorm:"type:varchar(20);default:'active'"`
-	LastLoginAt  *time.Time
+	Name         string     `gorm:"not null" json:"name"`
+	Email        string     `gorm:"unique;not null" json:"email"`
+	Phone        string     `gorm:"size:20" json:"phone,omitempty"`
+	PasswordHash string     `gorm:"not null" json:"-"`
+	Status       string     `gorm:"type:varchar(20);default:'active'" json:"status"`
+	LastLoginAt  *time.Time `json:"last_login_at,omitempty"`
 
-	Organization Organization `gorm:"foreignKey:OrganizationID"`
-	Branch       *Branch      `gorm:"foreignKey:BranchID"`
-	Role         Role         `gorm:"foreignKey:RoleID"`
+	Organization Organization `gorm:"foreignKey:OrganizationID" json:"organization,omitempty"`
+	Branch       *Branch      `gorm:"foreignKey:BranchID" json:"branch,omitempty"`
+	Role         Role         `gorm:"foreignKey:RoleID" json:"role"`
 }
