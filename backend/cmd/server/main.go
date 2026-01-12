@@ -31,6 +31,9 @@ func main() {
 	// Run Migration
 	database.RunMigrations()
 
+	// Initialize admin user
+	// scripts.InitializeAdmin()
+
 	// Connect to Redis
 	cache.ConnectRedis()
 
@@ -45,12 +48,18 @@ func main() {
 	_ = r.SetTrustedProxies(nil)
 	// r.SetTrustedProxies([]string{"192.168.1.0/24"}) // Example of setting trusted proxies
 
+	// router := gin.Default()
 	routes.RegisterRoutes(r)
 
 	// Test Redis
 	cache.RedisClient.Set(cache.Ctx, "ping", "pong", time.Minute)
 	val, _ := cache.RedisClient.Get(cache.Ctx, "ping").Result()
 	log.Println(val)
+
+	// Debug: Print all registered routes
+	// for _, route := range router.Routes() {
+	// 	fmt.Printf("%-6s %s\n", route.Method, route.Path)
+	// }
 
 	// Start server
 	r.Run(":8080")
