@@ -9,15 +9,11 @@ import (
 	"log"
 	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	// Set Gin mode
-	gin.SetMode(gin.DebugMode) // DebugMode in dev
-	//gin.SetMode(gin.TestMode) // TestMode in dev
-	//gin.SetMode(gin.ReleaseMode) // change to ReleaseMode in prod
-
 	// Load configuration
 	config.LoadConfig()
 
@@ -31,24 +27,30 @@ func main() {
 	// Run Migration
 	database.RunMigrations()
 
-	// Initialize admin user
-	// scripts.InitializeAdmin()
-
 	// Connect to Redis
 	cache.ConnectRedis()
 
-	// Create router WITHOUT default middleware
+	// Create ONE Gin instance
 	r := gin.New()
 
-	// Middlewares
+	// Apply CORS middleware FIRST
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:3000"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
+
+	// Then add other middlewares
 	r.Use(gin.Logger())
 	r.Use(gin.Recovery())
 
 	// Security: do not trust all proxies
 	_ = r.SetTrustedProxies(nil)
-	// r.SetTrustedProxies([]string{"192.168.1.0/24"}) // Example of setting trusted proxies
 
-	// router := gin.Default()
+	// Register routes
 	routes.RegisterRoutes(r)
 
 	// Test Redis
@@ -56,11 +58,7 @@ func main() {
 	val, _ := cache.RedisClient.Get(cache.Ctx, "ping").Result()
 	log.Println(val)
 
-	// Debug: Print all registered routes
-	// for _, route := range router.Routes() {
-	// 	fmt.Printf("%-6s %s\n", route.Method, route.Path)
-	// }
-
 	// Start server
+	log.Println("🚀 Server running on http://localhost:8080")
 	r.Run(":8080")
 }
