@@ -8,6 +8,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
 func JWTAuth() gin.HandlerFunc {
@@ -31,7 +32,16 @@ func JWTAuth() gin.HandlerFunc {
 		}
 
 		claims := token.Claims.(jwt.MapClaims)
-		c.Set("user_id", uint(claims["UserID"].(float64)))
+
+		// Parse UUID from Subject claim
+		userIDStr := claims["sub"].(string)
+		userID, err := uuid.Parse(userIDStr)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid user id in token"})
+			return
+		}
+
+		c.Set("user_id", userID.String())
 		c.Set("role", claims["Role"].(string))
 
 		c.Next()
