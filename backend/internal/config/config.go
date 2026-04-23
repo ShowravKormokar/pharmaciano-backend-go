@@ -10,6 +10,7 @@ import (
 
 // AppConfig holds all application configurations
 type AppConfig struct {
+	AppEnv  string
 	AppPort string
 
 	DB     DatabaseConfig
@@ -51,7 +52,7 @@ var Cfg *AppConfig
 func LoadConfig() {
 	// Load .env file
 	if err := godotenv.Load(); err != nil {
-		log.Fatal("❌ Failed to load .env file")
+		log.Println("⚠️ No .env file found, using system env")
 	}
 
 	// Convert ports & TTLs
@@ -60,6 +61,7 @@ func LoadConfig() {
 	refreshTTL, _ := strconv.Atoi(getEnv("JWT_REFRESH_TTL", "43200"))
 
 	Cfg = &AppConfig{
+		AppEnv:  getEnv("APP_ENV", "development"),
 		AppPort: getEnv("APP_PORT", "8080"),
 
 		DB: DatabaseConfig{
