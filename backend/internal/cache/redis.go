@@ -19,8 +19,13 @@ func ConnectRedis() {
 	cfg := config.Cfg
 
 	RedisClient = redis.NewClient(&redis.Options{
-		Addr: cfg.Redis.Addr,
-		DB:   0,
+		Addr:         cfg.Redis.Addr,
+		DB:           0,
+		PoolSize:     10,
+		MinIdleConns: 2,
+		DialTimeout:  5 * time.Second,
+		ReadTimeout:  3 * time.Second,
+		WriteTimeout: 3 * time.Second,
 	})
 
 	// Test connection
