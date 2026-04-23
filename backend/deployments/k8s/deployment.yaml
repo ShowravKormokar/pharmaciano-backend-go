@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pharmaciano-backend
+  labels:
+    app: pharmaciano-backend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: pharmaciano-backend
+  template:
+    metadata:
+      labels:
+        app: pharmaciano-backend
+    spec:
+      containers:
+      - name: backend
+        image: pharmaciano-backend:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        - name: PORT
+          value: "8080"
+        - name: ENVIRONMENT
+          value: "production"
+        - name: LOG_LEVEL
+          value: "info"
+        envFrom:
+        - configMapRef:
+            name: pharmaciano-config
+        - secretRef:
+            name: pharmaciano-secrets
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 2
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pharmaciano-backend
+spec:
+  type: ClusterIP
+  selector:
+    app: pharmaciano-backend
+  ports:
+  - port: 80
+    targetPort: 8080
+    protocol: TCP
+    name: http
