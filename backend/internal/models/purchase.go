@@ -1,11 +1,13 @@
 package models
 
+import "github.com/google/uuid"
+
 type Purchase struct {
 	BaseModel
 
-	OrganizationID uint
-	BranchID       uint
-	SupplierID     uint
+	OrganizationID uuid.UUID
+	BranchID       uuid.UUID
+	SupplierID     uuid.UUID
 
 	PurchaseNo string `gorm:"unique;not null"`
 	Status     string `gorm:"default:'pending'"`

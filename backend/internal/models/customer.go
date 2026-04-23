@@ -1,14 +1,12 @@
 package models
 
-import "time"
-
 type Customer struct {
-	ID        uint `gorm:"primaryKey"`
-	Name      string
-	Phone     string
-	Email     string
-	Address   string
-	CreatedAt time.Time
+	BaseModel
+
+	Name    string
+	Phone   string
+	Email   string
+	Address string
 
 	// Relations
 	Sales []Sale

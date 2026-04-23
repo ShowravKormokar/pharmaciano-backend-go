@@ -1,14 +1,16 @@
 package models
 
+import "github.com/google/uuid"
+
 type Sale struct {
 	BaseModel
 
-	OrganizationID uint   `gorm:"not null;index"`
-	BranchID       uint   `gorm:"not null;index"`
-	InvoiceNo      string `gorm:"unique;not null"`
+	OrganizationID uuid.UUID `gorm:"type:uuid;not null;index"`
+	BranchID       uuid.UUID `gorm:"type:uuid;not null;index"`
+	InvoiceNo      string    `gorm:"unique;not null"`
 
-	CashierID  uint
-	CustomerID *uint
+	CashierID  *uuid.UUID
+	CustomerID *uuid.UUID
 
 	Subtotal    float64
 	Discount    float64

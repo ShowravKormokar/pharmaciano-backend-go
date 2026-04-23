@@ -1,15 +1,15 @@
 package models
 
-import "time"
+import "github.com/google/uuid"
 
 type SalesReturn struct {
-	ID             uint         `gorm:"primaryKey"`
-	SaleID         uint         `gorm:"index;not null"`
+	BaseModel
+
+	SaleID         uuid.UUID    `gorm:"type:uuid;not null;index"`
 	Items          []ReturnItem `gorm:"foreignKey:SalesReturnID"`
 	Reason         string
-	RefundedAmount float64 `gorm:"not null"`
-	ProcessedBy    uint    `gorm:"index;not null"`
-	CreatedAt      time.Time
+	RefundedAmount float64
+	ProcessedBy    uuid.UUID `gorm:"type:uuid;not null;index"`
 
 	// Relations
 	Sale      Sale `gorm:"foreignKey:SaleID"`
@@ -17,14 +17,15 @@ type SalesReturn struct {
 }
 
 type ReturnItem struct {
-	ID            uint    `gorm:"primaryKey"`
-	SalesReturnID uint    `gorm:"index;not null"`
-	MedicineID    uint    `gorm:"index;not null"`
-	BatchNo       string  `gorm:"not null"`
-	Quantity      int     `gorm:"not null"`
-	ReturnPrice   float64 `gorm:"not null"`
+	BaseModel
+
+	SalesReturnID uuid.UUID `gorm:"type:uuid;not null;index"`
+	MedicineID    uuid.UUID `gorm:"type:uuid;not null;index"`
+	BatchNo       string    `gorm:"not null"`
+	Quantity      int       `gorm:"not null"`
+	ReturnPrice   float64   `gorm:"not null"`
 
 	// Relations
-	SalesReturn SalesReturn `gorm:"foreignKey:SalesReturnID"`
-	Medicine    Medicine    `gorm:"foreignKey:MedicineID"`
+	SalesReturn SalesReturn
+	Medicine    Medicine
 }

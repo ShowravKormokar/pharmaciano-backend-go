@@ -1,15 +1,17 @@
 package models
 
-import "time"
+import (
+	"github.com/google/uuid"
+)
 
 type Notification struct {
-	ID        uint   `gorm:"primaryKey"`
-	UserID    uint   `gorm:"index;not null"`
-	BranchID  uint   `gorm:"index;not null"`
-	Type      string `gorm:"not null"` // low_stock, expiry, approval
-	Message   string `gorm:"not null"`
-	IsRead    bool   `gorm:"default:false"`
-	CreatedAt time.Time
+	BaseModel
+
+	UserID   uuid.UUID `gorm:"type:uuid;not null;index"`
+	BranchID uuid.UUID `gorm:"type:uuid;not null;index"`
+	Type     string    `gorm:"not null"` // low_stock, expiry, approval
+	Message  string    `gorm:"not null"`
+	IsRead   bool      `gorm:"default:false"`
 
 	// Relations
 	User   User   `gorm:"foreignKey:UserID"`

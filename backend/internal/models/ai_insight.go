@@ -1,18 +1,18 @@
 package models
 
-import "time"
+import "github.com/google/uuid"
 
 type AIInsight struct {
-    ID               uint      `gorm:"primaryKey"`
-    BranchID         uint      `gorm:"index;not null"`
-    MedicineID       uint      `gorm:"index"`
-    InsightType      string    `gorm:"not null"` // demand, trend, stock
-    PredictedValue   float64   
-    Confidence       float64   
-    Recommendation   string    
-    GeneratedAt      time.Time
-    
-    // Relations
-    Branch   Branch   `gorm:"foreignKey:BranchID"`
-    Medicine Medicine `gorm:"foreignKey:MedicineID"`
+	BaseModel
+
+	BranchID       uuid.UUID  `gorm:"type:uuid;not null;index"`
+	MedicineID     *uuid.UUID `gorm:"type:uuid;index"`
+	InsightType    string     `gorm:"not null"` // demand, trend, stock
+	PredictedValue float64
+	Confidence     float64
+	Recommendation string
+
+	// Relations
+	Branch   Branch
+	Medicine *Medicine
 }

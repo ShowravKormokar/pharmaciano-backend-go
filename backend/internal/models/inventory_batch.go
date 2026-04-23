@@ -1,14 +1,18 @@
 package models
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type InventoryBatch struct {
 	BaseModel
 
-	OrganizationID uint `gorm:"not null;index"`
-	BranchID       uint `gorm:"not null;index"`
-	MedicineID     uint `gorm:"not null;index"`
-	WarehouseID    *uint
+	OrganizationID uuid.UUID  `gorm:"type:uuid;not null;index"`
+	BranchID       uuid.UUID  `gorm:"type:uuid;not null;index"`
+	MedicineID     uuid.UUID  `gorm:"type:uuid;not null;index"`
+	WarehouseID    *uuid.UUID `gorm:"type:uuid"`
 
 	BatchNo       string    `gorm:"not null"`
 	ExpiryDate    time.Time `gorm:"not null"`

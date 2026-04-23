@@ -1,13 +1,13 @@
 package models
 
-import "time"
+import "github.com/google/uuid"
 
 type BackupLog struct {
-	ID          uint   `gorm:"primaryKey"`
-	BackupType  string `gorm:"not null"`
+	BaseModel
+
+	BackupType  string
 	Location    string
-	PerformedBy uint `gorm:"index;not null"`
-	CreatedAt   time.Time
+	PerformedBy uuid.UUID
 
 	// Relations
 	User User `gorm:"foreignKey:PerformedBy"`

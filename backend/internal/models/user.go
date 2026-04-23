@@ -1,13 +1,17 @@
 package models
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type User struct {
 	BaseModel
 
-	OrganizationID uint `gorm:"not null;index"`
-	BranchID       *uint
-	RoleID         uint `gorm:"not null;index"`
+	OrganizationID uuid.UUID  `gorm:"type:uuid;not null;index"`
+	BranchID       *uuid.UUID `gorm:"type:uuid"`
+	RoleID         uuid.UUID  `gorm:"type:uuid;not null;index"`
 
 	Name         string     `gorm:"not null" json:"name"`
 	Email        string     `gorm:"unique;not null" json:"email"`
@@ -15,8 +19,15 @@ type User struct {
 	PasswordHash string     `gorm:"not null" json:"-"`
 	Status       string     `gorm:"type:varchar(20);default:'active'" json:"status"`
 	LastLoginAt  *time.Time `json:"last_login_at,omitempty"`
+	JoiningDate  time.Time  `gorm:"not null" json:"joining_date"`
 
-	Organization Organization `gorm:"foreignKey:OrganizationID" json:"organization,omitempty"`
-	Branch       *Branch      `gorm:"foreignKey:BranchID" json:"branch,omitempty"`
-	Role         Role         `gorm:"foreignKey:RoleID" json:"role"`
+	// Personal info
+	NID              string `gorm:"type:varchar(20)" json:"nid"`
+	PresentAddress   string `gorm:"type:varchar(255)" json:"present_address"`
+	PermanentAddress string `gorm:"type:varchar(255)" json:"permanent_address"`
+	EducationalBG    string `gorm:"type:varchar(255)" json:"educational_background"`
+
+	Organization Organization `gorm:"foreignKey:OrganizationID"`
+	Branch       *Branch      `gorm:"foreignKey:BranchID"`
+	Role         Role         `gorm:"foreignKey:RoleID"`
 }

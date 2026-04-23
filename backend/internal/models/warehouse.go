@@ -1,16 +1,16 @@
 package models
 
-import "time"
+import "github.com/google/uuid"
 
 type Warehouse struct {
-    ID        uint      `gorm:"primaryKey"`
-    BranchID  uint      `gorm:"index;not null"`
-    Name      string    `gorm:"not null"`
-    Location  string    
-    Capacity  int       
-    CreatedAt time.Time
-    
-    // Relations
-    Branch   Branch            `gorm:"foreignKey:BranchID"`
-    Inventory []InventoryBatch
+	BaseModel
+
+	BranchID uuid.UUID
+	Name     string
+	Location string
+	Capacity int
+
+	// Relations
+	Branch    Branch
+	Inventory []InventoryBatch
 }

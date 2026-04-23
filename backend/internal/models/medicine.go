@@ -1,5 +1,7 @@
 package models
 
+import "github.com/google/uuid"
+
 type Medicine struct {
 	BaseModel
 
@@ -7,8 +9,8 @@ type Medicine struct {
 	GenericName string
 	MRP         float64 `gorm:"not null"`
 
-	CategoryID *uint
-	BrandID    *uint
+	CategoryID *uuid.UUID
+	BrandID    *uuid.UUID
 
 	IsPrescriptionRequired bool `gorm:"default:false"`
 

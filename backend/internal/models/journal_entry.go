@@ -1,10 +1,12 @@
 package models
 
+import "github.com/google/uuid"
+
 type JournalEntry struct {
 	BaseModel
 
-	BranchID uint
-	DebitID  uint
-	CreditID uint
+	BranchID uuid.UUID
+	DebitID  uuid.UUID
+	CreditID uuid.UUID
 	Amount   float64
 }

@@ -1,10 +1,12 @@
 package models
 
+import "github.com/google/uuid"
+
 type SaleItem struct {
 	BaseModel
 
-	SaleID     uint `gorm:"not null;index"`
-	MedicineID uint `gorm:"not null;index"`
+	SaleID     uuid.UUID `gorm:"type:uuid;not null;index"`
+	MedicineID uuid.UUID `gorm:"type:uuid;not null;index"`
 
 	BatchNo  string
 	Quantity int

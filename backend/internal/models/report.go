@@ -1,21 +1,20 @@
 package models
 
 import (
-	"time"
-
+	"github.com/google/uuid"
 	"gorm.io/datatypes"
 )
 
 type Report struct {
-	ID            uint   `gorm:"primaryKey"`
-	BranchID      uint   `gorm:"index;not null"`
-	ReportType    string `gorm:"not null"`
+	BaseModel
+
+	BranchID      uuid.UUID `gorm:"type:uuid;not null;index"`
+	ReportType    string    `gorm:"not null"`
 	Period        string
 	GeneratedData datatypes.JSON `gorm:"type:jsonb"`
-	GeneratedBy   uint           `gorm:"index;not null"`
-	CreatedAt     time.Time
+	GeneratedBy   uuid.UUID      `gorm:"type:uuid;not null;index"`
 
 	// Relations
-	Branch Branch `gorm:"foreignKey:BranchID"`
-	User   User   `gorm:"foreignKey:GeneratedBy"`
+	Branch Branch
+	User   User `gorm:"foreignKey:GeneratedBy"`
 }
