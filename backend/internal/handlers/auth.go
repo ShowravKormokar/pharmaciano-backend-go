@@ -19,7 +19,7 @@ type LoginRequest struct {
 
 func Me(c *gin.Context) {
 	c.JSON(200, gin.H{
-		"user_id": c.GetUint("user_id"),
+		"user_id": c.GetString("user_id"),
 		"role":    c.GetString("role"),
 	})
 }
