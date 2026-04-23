@@ -3,46 +3,53 @@ package database
 import (
 	"log"
 
+	"backend/internal/config"
 	"backend/internal/models"
 )
 
 func RunMigrations() {
-	err := DB.AutoMigrate(
-		// Auto migrate all models
-		&models.Organization{},
-		&models.Branch{},
-		&models.Role{},
-		&models.Permission{},
-		&models.User{},
+	appEnv := config.Cfg.AppEnv
 
-		&models.Supplier{},
-		&models.Category{},
-		&models.Brand{},
-		&models.Medicine{},
+	if appEnv == "development" {
+		err := DB.AutoMigrate(
+			// Auto migrate all models
+			&models.Organization{},
+			&models.Branch{},
+			&models.Role{},
+			&models.Permission{},
+			&models.User{},
 
-		&models.Warehouse{},
-		&models.InventoryBatch{},
+			&models.Supplier{},
+			&models.Category{},
+			&models.Brand{},
+			&models.Medicine{},
 
-		&models.Customer{},
-		&models.Sale{},
-		&models.SaleItem{},
-		&models.SalesReturn{},
+			&models.Warehouse{},
+			&models.InventoryBatch{},
 
-		&models.Purchase{},
-		&models.PurchaseItem{},
+			&models.Customer{},
+			&models.Sale{},
+			&models.SaleItem{},
+			&models.SalesReturn{},
 
-		&models.Account{},
-		&models.JournalEntry{},
+			&models.Purchase{},
+			&models.PurchaseItem{},
 
-		&models.AuditLog{},
-		&models.BackupLog{},
-		&models.SystemSetting{},
-		&models.AIInsight{},
-	)
+			&models.Account{},
+			&models.JournalEntry{},
 
-	if err != nil {
-		log.Fatal("❌ Migration failed:", err)
+			&models.AuditLog{},
+			&models.BackupLog{},
+			&models.SystemSetting{},
+			&models.AIInsight{},
+		)
+
+		if err != nil {
+			log.Fatal("❌ Migration failed:", err)
+		}
+
+		log.Println("✅ Database migration completed (DEV ONLY)")
+	} else {
+		log.Printf("✅ AppEnv=%s; AutoMigrate disabled. Apply production migrations with golang-migrate.\n", appEnv)
 	}
-
-	log.Println("✅ Database migration completed")
 }
