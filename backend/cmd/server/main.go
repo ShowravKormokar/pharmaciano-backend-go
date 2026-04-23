@@ -1,64 +1,97 @@
 package main
 
 import (
+	"context"
+	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
 	"backend/internal/cache"
 	"backend/internal/config"
 	"backend/internal/database"
 	"backend/internal/logger"
+	"backend/internal/middlewares"
 	"backend/internal/routes"
-	"log"
-	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	// Load configuration
 	config.LoadConfig()
-
-	// Connect to Logger(zap)
 	logger.InitLogger()
 	defer logger.Log.Sync()
 
-	// Connect to PostgreSQL
 	database.ConnectPostgres()
-
-	// Run Migration
 	database.RunMigrations()
-
-	// Connect to Redis
 	cache.ConnectRedis()
 
-	// Create ONE Gin instance
+	if config.Cfg.AppEnv == "production" {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
 	r := gin.New()
 
-	// Apply CORS middleware FIRST
+	r.Use(
+		middlewares.SecurityHeadersMiddleware(),
+		middlewares.RateLimitMiddleware(),
+		middlewares.TenantMiddleware(),
+		middlewares.AuditMiddleware(logger.Log),
+	)
+
+	// CORS from ENV
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:3000"},
-		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
-		ExposeHeaders:    []string{"Content-Length"},
+		AllowOrigins:     []string{os.Getenv("FRONTEND_URL")},
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE"},
+		AllowHeaders:     []string{"Authorization", "Content-Type"},
 		AllowCredentials: true,
-		MaxAge:           12 * time.Hour,
 	}))
 
-	// Then add other middlewares
-	r.Use(gin.Logger())
-	r.Use(gin.Recovery())
+	r.Use(gin.Logger(), gin.Recovery())
 
-	// Security: do not trust all proxies
-	_ = r.SetTrustedProxies(nil)
+	// Health check
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(200, gin.H{"status": "ok"})
+	})
 
-	// Register routes
 	routes.RegisterRoutes(r)
 
-	// Test Redis
-	cache.RedisClient.Set(cache.Ctx, "ping", "pong", time.Minute)
-	val, _ := cache.RedisClient.Get(cache.Ctx, "ping").Result()
-	log.Println(val)
+	// Server config
+	srv := &http.Server{
+		Addr:    ":" + config.Cfg.AppPort,
+		Handler: r,
+	}
 
-	// Start server
-	log.Println("🚀 Server running on http://localhost:8080")
-	r.Run(":8080")
+	// Run server in goroutine
+	go func() {
+		log.Println("🚀 Server running on port:", config.Cfg.AppPort)
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatal(err)
+		}
+	}()
+
+	if err := database.DB.Exec("SELECT 1 FROM organizations LIMIT 1").Error; err != nil {
+		log.Fatal("❌ Database not migrated. Run migrations first.")
+	} else {
+		log.Println("✅ Database verification passed. Server is fully ready.")
+	}
+
+	// Graceful shutdown
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	log.Println("🛑 Shutting down server...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatal("Server forced to shutdown:", err)
+	}
+
+	log.Println("✅ Server exited properly")
 }
