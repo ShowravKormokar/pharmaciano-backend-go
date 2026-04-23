@@ -43,6 +43,27 @@ func ConnectPostgres() {
 		log.Fatal("❌ Failed to connect PostgreSQL:", err)
 	}
 
+	// Enable UUID / random UUID support
+	if err := db.Exec("CREATE EXTENSION IF NOT EXISTS \"pgcrypto\";").Error; err != nil {
+		log.Fatal("❌ Failed to enable pgcrypto extension:", err)
+	}
+
+	// Optionally support uuid_generate_v4() if future migrations use uuid-ossp
+	if err := db.Exec("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";").Error; err != nil {
+		log.Fatal("❌ Failed to enable uuid-ossp extension:", err)
+	}
+
+	// Configure connection pooling
+	sqlDB, err := db.DB()
+	if err != nil {
+		log.Fatal("❌ Failed to get DB instance:", err)
+	}
+
+	sqlDB.SetMaxOpenConns(50)
+	sqlDB.SetMaxIdleConns(10)
+	sqlDB.SetConnMaxLifetime(30 * time.Minute)
+	sqlDB.SetConnMaxIdleTime(5 * time.Minute)
+
 	DB = db
 
 	log.Println("✅ PostgreSQL connected successfully")
