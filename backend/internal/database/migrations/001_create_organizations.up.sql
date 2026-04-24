@@ -1,0 +1,20 @@
+CREATE TABLE IF NOT EXISTS organizations (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    deleted_at TIMESTAMPTZ,
+    name TEXT NOT NULL,
+    trade_license_no TEXT,
+    drug_license_no TEXT,
+    vat_registration_no TEXT,
+    subscription_plan VARCHAR(20) DEFAULT 'free',
+    is_active BOOLEAN DEFAULT true,
+    contact_phone TEXT,
+    contact_email TEXT,
+    address_line1 TEXT,
+    address_line2 TEXT,
+    city TEXT,
+    state TEXT,
+    postal_code TEXT,
+    country TEXT
+);
