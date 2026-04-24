@@ -1,29 +1,18 @@
 package routes
 
 import (
-	"backend/internal/handlers"
-	"backend/internal/middlewares"
+	v1 "backend/internal/routes/v1"
 
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterRoutes(r *gin.Engine) {
+func Register(r *gin.Engine) {
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(200, gin.H{"status": "ok"})
+	})
 
-	// --------------------
-	// Public Routes
-	// --------------------
-	r.POST("/login", handlers.Login)
-
-	// --------------------
-	// Protected Routes
-	// --------------------
 	api := r.Group("/api")
-	api.Use(middlewares.JWTAuth())
 	{
-		api.GET("/me", handlers.Me)
-
-		// User module
-		RegisterUserRoutes(api)
-
+		v1.Register(api)
 	}
 }
