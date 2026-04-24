@@ -10,16 +10,19 @@ import (
 	"strings"
 	"time"
 
-	"github.com/redis/go-redis/v9"
 	"github.com/hibiken/asynq/internal/base"
 	"github.com/hibiken/asynq/internal/errors"
 	"github.com/hibiken/asynq/internal/rdb"
+	"github.com/redis/go-redis/v9"
 )
 
 // Inspector is a client interface to inspect and mutate the state of
 // queues and tasks.
 type Inspector struct {
 	rdb *rdb.RDB
+	// When an Inspector has been created with an existing Redis connection, we do
+	// not want to close it.
+	sharedConnection bool
 }
 
 // New returns a new instance of Inspector.
@@ -28,13 +31,25 @@ func NewInspector(r RedisConnOpt) *Inspector {
 	if !ok {
 		panic(fmt.Sprintf("inspeq: unsupported RedisConnOpt type %T", r))
 	}
+	inspector := NewInspectorFromRedisClient(c)
+	inspector.sharedConnection = false
+	return inspector
+}
+
+// NewInspectorFromRedisClient returns a new instance of Inspector given a redis.UniversalClient
+// Warning: The underlying redis connection pool will not be closed by Asynq, you are responsible for closing it.
+func NewInspectorFromRedisClient(c redis.UniversalClient) *Inspector {
 	return &Inspector{
-		rdb: rdb.NewRDB(c),
+		rdb:              rdb.NewRDB(c),
+		sharedConnection: true,
 	}
 }
 
 // Close closes the connection with redis.
 func (i *Inspector) Close() error {
+	if i.sharedConnection {
+		return fmt.Errorf("redis connection is shared so the Inspector can't be closed through asynq")
+	}
 	return i.rdb.Close()
 }
 
@@ -230,7 +245,7 @@ func (i *Inspector) GetTaskInfo(queue, id string) (*TaskInfo, error) {
 	case errors.IsTaskNotFound(err):
 		return nil, fmt.Errorf("asynq: %w", ErrTaskNotFound)
 	case err != nil:
-		return nil, fmt.Errorf("asynq: %v", err)
+		return nil, fmt.Errorf("asynq: %w", err)
 	}
 	return newTaskInfo(info.Message, info.State, info.NextProcessAt, info.Result), nil
 }
@@ -301,7 +316,7 @@ func Page(n int) ListOption {
 // By default, it retrieves the first 30 tasks.
 func (i *Inspector) ListPendingTasks(queue string, opts ...ListOption) ([]*TaskInfo, error) {
 	if err := base.ValidateQueueName(queue); err != nil {
-		return nil, fmt.Errorf("asynq: %v", err)
+		return nil, fmt.Errorf("asynq: %w", err)
 	}
 	opt := composeListOptions(opts...)
 	pgn := rdb.Pagination{Size: opt.pageSize, Page: opt.pageNum - 1}
@@ -310,7 +325,7 @@ func (i *Inspector) ListPendingTasks(queue string, opts ...ListOption) ([]*TaskI
 	case errors.IsQueueNotFound(err):
 		return nil, fmt.Errorf("asynq: %w", ErrQueueNotFound)
 	case err != nil:
-		return nil, fmt.Errorf("asynq: %v", err)
+		return nil, fmt.Errorf("asynq: %w", err)
 	}
 	var tasks []*TaskInfo
 	for _, i := range infos {
@@ -329,7 +344,7 @@ func (i *Inspector) ListPendingTasks(queue string, opts ...ListOption) ([]*TaskI
 // By default, it retrieves the first 30 tasks.
 func (i *Inspector) ListActiveTasks(queue string, opts ...ListOption) ([]*TaskInfo, error) {
 	if err := base.ValidateQueueName(queue); err != nil {
-		return nil, fmt.Errorf("asynq: %v", err)
+		return nil, fmt.Errorf("asynq: %w", err)
 	}
 	opt := composeListOptions(opts...)
 	pgn := rdb.Pagination{Size: opt.pageSize, Page: opt.pageNum - 1}
@@ -338,11 +353,11 @@ func (i *Inspector) ListActiveTasks(queue string, opts ...ListOption) ([]*TaskIn
 	case errors.IsQueueNotFound(err):
 		return nil, fmt.Errorf("asynq: %w", ErrQueueNotFound)
 	case err != nil:
-		return nil, fmt.Errorf("asynq: %v", err)
+		return nil, fmt.Errorf("asynq: %w", err)
 	}
 	expired, err := i.rdb.ListLeaseExpired(time.Now(), queue)
 	if err != nil {
-		return nil, fmt.Errorf("asynq: %v", err)
+		return nil, fmt.Errorf("asynq: %w", err)
 	}
 	expiredSet := make(map[string]struct{}) // set of expired message IDs
 	for _, msg := range expired {
@@ -369,7 +384,7 @@ func (i *Inspector) ListActiveTasks(queue string, opts ...ListOption) ([]*TaskIn
 // By default, it retrieves the first 30 tasks.
 func (i *Inspector) ListAggregatingTasks(queue, group string, opts ...ListOption) ([]*TaskInfo, error) {
 	if err := base.ValidateQueueName(queue); err != nil {
-		return nil, fmt.Errorf("asynq: %v", err)
+		return nil, fmt.Errorf("asynq: %w", err)
 	}
 	opt := composeListOptions(opts...)
 	pgn := rdb.Pagination{Size: opt.pageSize, Page: opt.pageNum - 1}
@@ -378,7 +393,7 @@ func (i *Inspector) ListAggregatingTasks(queue, group string, opts ...ListOption
 	case errors.IsQueueNotFound(err):
 		return nil, fmt.Errorf("asynq: %w", ErrQueueNotFound)
 	case err != nil:
-		return nil, fmt.Errorf("asynq: %v", err)
+		return nil, fmt.Errorf("asynq: %w", err)
 	}
 	var tasks []*TaskInfo
 	for _, i := range infos {
@@ -398,7 +413,7 @@ func (i *Inspector) ListAggregatingTasks(queue, group string, opts ...ListOption
 // By default, it retrieves the first 30 tasks.
 func (i *Inspector) ListScheduledTasks(queue string, opts ...ListOption) ([]*TaskInfo, error) {
 	if err := base.ValidateQueueName(queue); err != nil {
-		return nil, fmt.Errorf("asynq: %v", err)
+		return nil, fmt.Errorf("asynq: %w", err)
 	}
 	opt := composeListOptions(opts...)
 	pgn := rdb.Pagination{Size: opt.pageSize, Page: opt.pageNum - 1}
@@ -407,7 +422,7 @@ func (i *Inspector) ListScheduledTasks(queue string, opts ...ListOption) ([]*Tas
 	case errors.IsQueueNotFound(err):
 		return nil, fmt.Errorf("asynq: %w", ErrQueueNotFound)
 	case err != nil:
-		return nil, fmt.Errorf("asynq: %v", err)
+		return nil, fmt.Errorf("asynq: %w", err)
 	}
 	var tasks []*TaskInfo
 	for _, i := range infos {
@@ -427,7 +442,7 @@ func (i *Inspector) ListScheduledTasks(queue string, opts ...ListOption) ([]*Tas
 // By default, it retrieves the first 30 tasks.
 func (i *Inspector) ListRetryTasks(queue string, opts ...ListOption) ([]*TaskInfo, error) {
 	if err := base.ValidateQueueName(queue); err != nil {
-		return nil, fmt.Errorf("asynq: %v", err)
+		return nil, fmt.Errorf("asynq: %w", err)
 	}
 	opt := composeListOptions(opts...)
 	pgn := rdb.Pagination{Size: opt.pageSize, Page: opt.pageNum - 1}
@@ -436,7 +451,7 @@ func (i *Inspector) ListRetryTasks(queue string, opts ...ListOption) ([]*TaskInf
 	case errors.IsQueueNotFound(err):
 		return nil, fmt.Errorf("asynq: %w", ErrQueueNotFound)
 	case err != nil:
-		return nil, fmt.Errorf("asynq: %v", err)
+		return nil, fmt.Errorf("asynq: %w", err)
 	}
 	var tasks []*TaskInfo
 	for _, i := range infos {
@@ -456,7 +471,7 @@ func (i *Inspector) ListRetryTasks(queue string, opts ...ListOption) ([]*TaskInf
 // By default, it retrieves the first 30 tasks.
 func (i *Inspector) ListArchivedTasks(queue string, opts ...ListOption) ([]*TaskInfo, error) {
 	if err := base.ValidateQueueName(queue); err != nil {
-		return nil, fmt.Errorf("asynq: %v", err)
+		return nil, fmt.Errorf("asynq: %w", err)
 	}
 	opt := composeListOptions(opts...)
 	pgn := rdb.Pagination{Size: opt.pageSize, Page: opt.pageNum - 1}
@@ -465,7 +480,7 @@ func (i *Inspector) ListArchivedTasks(queue string, opts ...ListOption) ([]*Task
 	case errors.IsQueueNotFound(err):
 		return nil, fmt.Errorf("asynq: %w", ErrQueueNotFound)
 	case err != nil:
-		return nil, fmt.Errorf("asynq: %v", err)
+		return nil, fmt.Errorf("asynq: %w", err)
 	}
 	var tasks []*TaskInfo
 	for _, i := range infos {
@@ -485,7 +500,7 @@ func (i *Inspector) ListArchivedTasks(queue string, opts ...ListOption) ([]*Task
 // By default, it retrieves the first 30 tasks.
 func (i *Inspector) ListCompletedTasks(queue string, opts ...ListOption) ([]*TaskInfo, error) {
 	if err := base.ValidateQueueName(queue); err != nil {
-		return nil, fmt.Errorf("asynq: %v", err)
+		return nil, fmt.Errorf("asynq: %w", err)
 	}
 	opt := composeListOptions(opts...)
 	pgn := rdb.Pagination{Size: opt.pageSize, Page: opt.pageNum - 1}
@@ -494,7 +509,7 @@ func (i *Inspector) ListCompletedTasks(queue string, opts ...ListOption) ([]*Tas
 	case errors.IsQueueNotFound(err):
 		return nil, fmt.Errorf("asynq: %w", ErrQueueNotFound)
 	case err != nil:
-		return nil, fmt.Errorf("asynq: %v", err)
+		return nil, fmt.Errorf("asynq: %w", err)
 	}
 	var tasks []*TaskInfo
 	for _, i := range infos {
@@ -568,6 +583,30 @@ func (i *Inspector) DeleteAllAggregatingTasks(queue, group string) (int, error) 
 	return int(n), err
 }
 
+// UpdateTaskPayload updates a task with the given id from the given queue with given payload.
+// The task needs to be in scheduled state,
+// otherwise UpdateTaskPayload will return an error.
+//
+// If a queue with the given name doesn't exist, it returns an error wrapping ErrQueueNotFound.
+// If a task with the given id doesn't exist in the queue, it returns an error wrapping ErrTaskNotFound.
+// If the task is not in scheduled state, it returns a non-nil error.
+func (i *Inspector) UpdateTaskPayload(queue, id string, payload []byte) error {
+	if err := base.ValidateQueueName(queue); err != nil {
+		return fmt.Errorf("asynq: %v", err)
+	}
+	err := i.rdb.UpdateTaskPayload(queue, id, payload)
+	switch {
+	case errors.IsQueueNotFound(err):
+		return fmt.Errorf("asynq: %w", ErrQueueNotFound)
+	case errors.IsTaskNotFound(err):
+		return fmt.Errorf("asynq: %w", ErrTaskNotFound)
+	case err != nil:
+		return fmt.Errorf("asynq: %v", err)
+	}
+	return nil
+
+}
+
 // DeleteTask deletes a task with the given id from the given queue.
 // The task needs to be in pending, scheduled, retry, or archived state,
 // otherwise DeleteTask will return an error.
@@ -577,7 +616,7 @@ func (i *Inspector) DeleteAllAggregatingTasks(queue, group string) (int, error) 
 // If the task is in active state, it returns a non-nil error.
 func (i *Inspector) DeleteTask(queue, id string) error {
 	if err := base.ValidateQueueName(queue); err != nil {
-		return fmt.Errorf("asynq: %v", err)
+		return fmt.Errorf("asynq: %w", err)
 	}
 	err := i.rdb.DeleteTask(queue, id)
 	switch {
@@ -586,7 +625,7 @@ func (i *Inspector) DeleteTask(queue, id string) error {
 	case errors.IsTaskNotFound(err):
 		return fmt.Errorf("asynq: %w", ErrTaskNotFound)
 	case err != nil:
-		return fmt.Errorf("asynq: %v", err)
+		return fmt.Errorf("asynq: %w", err)
 	}
 	return nil
 
@@ -641,7 +680,7 @@ func (i *Inspector) RunAllAggregatingTasks(queue, group string) (int, error) {
 // If the task is in pending or active state, it returns a non-nil error.
 func (i *Inspector) RunTask(queue, id string) error {
 	if err := base.ValidateQueueName(queue); err != nil {
-		return fmt.Errorf("asynq: %v", err)
+		return fmt.Errorf("asynq: %w", err)
 	}
 	err := i.rdb.RunTask(queue, id)
 	switch {
@@ -650,7 +689,7 @@ func (i *Inspector) RunTask(queue, id string) error {
 	case errors.IsTaskNotFound(err):
 		return fmt.Errorf("asynq: %w", ErrTaskNotFound)
 	case err != nil:
-		return fmt.Errorf("asynq: %v", err)
+		return fmt.Errorf("asynq: %w", err)
 	}
 	return nil
 }
@@ -713,7 +752,7 @@ func (i *Inspector) ArchiveTask(queue, id string) error {
 	case errors.IsTaskNotFound(err):
 		return fmt.Errorf("asynq: %w", ErrTaskNotFound)
 	case err != nil:
-		return fmt.Errorf("asynq: %v", err)
+		return fmt.Errorf("asynq: %w", err)
 	}
 	return nil
 }

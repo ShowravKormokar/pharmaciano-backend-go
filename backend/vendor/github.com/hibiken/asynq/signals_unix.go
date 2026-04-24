@@ -1,4 +1,4 @@
-// +build linux bsd darwin
+//go:build linux || dragonfly || freebsd || netbsd || openbsd || darwin
 
 package asynq
 
@@ -24,8 +24,10 @@ func (srv *Server) waitForSignals() {
 		if sig == unix.SIGTSTP {
 			srv.Stop()
 			continue
+		} else {
+			srv.Stop()
+			break
 		}
-		break
 	}
 }
 

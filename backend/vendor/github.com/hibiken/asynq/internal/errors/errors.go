@@ -107,6 +107,7 @@ type Op string
 // only the last one is recorded.
 //
 // The types are:
+//
 //	errors.Op
 //		The operation being performed, usually the method
 //		being invoked (Get, Put, etc.).
@@ -253,6 +254,21 @@ func (e *RedisCommandError) Unwrap() error { return e.Err }
 // IsRedisCommandError reports whether any error in err's chain is of type RedisCommandError.
 func IsRedisCommandError(err error) bool {
 	var target *RedisCommandError
+	return As(err, &target)
+}
+
+// PanicError defines an error when occurred a panic error.
+type PanicError struct {
+	ErrMsg string
+}
+
+func (e *PanicError) Error() string {
+	return fmt.Sprintf("panic error cause by: %s", e.ErrMsg)
+}
+
+// IsPanicError reports whether any error in err's chain is of type PanicError.
+func IsPanicError(err error) bool {
+	var target *PanicError
 	return As(err, &target)
 }
 

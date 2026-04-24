@@ -7,6 +7,73 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.0] - 2026-02-03
+
+### Upgrades
+- Prepare CI for Go 1.24.x and 1.25.x (commit: e9037f0)
+
+### Added
+- Add Headers support to tasks (PR: https://github.com/hibiken/asynq/pull/1070)
+- Add `--tls` option to dash command (PR: https://github.com/hibiken/asynq/pull/1073)
+- Add `--username` CLI flag for Redis ACL authentication (PR: https://github.com/hibiken/asynq/pull/1083)
+- Add `UpdateTaskPayload` method for inspector (PR: https://github.com/hibiken/asynq/pull/1042)
+
+### Fixes
+- Fix: Correct error message text in ResultWriter.Write (PR: https://github.com/hibiken/asynq/pull/1054)
+- Fix: Wrap all fmt.Errorf errors with %w (PR: https://github.com/hibiken/asynq/pull/1047)
+- Fix: ServeMux.NotFoundHandler returns ErrHandlerNotFound error (PR: https://github.com/hibiken/asynq/pull/1031)
+
+### Changed
+- Docs: Update server.go documentation (PR: https://github.com/hibiken/asynq/pull/1010)
+- Chore: Fix godoc comment (PR: https://github.com/hibiken/asynq/pull/1009)
+
+## [0.25.1] - 2024-12-11
+
+### Upgrades
+
+* Some packages
+
+### Added
+
+* Add `HeartbeatInterval` option to the scheduler (PR: https://github.com/hibiken/asynq/pull/956)
+* Add `RedisUniversalClient` support to periodic task manager (PR: https://github.com/hibiken/asynq/pull/958)
+* Add `--insecure` flag to CLI dash command (PR: https://github.com/hibiken/asynq/pull/980)
+* Add logging for registration errors (PR: https://github.com/hibiken/asynq/pull/657)
+
+### Fixes
+- Perf: Use string concat inplace of fmt.Sprintf in hotpath (PR: https://github.com/hibiken/asynq/pull/962)
+- Perf: Init map with size (PR: https://github.com/hibiken/asynq/pull/673)
+- Fix: `Scheduler` and `PeriodicTaskManager` graceful shutdown (PR: https://github.com/hibiken/asynq/pull/977)
+- Fix: `Server` graceful shutdown on UNIX systems (PR: https://github.com/hibiken/asynq/pull/982)
+
+## [0.25.0] - 2024-10-29
+
+### Upgrades
+- Minumum go version is set to 1.22 (PR: https://github.com/hibiken/asynq/pull/925)
+- Internal protobuf package is upgraded to address security advisories (PR: https://github.com/hibiken/asynq/pull/925)
+- Most packages are upgraded
+- CI/CD spec upgraded
+
+### Added
+- `IsPanicError` function is introduced to support catching of panic errors when processing tasks (PR: https://github.com/hibiken/asynq/pull/491)
+- `JanitorInterval` and `JanitorBatchSize` are added as Server options (PR: https://github.com/hibiken/asynq/pull/715)
+- `NewClientFromRedisClient` is introduced to allow reusing an existing redis client (PR: https://github.com/hibiken/asynq/pull/742)
+- `TaskCheckInterval` config option is added to specify the interval between checks for new tasks to process when all queues are empty (PR: https://github.com/hibiken/asynq/pull/694)
+- `Ping` method is added to Client, Server and Scheduler ((PR: https://github.com/hibiken/asynq/pull/585))
+- `RevokeTask` error type is introduced to prevent a task from being retried or archived (PR: https://github.com/hibiken/asynq/pull/882)
+- `SentinelUsername` is added as a redis config option (PR: https://github.com/hibiken/asynq/pull/924)
+- Some jitter is introduced to improve latency when fetching jobs in the processor (PR: https://github.com/hibiken/asynq/pull/868)
+- Add task enqueue command to the CLI (PR: https://github.com/hibiken/asynq/pull/918)
+- Add a map cache (concurrent safe) to keep track of queues that ultimately reduces redis load when enqueuing tasks (PR: https://github.com/hibiken/asynq/pull/946)
+
+### Fixes
+- Archived tasks that are trimmed should now be deleted (PR: https://github.com/hibiken/asynq/pull/743)
+- Fix lua script when listing task messages with an expired lease (PR: https://github.com/hibiken/asynq/pull/709)
+- Fix potential context leaks due to cancellation not being called (PR: https://github.com/hibiken/asynq/pull/926)
+- Misc documentation fixes
+- Misc test fixes
+
+
 ## [0.24.1] - 2023-05-01
 
 ### Changed

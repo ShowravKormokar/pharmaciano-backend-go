@@ -6,11 +6,15 @@ package asynq
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
 	"sync"
 )
+
+// ErrHandlerNotFound indicates that no task handler was found for a given pattern.
+var ErrHandlerNotFound = errors.New("handler not found for task")
 
 // ServeMux is a multiplexer for asynchronous tasks.
 // It matches the type of each task against a list of registered patterns
@@ -144,15 +148,13 @@ func (mux *ServeMux) HandleFunc(pattern string, handler func(context.Context, *T
 func (mux *ServeMux) Use(mws ...MiddlewareFunc) {
 	mux.mu.Lock()
 	defer mux.mu.Unlock()
-	for _, fn := range mws {
-		mux.mws = append(mux.mws, fn)
-	}
+	mux.mws = append(mux.mws, mws...)
 }
 
 // NotFound returns an error indicating that the handler was not found for the given task.
 func NotFound(ctx context.Context, task *Task) error {
-	return fmt.Errorf("handler not found for task %q", task.Type())
+	return fmt.Errorf("%w %q", ErrHandlerNotFound, task.Type())
 }
 
-// NotFoundHandler returns a simple task handler that returns a ``not found`` error.
+// NotFoundHandler returns a simple task handler that returns a “not found“ error.
 func NotFoundHandler() Handler { return HandlerFunc(NotFound) }
