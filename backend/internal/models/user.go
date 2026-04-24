@@ -10,22 +10,21 @@ type User struct {
 	BaseModel
 
 	OrganizationID uuid.UUID  `gorm:"type:uuid;not null;index"`
-	BranchID       *uuid.UUID `gorm:"type:uuid"`
+	BranchID       *uuid.UUID `gorm:"type:uuid;index"`
 	RoleID         uuid.UUID  `gorm:"type:uuid;not null;index"`
 
-	Name         string     `gorm:"not null" json:"name"`
-	Email        string     `gorm:"unique;not null" json:"email"`
-	Phone        string     `gorm:"size:20" json:"phone,omitempty"`
-	PasswordHash string     `gorm:"not null" json:"-"`
-	Status       string     `gorm:"type:varchar(20);default:'active'" json:"status"`
-	LastLoginAt  *time.Time `json:"last_login_at,omitempty"`
-	JoiningDate  time.Time  `gorm:"not null" json:"joining_date"`
+	Name         string     `gorm:"not null"`
+	Email        string     `gorm:"uniqueIndex;not null"`
+	Phone        string     `gorm:"size:20"`
+	PasswordHash string     `gorm:"not null"`
+	Status       string     `gorm:"type:varchar(20);default:'active'"`
+	LastLoginAt  *time.Time `gorm:""`
+	JoiningDate  time.Time  `gorm:"not null"`
 
-	// Personal info
-	NID              string `gorm:"type:varchar(20)" json:"nid"`
-	PresentAddress   string `gorm:"type:varchar(255)" json:"present_address"`
-	PermanentAddress string `gorm:"type:varchar(255)" json:"permanent_address"`
-	EducationalBG    string `gorm:"type:varchar(255)" json:"educational_background"`
+	NID              string
+	PresentAddress   string
+	PermanentAddress string
+	EducationalBG    string
 
 	Organization Organization `gorm:"foreignKey:OrganizationID"`
 	Branch       *Branch      `gorm:"foreignKey:BranchID"`
