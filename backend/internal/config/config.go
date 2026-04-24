@@ -1,26 +1,23 @@
 package config
 
 import (
-	"log"
 	"os"
 	"strconv"
 
 	"github.com/joho/godotenv"
 )
 
-// AppConfig holds all application configurations
-type AppConfig struct {
+type Config struct {
 	AppEnv  string
 	AppPort string
 
-	DB     DatabaseConfig
-	Redis  RedisConfig
-	JWT    JWTConfig
-	Casbin CasbinConfig
+	DB    DBConfig
+	Redis RedisConfig
+	JWT   JWTConfig
+	Super SuperAdminConfig
 }
 
-// Database configuration
-type DatabaseConfig struct {
+type DBConfig struct {
 	Host     string
 	Port     int
 	User     string
@@ -28,48 +25,40 @@ type DatabaseConfig struct {
 	Name     string
 }
 
-// Redis configuration
 type RedisConfig struct {
 	Addr string
 }
 
-// JWT configuration
 type JWTConfig struct {
-	JWTSecret     string
-	JWTAccessTTL  int // minutes
-	JWTRefreshTTL int // minutes
+	Secret     string
+	AccessTTL  int // minutes
+	RefreshTTL int // minutes
 }
 
-// Casbin configuration
-type CasbinConfig struct {
-	ModelPath string
+type SuperAdminConfig struct {
+	Email    string
+	Password string
 }
 
-// Global config instance
-var Cfg *AppConfig
+var Cfg *Config
 
-// LoadConfig loads environment variables into AppConfig
-func LoadConfig() {
-	// Load .env file
-	if err := godotenv.Load(); err != nil {
-		log.Println("⚠️ No .env file found, using system env")
-	}
+func Load() {
+	_ = godotenv.Load() // ignore if .env missing
 
-	// Convert ports & TTLs
 	dbPort, _ := strconv.Atoi(getEnv("DB_PORT", "5432"))
 	accessTTL, _ := strconv.Atoi(getEnv("JWT_ACCESS_TTL", "15"))
 	refreshTTL, _ := strconv.Atoi(getEnv("JWT_REFRESH_TTL", "43200"))
 
-	Cfg = &AppConfig{
+	Cfg = &Config{
 		AppEnv:  getEnv("APP_ENV", "development"),
 		AppPort: getEnv("APP_PORT", "8080"),
 
-		DB: DatabaseConfig{
+		DB: DBConfig{
 			Host:     getEnv("DB_HOST", "localhost"),
 			Port:     dbPort,
 			User:     getEnv("DB_USER", "postgres"),
 			Password: getEnv("DB_PASSWORD", ""),
-			Name:     getEnv("DB_NAME", ""),
+			Name:     getEnv("DB_NAME", "pharmaciano"),
 		},
 
 		Redis: RedisConfig{
@@ -77,21 +66,21 @@ func LoadConfig() {
 		},
 
 		JWT: JWTConfig{
-			JWTSecret:     getEnv("JWT_SECRET", ""),
-			JWTAccessTTL:  accessTTL,
-			JWTRefreshTTL: refreshTTL,
+			Secret:     getEnv("JWT_SECRET", "default-change-me"),
+			AccessTTL:  accessTTL,
+			RefreshTTL: refreshTTL,
 		},
 
-		Casbin: CasbinConfig{
-			ModelPath: getEnv("CASBIN_MODEL_PATH", ""),
+		Super: SuperAdminConfig{
+			Email:    getEnv("SUPER_ADMIN_EMAIL", "superadmin@pharmaciano.com"),
+			Password: getEnv("SUPER_ADMIN_PASSWORD", ""),
 		},
 	}
 }
 
-// Helper function to read env with default
-func getEnv(key, defaultVal string) string {
-	if value, exists := os.LookupEnv(key); exists {
-		return value
+func getEnv(key, def string) string {
+	if val, ok := os.LookupEnv(key); ok {
+		return val
 	}
-	return defaultVal
+	return def
 }
