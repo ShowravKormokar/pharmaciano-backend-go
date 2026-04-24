@@ -11,27 +11,18 @@ import (
 
 var Log *zap.Logger
 
-func InitLogger() {
-	cfg := config.Cfg
-
-	var zapCfg zap.Config
-
-	// Environment based config
-	if cfg.AppPort == "8080" {
-		zapCfg = zap.NewDevelopmentConfig()
+func Init() {
+	var cfg zap.Config
+	if config.Cfg.AppEnv == "production" {
+		cfg = zap.NewProductionConfig()
+		cfg.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
 	} else {
-		zapCfg = zap.NewProductionConfig()
+		cfg = zap.NewDevelopmentConfig()
 	}
-
-	// Time format
-	zapCfg.EncoderConfig.TimeKey = "time"
-	zapCfg.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
-
-	logger, err := zapCfg.Build()
+	logger, err := cfg.Build()
 	if err != nil {
-		log.Fatal("❌ Failed to initialize logger:", err)
+		log.Fatalf("❌ logger init: %v", err)
 	}
-
 	Log = logger
 	Log.Info("✅ Logger initialized")
 }
