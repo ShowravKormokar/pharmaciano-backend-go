@@ -10,34 +10,27 @@ import (
 	"go.uber.org/zap"
 )
 
-// AuditMiddleware logs requests to audit trail
 func AuditMiddleware(logger *zap.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Capture request body
-		var bodyBytes []byte
+		var body []byte
 		if c.Request.Body != nil {
-			bodyBytes, _ = io.ReadAll(c.Request.Body)
-			c.Request.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+			body, _ = io.ReadAll(c.Request.Body)
+			c.Request.Body = io.NopCloser(bytes.NewBuffer(body))
 		}
-
-		// Log audit trail
-		auditLog := map[string]interface{}{
-			"method":     c.Request.Method,
-			"path":       c.Request.URL.Path,
-			"ip":         c.ClientIP(),
-			"user_id":    c.GetString("user_id"),
-			"user_agent": c.Request.UserAgent(),
-			"timestamp":  time.Now().UTC().Format(time.RFC3339),
+		fields := []zap.Field{
+			zap.String("method", c.Request.Method),
+			zap.String("path", c.Request.URL.Path),
+			zap.String("ip", c.ClientIP()),
+			zap.String("user_agent", c.Request.UserAgent()),
+			zap.Time("timestamp", time.Now()),
 		}
-
-		if len(bodyBytes) > 0 {
-			var body interface{}
-			if err := json.Unmarshal(bodyBytes, &body); err == nil {
-				auditLog["body"] = body
+		if len(body) > 0 {
+			var parsed interface{}
+			if json.Unmarshal(body, &parsed) == nil {
+				fields = append(fields, zap.Any("body", parsed))
 			}
 		}
-
-		logger.Info("API Request", zap.Any("audit", auditLog))
+		logger.Info("API Request", fields...)
 		c.Next()
 	}
 }

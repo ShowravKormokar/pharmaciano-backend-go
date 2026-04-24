@@ -4,46 +4,51 @@ import (
 	"net/http"
 	"strings"
 
+	"backend/internal/auth"
+	"backend/internal/cache"
 	"backend/internal/config"
+	"backend/internal/errors"
+	"backend/pkg/response"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/uuid"
 )
 
 func JWTAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		authHeader := c.GetHeader("Authorization")
-
-		if authHeader == "" {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "missing token"})
-			return
-		}
-
-		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
-
-		token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
-			return []byte(config.Cfg.JWT.JWTSecret), nil
-		})
-
-		if err != nil || !token.Valid {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
-			return
-		}
-
-		claims := token.Claims.(jwt.MapClaims)
-
-		// Parse UUID from Subject claim
-		userIDStr := claims["sub"].(string)
-		userID, err := uuid.Parse(userIDStr)
+		token, err := extractToken(c)
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid user id in token"})
+			response.Error(c, http.StatusUnauthorized, "missing or malformed token", nil)
 			return
 		}
 
-		c.Set("user_id", userID.String())
-		c.Set("role", claims["Role"].(string))
+		claims, err := auth.ValidateToken(token, config.Cfg.JWT.Secret)
+		if err != nil {
+			response.Error(c, http.StatusUnauthorized, "invalid token", nil)
+			return
+		}
 
+		// Check blacklist
+		exists, _ := cache.RDB.Exists(c, cache.TokenBlacklistKey(claims.ID)).Result()
+		if exists > 0 {
+			response.Error(c, http.StatusUnauthorized, "token revoked", nil)
+			return
+		}
+
+		c.Set("user_id", claims.UserID.String())
+		c.Set("role", claims.Role)
+		c.Set("access_token", token) // for logout
 		c.Next()
 	}
+}
+
+func extractToken(c *gin.Context) (string, error) {
+	header := c.GetHeader("Authorization")
+	if header == "" {
+		return "", errors.NewAppError(http.StatusUnauthorized, "missing authorization header", nil)
+	}
+	parts := strings.SplitN(header, " ", 2)
+	if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+		return "", errors.NewAppError(http.StatusUnauthorized, "invalid authorization format", nil)
+	}
+	return parts[1], nil
 }
