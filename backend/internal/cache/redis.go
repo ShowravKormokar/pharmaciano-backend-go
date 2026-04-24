@@ -10,17 +10,13 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-var (
-	RedisClient *redis.Client
-	Ctx         = context.Background()
-)
+var RDB *redis.Client
+var Ctx = context.Background()
 
-func ConnectRedis() {
-	cfg := config.Cfg
-
-	RedisClient = redis.NewClient(&redis.Options{
-		Addr:         cfg.Redis.Addr,
-		DB:           0,
+func Connect() {
+	cfg := config.Cfg.Redis
+	RDB = redis.NewClient(&redis.Options{
+		Addr:         cfg.Addr,
 		PoolSize:     10,
 		MinIdleConns: 2,
 		DialTimeout:  5 * time.Second,
@@ -28,13 +24,8 @@ func ConnectRedis() {
 		WriteTimeout: 3 * time.Second,
 	})
 
-	// Test connection
-	ctx, cancel := context.WithTimeout(Ctx, 5*time.Second)
-	defer cancel()
-
-	if err := RedisClient.Ping(ctx).Err(); err != nil {
-		log.Fatal("❌ Failed to connect Redis:", err)
+	if err := RDB.Ping(Ctx).Err(); err != nil {
+		log.Fatalf("❌ Redis connection failed: %v", err)
 	}
-
-	log.Println("✅ Redis connected successfully")
+	log.Println("✅ Redis connected")
 }
