@@ -29,3 +29,16 @@ func Connect() {
 	}
 	log.Println("✅ Redis connected")
 }
+
+func FlushAll() {
+	if RDB == nil {
+		log.Println("❌ Redis not initialised, cannot flush")
+		return
+	}
+	err := RDB.FlushAll(Ctx).Err()
+	if err != nil {
+		log.Printf("❌ Failed to flush Redis: %v", err)
+	} else {
+		log.Println("🧹 Redis flushed successfully")
+	}
+}
