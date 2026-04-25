@@ -8,25 +8,27 @@ import (
 
 type User struct {
 	BaseModel
+	OrganizationID uuid.UUID  `gorm:"type:uuid;not null;index" json:"organization_id"`
+	BranchID       *uuid.UUID `gorm:"type:uuid;index" json:"branch_id"`
+	RoleID         uuid.UUID  `gorm:"type:uuid;not null;index" json:"role_id"`
 
-	OrganizationID uuid.UUID  `gorm:"type:uuid;not null;index"`
-	BranchID       *uuid.UUID `gorm:"type:uuid;index"`
-	RoleID         uuid.UUID  `gorm:"type:uuid;not null;index"`
+	Name         string     `gorm:"not null" json:"name"`
+	Email        string     `gorm:"uniqueIndex;not null" json:"email"`
+	Phone        string     `gorm:"size:20" json:"phone,omitempty"`
+	PasswordHash string     `gorm:"not null" json:"-"` // NEVER leak the hash
+	Status       string     `gorm:"type:varchar(20);default:'active'" json:"status"`
+	LastLoginAt  *time.Time `json:"last_login_at,omitempty"`
+	JoiningDate  time.Time  `gorm:"not null" json:"joining_date"`
 
-	Name         string     `gorm:"not null"`
-	Email        string     `gorm:"uniqueIndex;not null"`
-	Phone        string     `gorm:"size:20"`
-	PasswordHash string     `gorm:"not null"`
-	Status       string     `gorm:"type:varchar(20);default:'active'"`
-	LastLoginAt  *time.Time `gorm:""`
-	JoiningDate  time.Time  `gorm:"not null"`
+	NID              string `json:"nid,omitempty"`
+	PresentAddress   string `json:"present_address,omitempty"`
+	PermanentAddress string `json:"permanent_address,omitempty"`
+	EducationalBG    string `json:"educational_background,omitempty"`
 
-	NID              string
-	PresentAddress   string
-	PermanentAddress string
-	EducationalBG    string
+	Organization Organization `gorm:"foreignKey:OrganizationID" json:"organization,omitempty"`
+	Branch       *Branch      `gorm:"foreignKey:BranchID" json:"branch,omitempty"`
+	Role         Role         `gorm:"foreignKey:RoleID" json:"role,omitempty"`
 
-	Organization Organization `gorm:"foreignKey:OrganizationID"`
-	Branch       *Branch      `gorm:"foreignKey:BranchID"`
-	Role         Role         `gorm:"foreignKey:RoleID"`
+	FailedAttempts int        `gorm:"default:0" json:"-"`
+    LockedUntil    *time.Time `json:"-"`
 }
