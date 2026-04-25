@@ -15,6 +15,8 @@ type Config struct {
 	Redis RedisConfig
 	JWT   JWTConfig
 	Super SuperAdminConfig
+
+	TokenStrategy string // "cookie" or "header" (default "header")
 }
 
 type DBConfig struct {
@@ -76,6 +78,8 @@ func Load() {
 			Password: getEnv("SUPER_ADMIN_PASSWORD", ""),
 		},
 	}
+
+	Cfg.TokenStrategy = getEnv("TOKEN_STRATEGY", "header") // "cookie" for production web apps, "header" for APIs and mobile apps
 }
 
 func getEnv(key, def string) string {
