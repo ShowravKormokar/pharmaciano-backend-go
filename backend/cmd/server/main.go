@@ -30,6 +30,8 @@ func main() {
 	database.Connect()
 	database.RunMigrations() // golang-migrate embedded migrations
 	cache.Connect()
+	//  Uncomment the line below to flush Redis on startup (for development only)
+	// cache.FlushAll()
 
 	rbac.Init()
 	scripts.SeedAll()
@@ -43,7 +45,7 @@ func main() {
 	// Global middleware stack
 	r.Use(
 		middlewares.SecurityHeaders(),
-		middlewares.RateLimit(100), // 100 req/hour per IP
+		// middlewares.RateLimit(100), // 100 req/hour per IP
 		middlewares.AuditMiddleware(logger.Log),
 	)
 
