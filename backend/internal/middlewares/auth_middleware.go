@@ -2,7 +2,6 @@ package middlewares
 
 import (
 	"net/http"
-	"strings"
 
 	"backend/internal/auth"
 	"backend/internal/cache"
@@ -42,13 +41,20 @@ func JWTAuth() gin.HandlerFunc {
 }
 
 func extractToken(c *gin.Context) (string, error) {
-	header := c.GetHeader("Authorization")
-	if header == "" {
-		return "", errors.NewAppError(http.StatusUnauthorized, "missing authorization header", nil)
+	//  Try Authorization header first
+	// header := c.GetHeader("Authorization")
+	// if header != "" {
+	// 	parts := strings.SplitN(header, " ", 2)
+	// 	if len(parts) == 2 && strings.ToLower(parts[0]) == "bearer" {
+	// 		return parts[1], nil
+	// 	}
+	// }
+
+	// Fallback to cookie
+	cookie, err := c.Cookie("access_token")
+	if err == nil && cookie != "" {
+		return cookie, nil
 	}
-	parts := strings.SplitN(header, " ", 2)
-	if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
-		return "", errors.NewAppError(http.StatusUnauthorized, "invalid authorization format", nil)
-	}
-	return parts[1], nil
+
+	return "", errors.NewAppError(http.StatusUnauthorized, "missing or malformed token", nil)
 }
