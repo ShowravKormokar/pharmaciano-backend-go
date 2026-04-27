@@ -12,6 +12,7 @@ import (
 	"backend/internal/errors"
 	"backend/internal/models"
 	"backend/internal/services"
+	"backend/internal/utils"
 	"backend/pkg/response"
 
 	"github.com/gin-gonic/gin"
@@ -48,27 +49,8 @@ func (h *AuthHandler) Login(c *gin.Context) {
 
 	// If we want to use HTTP-only secure cookies (for web frontend)
 	if config.Cfg.TokenStrategy == "cookie" {
-		// access_token cookie
-		c.SetCookie(
-			"access_token",
-			resp.AccessToken,
-			int(config.Cfg.JWT.AccessTTL*60), // seconds
-			"/",
-			"",   // domain (auto)
-			true, // secure (HTTPS only)
-			true, // httpOnly
-		)
-		// refresh_token cookie
-		c.SetCookie(
-			"refresh_token",
-			resp.RefreshToken,
-			int(config.Cfg.JWT.RefreshTTL*60),
-			"/",
-			"",
-			true,
-			true,
-		)
-		// Still return user info in JSON, but avoid duplicate tokens
+		utils.SetAuthCookies(c.Writer, resp.AccessToken, resp.RefreshToken)
+
 		resp.AccessToken = ""
 		resp.RefreshToken = ""
 	}
@@ -112,8 +94,7 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 
 	// If using cookies, set new access/refresh cookies
 	if config.Cfg.TokenStrategy == "cookie" {
-		c.SetCookie("access_token", newAccess, int(config.Cfg.JWT.AccessTTL*60), "/", "", true, true)
-		c.SetCookie("refresh_token", newRefresh, int(config.Cfg.JWT.RefreshTTL*60), "/", "", true, true)
+		utils.SetAuthCookies(c.Writer, newAccess, newRefresh)
 		response.Success(c, http.StatusOK, "token refreshed", nil)
 		return
 	}
@@ -145,8 +126,7 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 
 	// Clear cookies if using cookie strategy
 	if config.Cfg.TokenStrategy == "cookie" {
-		c.SetCookie("access_token", "", -1, "/", "", true, true)
-		c.SetCookie("refresh_token", "", -1, "/", "", true, true)
+		utils.ClearAuthCookies(c.Writer)
 	}
 
 	response.Success(c, http.StatusOK, "logged out successfully", nil)
