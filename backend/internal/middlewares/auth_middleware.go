@@ -33,28 +33,26 @@ func JWTAuth() gin.HandlerFunc {
 			return
 		}
 
+		// NEW: Check if session still exists (for session revocation)
+		if claims.SessionID != "" {
+			sessExists, _ := cache.RDB.Exists(c, cache.SessionKey(claims.SessionID)).Result()
+			if sessExists == 0 {
+				response.Error(c, http.StatusUnauthorized, "session expired or revoked", nil)
+				return
+			}
+		}
+
 		c.Set("user_id", claims.UserID.String())
 		c.Set("role", claims.Role)
-		c.Set("access_token", token) // for logout
+		c.Set("access_token", token)
 		c.Next()
 	}
 }
 
 func extractToken(c *gin.Context) (string, error) {
-	//  Try Authorization header first
-	// header := c.GetHeader("Authorization")
-	// if header != "" {
-	// 	parts := strings.SplitN(header, " ", 2)
-	// 	if len(parts) == 2 && strings.ToLower(parts[0]) == "bearer" {
-	// 		return parts[1], nil
-	// 	}
-	// }
-
-	// Fallback to cookie
 	cookie, err := c.Cookie("access_token")
 	if err == nil && cookie != "" {
 		return cookie, nil
 	}
-
 	return "", errors.NewAppError(http.StatusUnauthorized, "missing or malformed token", nil)
 }
