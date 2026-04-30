@@ -27,6 +27,8 @@ func Register(api *gin.RouterGroup) {
 	protected.Use(middlewares.JWTAuth(), middlewares.GeneralRateLimit(1000))
 	{
 		protected.GET("/users/me", handlers.GetMe)
+		protected.POST("/auth/logout-all", authH.LogoutAll)
+		protected.GET("/auth/login-history", authH.LoginHistory)
 	}
 }
 
