@@ -34,10 +34,8 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	// Compute device fingerprint for this login attempt
-	deviceFp := auth.GenerateDeviceFingerprint(c.ClientIP(), c.Request.UserAgent(), config.Cfg.JWT.Secret)
-
-	resp, err := h.svc.Login(c.Request.Context(), req, deviceFp)
+	deviceFp := auth.GenerateDeviceFingerprint(c.Request.UserAgent(), config.Cfg.JWT.Secret)
+	resp, err := h.svc.Login(c.Request.Context(), req, deviceFp, c.ClientIP(), c.Request.UserAgent())
 	if err != nil {
 		if appErr, ok := err.(*errors.AppError); ok {
 			response.Error(c, appErr.Code, appErr.Message, nil)
@@ -47,10 +45,9 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	// If we want to use HTTP-only secure cookies (for web frontend)
+	// If cookie strategy is enabled, set httpOnly cookies and blank JSON tokens
 	if config.Cfg.TokenStrategy == "cookie" {
 		utils.SetAuthCookies(c.Writer, resp.AccessToken, resp.RefreshToken)
-
 		resp.AccessToken = ""
 		resp.RefreshToken = ""
 	}
@@ -77,7 +74,9 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 	}
 
 	// Compute device fingerprint (must match the one embedded in the old refresh token)
-	deviceFp := auth.GenerateDeviceFingerprint(c.ClientIP(), c.Request.UserAgent(), config.Cfg.JWT.Secret)
+	// deviceFp := auth.GenerateDeviceFingerprint(c.ClientIP(), c.Request.UserAgent(), config.Cfg.JWT.Secret)
+
+	deviceFp := auth.GenerateDeviceFingerprint(c.Request.UserAgent(), config.Cfg.JWT.Secret)
 
 	result, err := h.svc.RefreshToken(c.Request.Context(), req.RefreshToken, deviceFp)
 	if err != nil {
@@ -130,6 +129,26 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 	}
 
 	response.Success(c, http.StatusOK, "logged out successfully", nil)
+}
+
+func (h *AuthHandler) LogoutAll(c *gin.Context) {
+	userID := c.GetString("user_id")
+	if err := h.svc.LogoutAll(c.Request.Context(), userID); err != nil {
+		response.Error(c, http.StatusInternalServerError, "logout all failed", nil)
+		return
+	}
+	utils.ClearAuthCookies(c.Writer)
+	response.Success(c, http.StatusOK, "logged out from all devices", nil)
+}
+
+func (h *AuthHandler) LoginHistory(c *gin.Context) {
+	userID := c.GetString("user_id")
+	history, err := h.svc.GetLoginHistory(c.Request.Context(), userID)
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, "failed to get login history", nil)
+		return
+	}
+	response.Success(c, http.StatusOK, "login history", history)
 }
 
 func logAudit(userID uuid.UUID, action, module, ip, userAgent, details string) {
