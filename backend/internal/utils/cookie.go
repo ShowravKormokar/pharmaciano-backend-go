@@ -16,6 +16,8 @@ func SetAuthCookies(w http.ResponseWriter, accessToken, refreshToken string) {
 		sameSite = http.SameSiteNoneMode
 		secure = true
 	} else {
+		// For localhost with proxy, use SameSite=Lax (same-site)
+		// If you must use SameSite=None, you need HTTPS (not recommended for dev)
 		sameSite = http.SameSiteLaxMode
 		secure = false
 	}
@@ -64,7 +66,6 @@ func ClearAuthCookies(w http.ResponseWriter) {
 		SameSite: sameSite,
 		MaxAge:   -1,
 	})
-
 	http.SetCookie(w, &http.Cookie{
 		Name:     "refresh_token",
 		Value:    "",

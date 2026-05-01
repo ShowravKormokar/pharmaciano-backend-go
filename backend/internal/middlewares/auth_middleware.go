@@ -1,12 +1,15 @@
 package middlewares
 
 import (
+	"encoding/json"
 	"net/http"
+	"time"
 
 	"backend/internal/auth"
 	"backend/internal/cache"
 	"backend/internal/config"
 	"backend/internal/errors"
+	"backend/internal/models"
 	"backend/pkg/response"
 
 	"github.com/gin-gonic/gin"
@@ -26,19 +29,42 @@ func JWTAuth() gin.HandlerFunc {
 			return
 		}
 
-		// Check blacklist
+		// Blacklist check
 		exists, _ := cache.RDB.Exists(c, cache.TokenBlacklistKey(claims.ID)).Result()
 		if exists > 0 {
 			response.Error(c, http.StatusUnauthorized, "token revoked", nil)
 			return
 		}
 
-		// NEW: Check if session still exists (for session revocation)
+		// Session validation & hijack detection
 		if claims.SessionID != "" {
-			sessExists, _ := cache.RDB.Exists(c, cache.SessionKey(claims.SessionID)).Result()
-			if sessExists == 0 {
-				response.Error(c, http.StatusUnauthorized, "session expired or revoked", nil)
+			data, err := cache.RDB.Get(c, cache.SessionKey(claims.SessionID)).Result()
+			if err != nil {
+				response.Error(c, http.StatusUnauthorized, "session expired", nil)
+				c.Abort()
 				return
+			}
+
+			var sess models.Session
+			if json.Unmarshal([]byte(data), &sess) == nil {
+				// Hijack detection: fingerprint mismatch
+				if sess.DeviceFp != claims.DeviceFingerprint {
+					cache.RDB.Del(c, cache.SessionKey(claims.SessionID))
+					response.Error(c, http.StatusUnauthorized, "session hijack detected", nil)
+					c.Abort()
+					return
+				}
+
+				// IP change warning
+				if sess.IP != c.ClientIP() {
+					cache.RDB.Set(c, "risk:"+claims.UserID.String(), "ip_changed", time.Hour)
+				}
+
+				// Update last seen
+				sess.LastSeen = time.Now()
+				sess.IP = c.ClientIP()
+				updated, _ := json.Marshal(sess)
+				cache.RDB.Set(c, cache.SessionKey(claims.SessionID), updated, time.Until(sess.ExpiresAt))
 			}
 		}
 
