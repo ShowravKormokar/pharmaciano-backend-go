@@ -27,7 +27,7 @@ func main() {
 	logger.Init()
 	defer logger.Log.Sync()
 
-	database.Connect()
+	database.ConnectPostgres()
 	database.RunMigrations() // golang-migrate embedded migrations
 	cache.Connect()
 	//  Uncomment the line below to flush Redis on startup (for development only)
