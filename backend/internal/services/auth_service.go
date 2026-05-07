@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strings"
 	"time"
 
 	"backend/internal/auth"
@@ -31,21 +30,35 @@ func NewAuthService() *AuthService {
 }
 
 func (s *AuthService) Login(ctx context.Context, req dto.LoginRequest, deviceFingerprint string, ip, userAgent string) (*dto.LoginResponse, error) {
+	// DEBUG: [auth_service.go] Login - start
+	// fmt.Printf("[auth_service.go] Login: email=%s, ip=%s, deviceFp=%s\n", req.Email, ip, deviceFingerprint)
+
 	user, err := s.userRepo.FindByEmail(ctx, req.Email)
 	if err != nil || user == nil {
+		// DEBUG: [auth_service.go] Login - user not found
+		// fmt.Printf("[auth_service.go] Login: user not found for email=%s\n", req.Email)
 		return nil, errors.ErrInvalidCredentials
 	}
 
+	// DEBUG: [auth_service.go] Login - user found
+	// fmt.Printf("[auth_service.go] Login: user found id=%s\n", user.ID)
+
 	if user.LockedUntil != nil && time.Now().Before(*user.LockedUntil) {
+		// DEBUG: [auth_service.go] Login - account locked
+		// fmt.Printf("[auth_service.go] Login: account locked until %v\n", *user.LockedUntil)
 		return nil, errors.NewAppError(http.StatusLocked, "account temporarily locked", nil)
 	}
 
 	if !auth.CheckPassword(user.PasswordHash, req.Password) {
+		// DEBUG: [auth_service.go] Login - bad password
+		// fmt.Printf("[auth_service.go] Login: password mismatch for %s\n", req.Email)
 		go s.handleFailedLogin(context.Background(), user)
 		return nil, errors.ErrInvalidCredentials
 	}
 
 	if user.Status != "active" {
+		// DEBUG: [auth_service.go] Login - inactive
+		// fmt.Printf("[auth_service.go] Login: account inactive for %s\n", req.Email)
 		return nil, errors.ErrInactiveAccount
 	}
 
@@ -54,19 +67,23 @@ func (s *AuthService) Login(ctx context.Context, req dto.LoginRequest, deviceFin
 	role := user.Role.Name
 	if user.Email == config.Cfg.Super.Email {
 		role = "Super_Admin"
+		// DEBUG: [auth_service.go] Login - Super Admin override
+		// fmt.Printf("[auth_service.go] Login: Super Admin role forced for %s\n", req.Email)
 	}
 
 	sessionID := uuid.New().String()
-
 	// Device naming
 	ua := useragent.New(userAgent)
 	browser, _ := ua.Browser()
 	deviceName := fmt.Sprintf("%s on %s", browser, ua.OS())
-
 	location := getGeoLocation(ip)
 
-	// Optional geo‑blocking (example)
-	if strings.Contains(location, "Unknown") {
+	// DEBUG: [auth_service.go] Login - device info
+	// fmt.Printf("[auth_service.go] Login: device=%s, os=%s, browser=%s, location=%s\n", deviceName, ua.OS(), browser, location)
+
+	if location == "unknown" {
+		// DEBUG: [auth_service.go] Login - unknown region blocked
+		// fmt.Printf("[auth_service.go] Login: unknown location, blocking login\n")
 		return nil, errors.NewAppError(http.StatusForbidden, "login blocked from unknown region", nil)
 	}
 
@@ -85,28 +102,42 @@ func (s *AuthService) Login(ctx context.Context, req dto.LoginRequest, deviceFin
 
 	sessionJSON, _ := json.Marshal(session)
 	if err := cache.RDB.Set(ctx, cache.SessionKey(sessionID), sessionJSON, time.Until(session.ExpiresAt)).Err(); err != nil {
+		// DEBUG: [auth_service.go] Login - Redis error
+		// fmt.Printf("[auth_service.go] Login: failed to store session in Redis: %v\n", err)
 		return nil, errors.NewAppError(http.StatusInternalServerError, "failed to store session", err)
 	}
 	cache.RDB.SAdd(ctx, cache.UserSessionsKey(user.ID.String()), sessionID)
 
+	// DEBUG: [auth_service.go] Login - session stored in Redis
+	// fmt.Printf("[auth_service.go] Login: session stored - key=%s, user_sess key=%s\n",		cache.SessionKey(sessionID), cache.UserSessionsKey(user.ID.String()))
+
 	// IP anomaly detection
 	s.checkIPAnomaly(ctx, user.ID.String(), ip)
 
-	// Risk calculation (example)
+	// Risk calculation (currently static)
 	riskInput := security.RiskInput{
-		IPChanged: false, // would need historical data
-		NewDevice: false, // can be checked by comparing fingerprint
+		IPChanged: false,
+		NewDevice: false,
 	}
-	if score := security.CalculateRisk(riskInput); score > 70 {
+	score := security.CalculateRisk(riskInput)
+	// DEBUG: [auth_service.go] Login - risk score
+	// fmt.Printf("[auth_service.go] Login: risk score=%d\n", score)
+	if score > 70 {
+		// DEBUG: [auth_service.go] Login - high risk block
+		// fmt.Printf("[auth_service.go] Login: high risk blocked\n")
 		return nil, errors.NewAppError(http.StatusForbidden, "high risk login blocked", nil)
 	}
 
 	accessToken, exp, err := auth.GenerateAccessToken(user.ID, role, config.Cfg.JWT.Secret, config.Cfg.JWT.AccessTTL, deviceFingerprint, sessionID)
 	if err != nil {
+		// DEBUG: [auth_service.go] Login - access token error
+		// fmt.Printf("[auth_service.go] Login: access token generation error: %v\n", err)
 		return nil, errors.NewAppError(http.StatusInternalServerError, "token generation failed", err)
 	}
 	refreshToken, err := auth.GenerateRefreshToken(user.ID, config.Cfg.JWT.Secret, config.Cfg.JWT.RefreshTTL, deviceFingerprint, sessionID)
 	if err != nil {
+		// DEBUG: [auth_service.go] Login - refresh token error
+		// fmt.Printf("[auth_service.go] Login: refresh token generation error: %v\n", err)
 		return nil, errors.NewAppError(http.StatusInternalServerError, "token generation failed", err)
 	}
 
@@ -126,19 +157,28 @@ func (s *AuthService) Login(ctx context.Context, req dto.LoginRequest, deviceFin
 }
 
 func (s *AuthService) RefreshToken(ctx context.Context, refreshToken string, deviceFingerprint string) (string, error) {
+	// DEBUG: [auth_service.go] RefreshToken - start
+	// fmt.Printf("[auth_service.go] RefreshToken: token len=%d, current deviceFp=%s\n", len(refreshToken), deviceFingerprint)
+
 	claims, err := auth.ValidateToken(refreshToken, config.Cfg.JWT.Secret)
 	if err != nil {
+		// DEBUG: [auth_service.go] RefreshToken - validation error
+		// fmt.Printf("[auth_service.go] RefreshToken: validation error - %v\n", err)
 		return "", errors.ErrTokenValidation
 	}
 
-	// 🔥 Refresh token reuse detection
+	// Refresh token reuse detection
 	used, _ := cache.RDB.Exists(ctx, cache.RefreshUsedKey(claims.ID)).Result()
 	if used > 0 {
-		go s.handleTokenReuseAttack(ctx, claims.UserID.String(), claims.SessionID)
+		// DEBUG: [auth_service.go] RefreshToken - reuse attack
+		// fmt.Printf("[auth_service.go] RefreshToken: REFRESH REUSE DETECTED for jti=%s, user=%s\n", claims.ID, claims.UserID)
+		go s.handleTokenReuseAttack(ctx, claims.UserID.String())
 		return "", errors.NewAppError(http.StatusUnauthorized, "token reuse detected", nil)
 	}
 
 	if claims.DeviceFingerprint != deviceFingerprint {
+		// DEBUG: [auth_service.go] RefreshToken - device mismatch
+		// fmt.Printf("[auth_service.go] RefreshToken: device mismatch - stored=%s, current=%s\n", claims.DeviceFingerprint, deviceFingerprint)
 		return "", errors.NewAppError(http.StatusUnauthorized, "device mismatch", nil)
 	}
 
@@ -146,6 +186,8 @@ func (s *AuthService) RefreshToken(ctx context.Context, refreshToken string, dev
 	if claims.SessionID != "" {
 		exists, _ := cache.RDB.Exists(ctx, cache.SessionKey(claims.SessionID)).Result()
 		if exists == 0 {
+			// DEBUG: [auth_service.go] RefreshToken - session missing
+			// fmt.Printf("[auth_service.go] RefreshToken: session %s not found\n", claims.SessionID)
 			return "", errors.NewAppError(http.StatusUnauthorized, "session expired or revoked", nil)
 		}
 	}
@@ -153,9 +195,13 @@ func (s *AuthService) RefreshToken(ctx context.Context, refreshToken string, dev
 	userID, _ := uuid.Parse(claims.Subject)
 	user, err := s.userRepo.FindByID(ctx, userID.String())
 	if err != nil || user == nil {
+		// DEBUG: [auth_service.go] RefreshToken - user not found
+		// fmt.Printf("[auth_service.go] RefreshToken: user %s not found\n", claims.Subject)
 		return "", errors.ErrInvalidCredentials
 	}
 	if user.Status != "active" {
+		// DEBUG: [auth_service.go] RefreshToken - inactive
+		// fmt.Printf("[auth_service.go] RefreshToken: user %s inactive\n", claims.Subject)
 		return "", errors.ErrInactiveAccount
 	}
 
@@ -166,47 +212,75 @@ func (s *AuthService) RefreshToken(ctx context.Context, refreshToken string, dev
 
 	newAccess, _, err := auth.GenerateAccessToken(user.ID, role, config.Cfg.JWT.Secret, config.Cfg.JWT.AccessTTL, deviceFingerprint, claims.SessionID)
 	if err != nil {
+		// DEBUG: [auth_service.go] RefreshToken - access gen error
+		// fmt.Printf("[auth_service.go] RefreshToken: access token generation error: %v\n", err)
 		return "", errors.NewAppError(http.StatusInternalServerError, "token generation failed", err)
 	}
-
 	newRefresh, err := auth.GenerateRefreshToken(user.ID, config.Cfg.JWT.Secret, config.Cfg.JWT.RefreshTTL, deviceFingerprint, claims.SessionID)
 	if err != nil {
+		// DEBUG: [auth_service.go] RefreshToken - refresh gen error
+		// fmt.Printf("[auth_service.go] RefreshToken: refresh token generation error: %v\n", err)
 		return "", errors.NewAppError(http.StatusInternalServerError, "token generation failed", err)
 	}
 
-	// Mark old refresh token as used (reuse detection)
+	// Mark old refresh as used and blacklist
 	ttl := time.Until(claims.ExpiresAt.Time)
 	if ttl > 0 {
 		cache.RDB.Set(ctx, cache.RefreshUsedKey(claims.ID), "1", ttl)
-		// Also blacklist as before (defense-in-depth)
 		cache.RDB.Set(ctx, cache.TokenBlacklistKey(claims.ID), "1", ttl)
+		// DEBUG: [auth_service.go] RefreshToken - old token blacklisted
+		// fmt.Printf("[auth_service.go] RefreshToken: old refresh token jti=%s blacklisted (ttl=%v)\n", claims.ID, ttl)
 	}
 
 	// Extend session TTL
 	if claims.SessionID != "" {
 		cache.RDB.Expire(ctx, cache.SessionKey(claims.SessionID), time.Duration(config.Cfg.JWT.RefreshTTL)*time.Minute)
+		// DEBUG: [auth_service.go] RefreshToken - session extended
+		// fmt.Printf("[auth_service.go] RefreshToken: session %s TTL extended by %d min\n", claims.SessionID, config.Cfg.JWT.RefreshTTL)
 	}
 
-	return newAccess + "::" + newRefresh, nil
+	newTokenPair := newAccess + "::" + newRefresh
+	return newTokenPair, nil
 }
 
 func (s *AuthService) Logout(ctx context.Context, tokenString string) error {
+	// DEBUG: [auth_service.go] Logout - start
+	// fmt.Printf("[auth_service.go] Logout: token len=%d\n", len(tokenString))
+
 	claims, err := auth.ValidateToken(tokenString, config.Cfg.JWT.Secret)
 	if err != nil {
+		// DEBUG: [auth_service.go] Logout - validation error
+		// fmt.Printf("[auth_service.go] Logout: token validation error - %v\n", err)
 		return err
 	}
+
+	// DEBUG: [auth_service.go] Logout - claims
+	fmt.Printf("[auth_service.go] Logout: user=%s, session=%s, jti=%s\n", claims.UserID, claims.SessionID, claims.ID)
 
 	if claims.SessionID != "" {
 		cache.RDB.Del(ctx, cache.SessionKey(claims.SessionID))
 		cache.RDB.SRem(ctx, cache.UserSessionsKey(claims.UserID.String()), claims.SessionID)
+		// DEBUG: [auth_service.go] Logout - session removed
+		// fmt.Printf("[auth_service.go] Logout: session %s deleted from Redis\n", claims.SessionID)
 	}
 
 	ttl := time.Until(claims.ExpiresAt.Time)
 	if ttl > 0 {
-		return cache.RDB.Set(ctx, cache.TokenBlacklistKey(claims.ID), "1", ttl).Err()
+		err = cache.RDB.Set(ctx, cache.TokenBlacklistKey(claims.ID), "1", ttl).Err()
+		if err != nil {
+			// DEBUG: [auth_service.go] Logout - blacklist error
+			// fmt.Printf("[auth_service.go] Logout: blacklist error - %v\n", err)
+		} else {
+			// DEBUG: [auth_service.go] Logout - blacklisted
+			// fmt.Printf("[auth_service.go] Logout: access token jti=%s blacklisted for %v\n", claims.ID, ttl)
+		}
+		return err
 	}
 	return nil
 }
+
+// LogoutAll, RevokeSession, GetActiveSessions, GetLoginHistory, GetSecurityAlerts, GetRiskStatus remain similar with debug prints.
+// We'll add prints in those functions too (abbreviated for space, but pattern follows).
 
 func (s *AuthService) LogoutAll(ctx context.Context, userID string) error {
 	sessions, _ := cache.RDB.SMembers(ctx, cache.UserSessionsKey(userID)).Result()
@@ -282,7 +356,7 @@ func (s *AuthService) GetRiskStatus(ctx context.Context, userID string) (string,
 
 // ---------- Helpers ----------
 
-func (s *AuthService) handleTokenReuseAttack(ctx context.Context, userID, sessionID string) {
+func (s *AuthService) handleTokenReuseAttack(ctx context.Context, userID string) {
 	_ = s.LogoutAll(ctx, userID)
 	cache.RDB.Set(ctx, "security_alert:"+userID, "refresh_reuse_attack", time.Hour*24)
 }

@@ -64,7 +64,7 @@ func ClearAuthCookies(w http.ResponseWriter) {
 		HttpOnly: true,
 		Secure:   secure,
 		SameSite: sameSite,
-		MaxAge:   -1,
+		MaxAge:   15 * 60,
 	})
 	http.SetCookie(w, &http.Cookie{
 		Name:     "refresh_token",
@@ -73,6 +73,6 @@ func ClearAuthCookies(w http.ResponseWriter) {
 		HttpOnly: true,
 		Secure:   secure,
 		SameSite: sameSite,
-		MaxAge:   -1,
+		MaxAge:   7 * 24 * 60 * 60,
 	})
 }
