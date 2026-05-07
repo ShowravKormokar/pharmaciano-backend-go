@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"backend/internal/cache"
+	"backend/internal/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/ulule/limiter/v3"
@@ -23,7 +24,7 @@ func GeneralRateLimit(requestsPerHour int) gin.HandlerFunc {
 	})
 
 	return func(c *gin.Context) {
-		ip := c.ClientIP()
+		ip := utils.GetClientIP(c)
 		ctx, err := limiterInstance.Get(c, ip)
 		if err != nil {
 			c.AbortWithStatus(http.StatusInternalServerError)
@@ -49,7 +50,7 @@ func LoginRateLimit() gin.HandlerFunc {
 	})
 
 	return func(c *gin.Context) {
-		ip := c.ClientIP()
+		ip := utils.GetClientIP(c)
 		ctx, err := limiterInstance.Get(c, ip)
 		if err != nil {
 			c.AbortWithStatus(http.StatusInternalServerError)
@@ -126,7 +127,7 @@ func extractEmailFromBody(c *gin.Context) string {
 // 	})
 
 //		return func(c *gin.Context) {
-//			ip := c.ClientIP()
+//			ip := utils.GetClientIP(c)
 //			ctx, err := limiterInstance.Get(c, ip)
 //			if err != nil {
 //				c.AbortWithStatus(http.StatusInternalServerError)

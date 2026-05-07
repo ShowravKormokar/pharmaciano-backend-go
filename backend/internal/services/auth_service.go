@@ -16,6 +16,7 @@ import (
 	"backend/internal/models"
 	"backend/internal/repository"
 	"backend/internal/security"
+	"backend/internal/utils"
 
 	"github.com/google/uuid"
 	"github.com/mssola/useragent"
@@ -76,7 +77,7 @@ func (s *AuthService) Login(ctx context.Context, req dto.LoginRequest, deviceFin
 	ua := useragent.New(userAgent)
 	browser, _ := ua.Browser()
 	deviceName := fmt.Sprintf("%s on %s", browser, ua.OS())
-	location := getGeoLocation(ip)
+	location := utils.GetGeoLocation(ip)
 
 	// DEBUG: [auth_service.go] Login - device info
 	// fmt.Printf("[auth_service.go] Login: device=%s, os=%s, browser=%s, location=%s\n", deviceName, ua.OS(), browser, location)
@@ -371,7 +372,7 @@ func (s *AuthService) checkIPAnomaly(ctx context.Context, userID, currentIP stri
 	entry := LoginHistoryEntry{
 		Timestamp: time.Now().Format(time.RFC3339),
 		IP:        currentIP,
-		Location:  getGeoLocation(currentIP),
+		Location:  utils.GetGeoLocation(currentIP),
 	}
 	data, _ := json.Marshal(entry)
 	cache.RDB.LPush(ctx, "login_history:"+userID, data)
@@ -393,26 +394,4 @@ func (s *AuthService) handleSuccessfulLogin(ctx context.Context, user *models.Us
 		"failed_attempts": 0,
 		"locked_until":    nil,
 	})
-}
-
-func getGeoLocation(ip string) string {
-	if ip == "" || ip == "::1" || ip == "127.0.0.1" {
-		return "localhost"
-	}
-	url := fmt.Sprintf("http://ip-api.com/json/%s?fields=city,country", ip)
-	client := http.Client{Timeout: 2 * time.Second}
-	resp, err := client.Get(url)
-	if err != nil {
-		return "unknown"
-	}
-	defer resp.Body.Close()
-	var result struct {
-		City    string `json:"city"`
-		Country string `json:"country"`
-	}
-	json.NewDecoder(resp.Body).Decode(&result)
-	if result.City == "" {
-		return "unknown"
-	}
-	return fmt.Sprintf("%s, %s", result.City, result.Country)
 }

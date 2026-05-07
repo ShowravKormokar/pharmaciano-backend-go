@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -17,6 +18,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/mssola/useragent"
 )
 
 type AuthHandler struct {
@@ -35,10 +37,10 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	}
 
 	// DEBUG: [auth_handler.go] Login - start
-	// fmt.Printf("[auth_handler.go] Login: email=%s, ip=%s\n", req.Email, c.ClientIP())
+	// fmt.Printf("[auth_handler.go] Login: email=%s, ip=%s\n", req.Email, utils.GetClientIP(c))
 
-	deviceFp := auth.GenerateDeviceFingerprint(c.ClientIP(), c.Request.UserAgent(), config.Cfg.JWT.Secret)
-	resp, err := h.svc.Login(c.Request.Context(), req, deviceFp, c.ClientIP(), c.Request.UserAgent())
+	deviceFp := auth.GenerateDeviceFingerprint(utils.GetClientIP(c), c.Request.UserAgent(), config.Cfg.JWT.Secret)
+	resp, err := h.svc.Login(c.Request.Context(), req, deviceFp, utils.GetClientIP(c), c.Request.UserAgent())
 	if err != nil {
 		if appErr, ok := err.(*errors.AppError); ok {
 			// DEBUG: [auth_handler.go] Login - app error
@@ -63,7 +65,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		resp.RefreshToken = ""
 	}
 
-	go logAudit(uuid.MustParse(resp.User.ID), "LOGIN", "auth", c.ClientIP(), c.Request.UserAgent(), "login")
+	go logAudit(uuid.MustParse(resp.User.ID), "LOGIN", "auth", utils.GetClientIP(c), c.Request.UserAgent(), "login")
 	response.SuccessAuth(c, http.StatusOK, "login successful", resp)
 }
 
@@ -94,7 +96,7 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 	// fmt.Printf("[auth_handler.go] RefreshToken: token received len=%d\n", len(req.RefreshToken))
 
 	deviceFp := auth.GenerateDeviceFingerprint(
-		c.ClientIP(),
+		utils.GetClientIP(c),
 		c.Request.UserAgent(),
 		config.Cfg.JWT.Secret,
 	)
@@ -256,22 +258,45 @@ func (h *AuthHandler) SecurityStatus(c *gin.Context) {
 }
 
 func logAudit(userID uuid.UUID, action, module, ip, userAgent, details string) {
+
+	ua := useragent.New(userAgent)
+
+	browser, _ := ua.Browser()
+
+	device := fmt.Sprintf(
+		"%s on %s",
+		browser,
+		ua.OS(),
+	)
+
+	location := utils.GetGeoLocation(ip)
+
 	event := map[string]interface{}{
-		"event":   action,
-		"status":  "SUCCESS",
-		"method":  "password",
-		"ip":      ip,
-		"device":  userAgent,
-		"details": details,
+		"event":    action,
+		"status":   "SUCCESS",
+		"method":   "password",
+		"ip":       ip,
+		"browser":  browser,
+		"os":       ua.OS(),
+		"device":   device,
+		"location": location,
+		"details":  details,
 	}
+
 	jsonDetails, _ := json.Marshal(event)
+
 	audit := models.AuditLog{
 		UserID:    userID,
 		Action:    action,
 		Module:    module,
 		IP:        ip,
+		Browser:   browser,
+		OS:        ua.OS(),
+		Device:    device,
+		Location:  location,
 		UserAgent: userAgent,
 		Details:   string(jsonDetails),
 	}
+
 	database.DB.Create(&audit)
 }

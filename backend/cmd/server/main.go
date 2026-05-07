@@ -56,6 +56,15 @@ func main() {
 		AllowCredentials: true,
 	}))
 
+	if config.Cfg.AppEnv == "production" {
+		r.SetTrustedProxies(nil)
+
+	} else {
+		r.SetTrustedProxies([]string{
+			"127.0.0.1",
+		})
+	}
+
 	r.Use(gin.Logger(), gin.Recovery())
 
 	routes.Register(r)

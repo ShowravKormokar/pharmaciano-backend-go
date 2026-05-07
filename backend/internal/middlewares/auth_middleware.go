@@ -11,6 +11,7 @@ import (
 	"backend/internal/config"
 	"backend/internal/errors"
 	"backend/internal/models"
+	"backend/internal/utils"
 	"backend/pkg/response"
 
 	"github.com/gin-gonic/gin"
@@ -70,15 +71,15 @@ func JWTAuth() gin.HandlerFunc {
 				}
 
 				// IP change warning
-				if sess.IP != c.ClientIP() {
+				if sess.IP != utils.GetClientIP(c) {
 					// DEBUG: [auth_middleware.go] JWTAuth - IP changed
-					// fmt.Printf("[auth_middleware.go] JWTAuth: IP changed (stored=%s current=%s), setting risk\n", sess.IP, c.ClientIP())
+					// fmt.Printf("[auth_middleware.go] JWTAuth: IP changed (stored=%s current=%s), setting risk\n", sess.IP, utils.GetClientIP(c))
 					cache.RDB.Set(c, "risk:"+claims.UserID.String(), "ip_changed", time.Hour)
 				}
 
 				// Update last seen
 				sess.LastSeen = time.Now()
-				sess.IP = c.ClientIP()
+				sess.IP = utils.GetClientIP(c)
 				updated, _ := json.Marshal(sess)
 				cache.RDB.Set(c, cache.SessionKey(claims.SessionID), updated, time.Until(sess.ExpiresAt))
 				// DEBUG: [auth_middleware.go] JWTAuth - session updated

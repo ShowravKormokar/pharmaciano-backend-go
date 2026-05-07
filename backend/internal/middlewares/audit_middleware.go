@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"backend/internal/utils"
 	"bytes"
 	"encoding/json"
 	"io"
@@ -20,7 +21,7 @@ func AuditMiddleware(logger *zap.Logger) gin.HandlerFunc {
 		fields := []zap.Field{
 			zap.String("method", c.Request.Method),
 			zap.String("path", c.Request.URL.Path),
-			zap.String("ip", c.ClientIP()),
+			zap.String("ip", utils.GetClientIP(c)),
 			zap.String("user_agent", c.Request.UserAgent()),
 			zap.Time("timestamp", time.Now()),
 		}
