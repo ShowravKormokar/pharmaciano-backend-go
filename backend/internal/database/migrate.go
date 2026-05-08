@@ -17,34 +17,63 @@ import (
 var migrationsFS embed.FS
 
 func RunMigrations() {
-	cfg := config.Cfg.DB
+	cfg := config.Cfg
 
-	// Build a properly URL-encoded DSN to handle special characters in password
-	u := &url.URL{
-		Scheme: "postgres",
-		User:   url.UserPassword(cfg.User, cfg.Password),
-		Host:   fmt.Sprintf("%s:%d", cfg.Host, cfg.Port),
-		Path:   cfg.Name,
+	var dsn string
+
+	// =========================
+	// PRODUCTION (Neon)
+	// =========================
+	if cfg.AppEnv == "production" {
+
+		dsn = cfg.DB.URL
+
+		log.Println("🚀 Using Neon PostgreSQL for migrations")
+
+	} else {
+
+		// =========================
+		// DEVELOPMENT (Local)
+		// =========================
+
+		u := &url.URL{
+			Scheme: "postgres",
+			User:   url.UserPassword(cfg.DB.User, cfg.DB.Password),
+			Host:   fmt.Sprintf("%s:%d", cfg.DB.Host, cfg.DB.Port),
+			Path:   cfg.DB.Name,
+		}
+
+		q := u.Query()
+		q.Set("sslmode", "disable")
+
+		u.RawQuery = q.Encode()
+
+		dsn = u.String()
+
+		log.Println("🖥️ Using Local PostgreSQL for migrations")
 	}
-	q := u.Query()
-	q.Set("sslmode", "disable")
-	u.RawQuery = q.Encode()
-
-	dsn := u.String()
 
 	source, err := iofs.New(migrationsFS, "migrations")
 	if err != nil {
-		log.Fatalf("❌ Failed to create iofs source: %v", err)
+		log.Fatalf("❌ Failed to create migration source: %v", err)
 	}
 
-	m, err := migrate.NewWithSourceInstance("iofs", source, dsn)
+	m, err := migrate.NewWithSourceInstance(
+		"iofs",
+		source,
+		dsn,
+	)
+
 	if err != nil {
 		log.Fatalf("❌ Failed to create migrate instance: %v", err)
 	}
+
 	defer m.Close()
 
 	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+
 		log.Fatalf("❌ Migration failed: %v", err)
 	}
+
 	log.Println("✅ Database migrations applied")
 }

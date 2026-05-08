@@ -16,7 +16,9 @@ CREATE TABLE IF NOT EXISTS users (
     n_id TEXT,
     present_address TEXT,
     permanent_address TEXT,
-    educational_bg TEXT
+    educational_bg TEXT,
+    failed_attempts INTEGER DEFAULT 0,
+    locked_until TIMESTAMPTZ
 );
 CREATE INDEX IF NOT EXISTS idx_users_org ON users(organization_id);
 CREATE INDEX IF NOT EXISTS idx_users_role ON users(role_id);

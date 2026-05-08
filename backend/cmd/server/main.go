@@ -31,7 +31,7 @@ func main() {
 	database.RunMigrations() // golang-migrate embedded migrations
 	cache.Connect()
 	//  Uncomment the line below to flush Redis on startup (for development only)
-	cache.FlushAll()
+	// cache.FlushAll()
 
 	rbac.Init()
 	scripts.SeedAll()

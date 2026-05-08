@@ -8,6 +8,10 @@ CREATE TABLE IF NOT EXISTS audit_logs (
     module VARCHAR(50) NOT NULL,
     ip VARCHAR(45),
     user_agent VARCHAR(255),
-    details TEXT
+    details TEXT,
+    browser VARCHAR(100),
+    os VARCHAR(100),
+    device VARCHAR(150),
+    location VARCHAR(150)
 );
 CREATE INDEX IF NOT EXISTS idx_audit_user ON audit_logs(user_id);
