@@ -107,7 +107,16 @@ func (s *AuthService) Login(ctx context.Context, req dto.LoginRequest, deviceFin
 		// fmt.Printf("[auth_service.go] Login: failed to store session in Redis: %v\n", err)
 		return nil, errors.NewAppError(http.StatusInternalServerError, "failed to store session", err)
 	}
-	cache.RDB.SAdd(ctx, cache.UserSessionsKey(user.ID.String()), sessionID)
+
+	userSessionsKey := cache.UserSessionsKey(user.ID.String())
+	pipe := cache.RDB.TxPipeline()
+	pipe.SAdd(ctx, userSessionsKey, sessionID)
+	pipe.Expire(
+		ctx,
+		userSessionsKey,
+		time.Duration(config.Cfg.JWT.RefreshTTL)*time.Minute,
+	)
+	_, _ = pipe.Exec(ctx)
 
 	// DEBUG: [auth_service.go] Login - session stored in Redis
 	// fmt.Printf("[auth_service.go] Login: session stored - key=%s, user_sess key=%s\n",		cache.SessionKey(sessionID), cache.UserSessionsKey(user.ID.String()))
@@ -308,18 +317,26 @@ func (s *AuthService) RevokeSession(ctx context.Context, userID, sessionID strin
 }
 
 func (s *AuthService) GetActiveSessions(ctx context.Context, userID string) ([]models.Session, error) {
+
 	sessionIDs, _ := cache.RDB.SMembers(ctx, cache.UserSessionsKey(userID)).Result()
-	var sessions []models.Session
+
+	sessions := make([]models.Session, 0)
+
 	for _, sid := range sessionIDs {
+
 		data, err := cache.RDB.Get(ctx, cache.SessionKey(sid)).Result()
+
 		if err != nil {
 			continue
 		}
+
 		var sess models.Session
+
 		if json.Unmarshal([]byte(data), &sess) == nil {
 			sessions = append(sessions, sess)
 		}
 	}
+
 	return sessions, nil
 }
 
@@ -331,20 +348,26 @@ type LoginHistoryEntry struct {
 }
 
 func (s *AuthService) GetLoginHistory(ctx context.Context, userID string) ([]LoginHistoryEntry, error) {
-	raw, _ := cache.RDB.LRange(ctx, "login_history:"+userID, 0, -1).Result()
-	var history []LoginHistoryEntry
+
+	raw, _ := cache.RDB.LRange(ctx, cache.LoginHistoryKey(userID), 0, -1).Result()
+
+	history := make([]LoginHistoryEntry, 0)
+
 	for _, item := range raw {
+
 		var entry LoginHistoryEntry
+
 		if json.Unmarshal([]byte(item), &entry) == nil {
 			history = append(history, entry)
 		}
 	}
+
 	return history, nil
 }
 
 func (s *AuthService) GetSecurityAlerts(ctx context.Context, userID string) (map[string]string, error) {
 	alerts := make(map[string]string)
-	val, _ := cache.RDB.Get(ctx, "security_alert:"+userID).Result()
+	val, _ := cache.RDB.Get(ctx, cache.SecurityAlertKey(userID)).Result()
 	if val != "" {
 		alerts["alert"] = val
 	}
@@ -352,22 +375,27 @@ func (s *AuthService) GetSecurityAlerts(ctx context.Context, userID string) (map
 }
 
 func (s *AuthService) GetRiskStatus(ctx context.Context, userID string) (string, error) {
-	return cache.RDB.Get(ctx, "risk:"+userID).Result()
+	return cache.RDB.Get(ctx, cache.RiskKey(userID)).Result()
 }
 
 // ---------- Helpers ----------
 
 func (s *AuthService) handleTokenReuseAttack(ctx context.Context, userID string) {
 	_ = s.LogoutAll(ctx, userID)
-	cache.RDB.Set(ctx, "security_alert:"+userID, "refresh_reuse_attack", time.Hour*24)
+	cache.RDB.Set(
+		ctx,
+		cache.SecurityAlertKey(userID),
+		"refresh_reuse_attack",
+		24*time.Hour,
+	)
 }
 
 func (s *AuthService) checkIPAnomaly(ctx context.Context, userID, currentIP string) {
-	lastIP, _ := cache.RDB.Get(ctx, "last_ip:"+userID).Result()
+	lastIP, _ := cache.RDB.Get(ctx, cache.LastIPKey(userID)).Result()
 	if lastIP != "" && lastIP != currentIP {
-		cache.RDB.Set(ctx, "risk:"+userID, "ip_changed", time.Hour)
+		cache.RDB.Set(ctx, cache.RiskKey(userID), "ip_changed", time.Hour)
 	}
-	cache.RDB.Set(ctx, "last_ip:"+userID, currentIP, 24*time.Hour)
+	cache.RDB.Set(ctx, cache.LastIPKey(userID), currentIP, 30*24*time.Hour)
 
 	entry := LoginHistoryEntry{
 		Timestamp: time.Now().Format(time.RFC3339),
@@ -375,8 +403,13 @@ func (s *AuthService) checkIPAnomaly(ctx context.Context, userID, currentIP stri
 		Location:  utils.GetGeoLocation(currentIP),
 	}
 	data, _ := json.Marshal(entry)
-	cache.RDB.LPush(ctx, "login_history:"+userID, data)
-	cache.RDB.LTrim(ctx, "login_history:"+userID, 0, 9)
+
+	loginHistoryKey := cache.LoginHistoryKey(userID)
+	pipe := cache.RDB.TxPipeline()
+	pipe.LPush(ctx, loginHistoryKey, data)
+	pipe.LTrim(ctx, loginHistoryKey, 0, 9)
+	pipe.Expire(ctx, loginHistoryKey, 90*24*time.Hour)
+	_, _ = pipe.Exec(ctx)
 }
 
 func (s *AuthService) handleFailedLogin(ctx context.Context, user *models.User) {
