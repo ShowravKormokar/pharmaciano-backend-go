@@ -15,38 +15,41 @@ var RDB *redis.Client
 var Ctx = context.Background()
 
 func Connect() {
+
 	cfg := config.Cfg.Redis
 
 	options := &redis.Options{
-		Addr:         cfg.Addr,
-		Password:     cfg.Password,
-		DB:           0,
-		PoolSize:     10,
-		MinIdleConns: 2,
-		DialTimeout:  5 * time.Second,
-		ReadTimeout:  3 * time.Second,
-		WriteTimeout: 3 * time.Second,
+		Addr:            cfg.Addr,
+		Password:        cfg.Password,
+		DB:              0,
+		PoolSize:        50,
+		MinIdleConns:    10,
+		MaxIdleConns:    20,
+		ConnMaxIdleTime: 5 * time.Minute,
+		ConnMaxLifetime: 30 * time.Minute,
+		DialTimeout:     5 * time.Second,
+		ReadTimeout:     3 * time.Second,
+		WriteTimeout:    3 * time.Second,
+		PoolTimeout:     4 * time.Second,
 	}
 
-	// PRODUCTION → Upstash Redis (TLS)
 	if config.Cfg.AppEnv == "production" {
 
 		options.TLSConfig = &tls.Config{
 			MinVersion: tls.VersionTLS12,
 		}
 
-		log.Println("🚀 Using Upstash Redis (Production)")
-
+		log.Println("🚀 Using Secure Redis (Production)")
 	} else {
-
-		// DEVELOPMENT → Local Redis
-
 		log.Println("🖥️ Using Local Redis (Development)")
 	}
 
 	RDB = redis.NewClient(options)
 
-	if err := RDB.Ping(Ctx).Err(); err != nil {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := RDB.Ping(ctx).Err(); err != nil {
 		log.Fatalf("❌ Redis connection failed: %v", err)
 	}
 

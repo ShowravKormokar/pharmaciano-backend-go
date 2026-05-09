@@ -10,8 +10,7 @@ import (
 )
 
 const (
-	RolePermissionsPrefix = "perm:role:"
-	RolePermissionsTTL    = 30 * time.Minute
+	RolePermissionsTTL = 30 * time.Minute
 )
 
 // CachedPermissions stores permissions for a role
@@ -21,7 +20,7 @@ type CachedPermissions struct {
 
 // GetRolePermissions returns permissions for a role, with Redis caching
 func GetRolePermissions(ctx context.Context, roleName string) ([]dto.PermissionBrief, error) {
-	key := RolePermissionsPrefix + roleName
+	key := RolePermissionsKey(roleName)
 	cached, err := RDB.Get(ctx, key).Result()
 	if err == nil {
 		var cp CachedPermissions
@@ -58,5 +57,5 @@ func GetRolePermissions(ctx context.Context, roleName string) ([]dto.PermissionB
 
 // InvalidateRolePermissions removes cached permissions for a role
 func InvalidateRolePermissions(ctx context.Context, roleName string) {
-	RDB.Del(ctx, RolePermissionsPrefix+roleName)
+	RDB.Del(ctx, RolePermissionsKey(roleName))
 }
