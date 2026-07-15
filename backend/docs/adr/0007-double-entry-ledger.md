@@ -9,7 +9,7 @@
 
 ## Context
 
-MediCore ERP is a financial system: every sale, purchase, payment, transfer
+Pharmaciano ERP is a financial system: every sale, purchase, payment, transfer
 and expiry write-off must reconcile at the end of the day, month and year.
 The owner wants:
 
@@ -28,7 +28,7 @@ Options considered:
 
 ## Decision
 
-We build a **first-class double-entry ledger** inside MediCore ERP.
+We build a **first-class double-entry ledger** inside Pharmaciano ERP.
 
 Tables:
 

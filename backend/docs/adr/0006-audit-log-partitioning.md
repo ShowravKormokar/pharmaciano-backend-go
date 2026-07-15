@@ -9,7 +9,7 @@
 
 ## Context
 
-Every write in MediCore ERP produces an audit row: who did what, when, from
+Every write in Pharmaciano ERP produces an audit row: who did what, when, from
 where, with before/after payloads. Over time this table dominates the working
 set:
 

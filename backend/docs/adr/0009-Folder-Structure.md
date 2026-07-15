@@ -1,5 +1,8 @@
+# Based on Modular Monilith  
+
+### Folder Structure:  
 ```
-medicore-erp-backend/
+backend/
 │
 ├── cmd/
 │   ├── api/

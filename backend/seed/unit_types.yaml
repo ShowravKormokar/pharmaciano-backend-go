@@ -1,0 +1,153 @@
+# =============================================================================
+# Pharmaciano ERP — Unit Types
+#
+# Idempotent by `code`.
+# `base_unit` references another unit's code; `conversion_factor` is
+# multiplicative to reach the base unit (e.g. 1 strip = 10 pieces → factor 10).
+# =============================================================================
+
+version: 1
+description: "Selling and pack units for pharmacy inventory."
+
+unit_types:
+
+  # ----- Count units --------------------------------------------------------
+  - code: PIECE
+    name: "Piece"
+    symbol: "pc"
+    is_base: true
+    is_active: true
+
+  - code: STRIP
+    name: "Strip"
+    symbol: "strip"
+    base_unit: PIECE
+    conversion_factor: 10           # default; overridden per medicine
+    is_active: true
+
+  - code: PACK
+    name: "Pack"
+    symbol: "pack"
+    base_unit: PIECE
+    conversion_factor: 100
+    is_active: true
+
+  - code: BOX
+    name: "Box"
+    symbol: "box"
+    base_unit: PIECE
+    conversion_factor: 100
+    is_active: true
+
+  - code: CARTON
+    name: "Carton"
+    symbol: "ctn"
+    base_unit: PIECE
+    conversion_factor: 1000
+    is_active: true
+
+  - code: PAIR
+    name: "Pair"
+    symbol: "pair"
+    base_unit: PIECE
+    conversion_factor: 2
+    is_active: true
+
+  - code: DOZEN
+    name: "Dozen"
+    symbol: "dz"
+    base_unit: PIECE
+    conversion_factor: 12
+    is_active: true
+
+  - code: ROLL
+    name: "Roll"
+    symbol: "roll"
+    is_base: true
+    is_active: true
+
+  # ----- Container units ----------------------------------------------------
+  - code: BOTTLE
+    name: "Bottle"
+    symbol: "bot"
+    is_base: true
+    is_active: true
+
+  - code: TUBE
+    name: "Tube"
+    symbol: "tube"
+    is_base: true
+    is_active: true
+
+  - code: VIAL
+    name: "Vial"
+    symbol: "vial"
+    is_base: true
+    is_active: true
+
+  - code: AMPOULE
+    name: "Ampoule"
+    symbol: "amp"
+    is_base: true
+    is_active: true
+
+  - code: SACHET
+    name: "Sachet"
+    symbol: "sachet"
+    is_base: true
+    is_active: true
+
+  - code: BAG
+    name: "Bag"
+    symbol: "bag"
+    is_base: true
+    is_active: true
+
+  # ----- Volume units -------------------------------------------------------
+  - code: ML
+    name: "Millilitre"
+    symbol: "ml"
+    is_base: true
+    is_active: true
+
+  - code: LITRE
+    name: "Litre"
+    symbol: "L"
+    base_unit: ML
+    conversion_factor: 1000
+    is_active: true
+
+  # ----- Mass units ---------------------------------------------------------
+  - code: MG
+    name: "Milligram"
+    symbol: "mg"
+    is_base: true
+    is_active: true
+
+  - code: GRAM
+    name: "Gram"
+    symbol: "g"
+    base_unit: MG
+    conversion_factor: 1000
+    is_active: true
+
+  - code: KG
+    name: "Kilogram"
+    symbol: "kg"
+    base_unit: MG
+    conversion_factor: 1000000
+    is_active: true
+
+  - code: MCG
+    name: "Microgram"
+    symbol: "mcg"
+    base_unit: MG
+    conversion_factor: 0.001
+    is_active: true
+
+  # ----- Activity units -----------------------------------------------------
+  - code: IU
+    name: "International Unit"
+    symbol: "IU"
+    is_base: true
+    is_active: true

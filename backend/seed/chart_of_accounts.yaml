@@ -1,0 +1,527 @@
+# =============================================================================
+# Pharmaciano ERP — Chart of Accounts (Default)
+#
+# Standard 5-block layout: Assets (1xxx), Liabilities (2xxx), Equity (3xxx),
+# Revenue (4xxx), Expenses (5xxx-6xxx).
+#
+# `normal_side` is the natural balance side (debit or credit).
+# `is_system=true` means the account is required by auto-posting rules and
+# cannot be deleted through the API.
+# `parent` refers to another account by `code` to build the hierarchy.
+# =============================================================================
+
+version: 1
+description: "Default Chart of Accounts for a pharmacy retail organization."
+
+accounts:
+
+  # =========================================================================
+  # 1000 — ASSETS
+  # =========================================================================
+  - code: "1000"
+    name: "Assets"
+    account_type: asset
+    sub_type: header
+    normal_side: debit
+    is_system: true
+    is_active: true
+
+  # ----- 1100 Cash & Bank ---------------------------------------------------
+  - code: "1100"
+    name: "Cash & Cash Equivalents"
+    parent: "1000"
+    account_type: asset
+    sub_type: current_asset
+    normal_side: debit
+    is_system: true
+    is_active: true
+
+  - code: "1101"
+    name: "Cash in Hand"
+    parent: "1100"
+    account_type: asset
+    sub_type: cash
+    normal_side: debit
+    is_system: true
+    is_active: true
+
+  - code: "1102"
+    name: "Petty Cash"
+    parent: "1100"
+    account_type: asset
+    sub_type: cash
+    normal_side: debit
+    is_system: true
+    is_active: true
+
+  - code: "1110"
+    name: "Bank Accounts"
+    parent: "1100"
+    account_type: asset
+    sub_type: bank
+    normal_side: debit
+    is_system: true
+    is_active: true
+
+  # ----- 1200 Receivables ---------------------------------------------------
+  - code: "1200"
+    name: "Accounts Receivable"
+    parent: "1000"
+    account_type: asset
+    sub_type: current_asset
+    normal_side: debit
+    is_system: true
+    is_active: true
+
+  - code: "1210"
+    name: "Customer Receivables"
+    parent: "1200"
+    account_type: asset
+    normal_side: debit
+    is_system: true
+    is_active: true
+
+  - code: "1220"
+    name: "Advances to Suppliers"
+    parent: "1200"
+    account_type: asset
+    normal_side: debit
+    is_system: true
+    is_active: true
+
+  - code: "1230"
+    name: "Employee Advances"
+    parent: "1200"
+    account_type: asset
+    normal_side: debit
+    is_system: true
+    is_active: true
+
+  # ----- 1300 Inventory -----------------------------------------------------
+  - code: "1300"
+    name: "Inventory"
+    parent: "1000"
+    account_type: asset
+    sub_type: inventory
+    normal_side: debit
+    is_system: true
+    is_active: true
+
+  - code: "1310"
+    name: "Medicine Inventory"
+    parent: "1300"
+    account_type: asset
+    sub_type: inventory
+    normal_side: debit
+    is_system: true
+    is_active: true
+
+  - code: "1320"
+    name: "Non-Medicine Inventory"
+    parent: "1300"
+    account_type: asset
+    sub_type: inventory
+    normal_side: debit
+    is_system: true
+    is_active: true
+
+  - code: "1350"
+    name: "Stock in Transit"
+    parent: "1300"
+    account_type: asset
+    sub_type: control_account
+    normal_side: debit
+    is_system: true
+    is_active: true
+
+  - code: "1360"
+    name: "Goods Received Not Invoiced (GRNI)"
+    parent: "1300"
+    account_type: asset
+    sub_type: control_account
+    normal_side: debit
+    is_system: true
+    is_active: true
+
+  # ----- 1400 Prepaid / Other Current --------------------------------------
+  - code: "1400"
+    name: "Prepaid Expenses"
+    parent: "1000"
+    account_type: asset
+    normal_side: debit
+    is_system: true
+    is_active: true
+
+  - code: "1410"
+    name: "Input VAT Receivable"
+    parent: "1400"
+    account_type: asset
+    normal_side: debit
+    is_system: true
+    is_active: true
+
+  # ----- 1500 Fixed Assets --------------------------------------------------
+  - code: "1500"
+    name: "Fixed Assets"
+    parent: "1000"
+    account_type: asset
+    sub_type: fixed_asset
+    normal_side: debit
+    is_system: true
+    is_active: true
+
+  - code: "1510"
+    name: "Furniture & Fixtures"
+    parent: "1500"
+    account_type: asset
+    normal_side: debit
+    is_system: false
+    is_active: true
+
+  - code: "1520"
+    name: "Computers & Equipment"
+    parent: "1500"
+    account_type: asset
+    normal_side: debit
+    is_system: false
+    is_active: true
+
+  - code: "1590"
+    name: "Accumulated Depreciation"
+    parent: "1500"
+    account_type: asset
+    sub_type: contra_asset
+    normal_side: credit
+    is_system: true
+    is_active: true
+
+  # =========================================================================
+  # 2000 — LIABILITIES
+  # =========================================================================
+  - code: "2000"
+    name: "Liabilities"
+    account_type: liability
+    sub_type: header
+    normal_side: credit
+    is_system: true
+    is_active: true
+
+  - code: "2100"
+    name: "Accounts Payable"
+    parent: "2000"
+    account_type: liability
+    sub_type: current_liability
+    normal_side: credit
+    is_system: true
+    is_active: true
+
+  - code: "2110"
+    name: "Supplier Payables"
+    parent: "2100"
+    account_type: liability
+    normal_side: credit
+    is_system: true
+    is_active: true
+
+  - code: "2200"
+    name: "Taxes Payable"
+    parent: "2000"
+    account_type: liability
+    normal_side: credit
+    is_system: true
+    is_active: true
+
+  - code: "2210"
+    name: "Output VAT Payable"
+    parent: "2200"
+    account_type: liability
+    normal_side: credit
+    is_system: true
+    is_active: true
+
+  - code: "2220"
+    name: "Withholding Tax Payable"
+    parent: "2200"
+    account_type: liability
+    normal_side: credit
+    is_system: true
+    is_active: true
+
+  - code: "2300"
+    name: "Salaries & Wages Payable"
+    parent: "2000"
+    account_type: liability
+    normal_side: credit
+    is_system: true
+    is_active: true
+
+  - code: "2400"
+    name: "Customer Advances Received"
+    parent: "2000"
+    account_type: liability
+    normal_side: credit
+    is_system: true
+    is_active: true
+
+  - code: "2500"
+    name: "Accrued Expenses"
+    parent: "2000"
+    account_type: liability
+    normal_side: credit
+    is_system: true
+    is_active: true
+
+  - code: "2900"
+    name: "Long-Term Loans"
+    parent: "2000"
+    account_type: liability
+    sub_type: long_term_liability
+    normal_side: credit
+    is_system: false
+    is_active: true
+
+  # =========================================================================
+  # 3000 — EQUITY
+  # =========================================================================
+  - code: "3000"
+    name: "Equity"
+    account_type: equity
+    sub_type: header
+    normal_side: credit
+    is_system: true
+    is_active: true
+
+  - code: "3100"
+    name: "Owner's Capital"
+    parent: "3000"
+    account_type: equity
+    normal_side: credit
+    is_system: true
+    is_active: true
+
+  - code: "3200"
+    name: "Retained Earnings"
+    parent: "3000"
+    account_type: equity
+    normal_side: credit
+    is_system: true
+    is_active: true
+
+  - code: "3300"
+    name: "Owner's Drawings"
+    parent: "3000"
+    account_type: equity
+    sub_type: contra_equity
+    normal_side: debit
+    is_system: true
+    is_active: true
+
+  # =========================================================================
+  # 4000 — REVENUE
+  # =========================================================================
+  - code: "4000"
+    name: "Revenue"
+    account_type: revenue
+    sub_type: header
+    normal_side: credit
+    is_system: true
+    is_active: true
+
+  - code: "4100"
+    name: "Sales Revenue"
+    parent: "4000"
+    account_type: revenue
+    normal_side: credit
+    is_system: true
+    is_active: true
+
+  - code: "4110"
+    name: "Medicine Sales"
+    parent: "4100"
+    account_type: revenue
+    normal_side: credit
+    is_system: true
+    is_active: true
+
+  - code: "4120"
+    name: "Non-Medicine Sales"
+    parent: "4100"
+    account_type: revenue
+    normal_side: credit
+    is_system: true
+    is_active: true
+
+  - code: "4200"
+    name: "Sales Returns & Allowances"
+    parent: "4000"
+    account_type: revenue
+    sub_type: contra_revenue
+    normal_side: debit
+    is_system: true
+    is_active: true
+
+  - code: "4300"
+    name: "Discount Received"
+    parent: "4000"
+    account_type: revenue
+    normal_side: credit
+    is_system: true
+    is_active: true
+
+  - code: "4400"
+    name: "Other Income"
+    parent: "4000"
+    account_type: revenue
+    normal_side: credit
+    is_system: true
+    is_active: true
+
+  # =========================================================================
+  # 5000 — COST OF GOODS SOLD
+  # =========================================================================
+  - code: "5000"
+    name: "Cost of Goods Sold"
+    account_type: expense
+    sub_type: header
+    normal_side: debit
+    is_system: true
+    is_active: true
+
+  - code: "5100"
+    name: "COGS – Medicine"
+    parent: "5000"
+    account_type: expense
+    normal_side: debit
+    is_system: true
+    is_active: true
+
+  - code: "5200"
+    name: "COGS – Non-Medicine"
+    parent: "5000"
+    account_type: expense
+    normal_side: debit
+    is_system: true
+    is_active: true
+
+  - code: "5300"
+    name: "Expired Stock Loss"
+    parent: "5000"
+    account_type: expense
+    normal_side: debit
+    is_system: true
+    is_active: true
+
+  - code: "5400"
+    name: "Damaged Stock Loss"
+    parent: "5000"
+    account_type: expense
+    normal_side: debit
+    is_system: true
+    is_active: true
+
+  - code: "5500"
+    name: "Inventory Adjustment"
+    parent: "5000"
+    account_type: expense
+    normal_side: debit
+    is_system: true
+    is_active: true
+
+  # =========================================================================
+  # 6000 — OPERATING EXPENSES
+  # =========================================================================
+  - code: "6000"
+    name: "Operating Expenses"
+    account_type: expense
+    sub_type: header
+    normal_side: debit
+    is_system: true
+    is_active: true
+
+  - code: "6100"
+    name: "Salaries & Wages"
+    parent: "6000"
+    account_type: expense
+    normal_side: debit
+    is_system: true
+    is_active: true
+
+  - code: "6200"
+    name: "Rent"
+    parent: "6000"
+    account_type: expense
+    normal_side: debit
+    is_system: true
+    is_active: true
+
+  - code: "6300"
+    name: "Utilities"
+    parent: "6000"
+    account_type: expense
+    normal_side: debit
+    is_system: true
+    is_active: true
+
+  - code: "6400"
+    name: "Internet & Telephone"
+    parent: "6000"
+    account_type: expense
+    normal_side: debit
+    is_system: false
+    is_active: true
+
+  - code: "6500"
+    name: "Marketing & Advertising"
+    parent: "6000"
+    account_type: expense
+    normal_side: debit
+    is_system: false
+    is_active: true
+
+  - code: "6600"
+    name: "Repairs & Maintenance"
+    parent: "6000"
+    account_type: expense
+    normal_side: debit
+    is_system: false
+    is_active: true
+
+  - code: "6700"
+    name: "Depreciation Expense"
+    parent: "6000"
+    account_type: expense
+    normal_side: debit
+    is_system: true
+    is_active: true
+
+  - code: "6800"
+    name: "Bank Charges"
+    parent: "6000"
+    account_type: expense
+    normal_side: debit
+    is_system: true
+    is_active: true
+
+  - code: "6810"
+    name: "Payment Gateway Fees"
+    parent: "6800"
+    account_type: expense
+    normal_side: debit
+    is_system: false
+    is_active: true
+
+  - code: "6900"
+    name: "Discount Given"
+    parent: "6000"
+    account_type: expense
+    normal_side: debit
+    is_system: true
+    is_active: true
+
+  - code: "6950"
+    name: "Miscellaneous Expenses"
+    parent: "6000"
+    account_type: expense
+    normal_side: debit
+    is_system: false
+    is_active: true

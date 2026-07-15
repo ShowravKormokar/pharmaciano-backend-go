@@ -1,4 +1,4 @@
-# MediCore ERP — REST API Specification
+# Pharmaciano ERP — REST API Specification
 
 **Base URL:** `https://api.medicore.example.com`  
 **Current Version:** `v1`  

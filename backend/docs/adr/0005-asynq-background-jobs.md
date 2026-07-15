@@ -9,7 +9,7 @@
 
 ## Context
 
-Several MediCore ERP features must run outside the request/response cycle:
+Several Pharmaciano ERP features must run outside the request/response cycle:
 
 - Async audit-log persistence.
 - Notification fan-out (WebSocket, DB row, future email/SMS).

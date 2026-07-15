@@ -1,5 +1,5 @@
 # ==============================================================================
-# MediCore ERP Backend
+# Pharmaciano ERP Backend
 # Makefile
 # ==============================================================================
 
@@ -27,7 +27,7 @@ MOCKERY := mockery
 
 help:
 	@echo ""
-	@echo "================ MediCore ERP =================="
+	@echo "================ Pharmaciano ERP =================="
 	@echo ""
 	@echo "Development"
 	@echo "  make run                 Start API server"

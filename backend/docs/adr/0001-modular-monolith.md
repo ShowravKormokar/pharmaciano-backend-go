@@ -12,7 +12,7 @@
 
 ## Context
 
-MediCore ERP must serve a multi-branch pharmacy retail business: identity,
+Pharmaciano ERP must serve a multi-branch pharmacy retail business: identity,
 inventory (batch/expiry), POS sales, purchase workflow, double-entry ledger,
 AI forecasting, notifications, audit, and analytics. The system will be
 deployed on modest hardware (4 vCPU / 4 GB RAM per node in dev, VPS-class in
@@ -43,7 +43,7 @@ Constraints and forces that shaped the decision:
 
 ## Decision
 
-We will build MediCore ERP as a **modular monolith** in Go.
+We will build Pharmaciano ERP as a **modular monolith** in Go.
 
 Concretely:
 

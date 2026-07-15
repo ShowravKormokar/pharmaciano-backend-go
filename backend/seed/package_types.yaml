@@ -1,0 +1,79 @@
+# =============================================================================
+# Pharmaciano ERP — Package Types
+# Idempotent by `code`.
+# =============================================================================
+
+version: 1
+description: "Outer / inner package types encountered on medicine SKUs."
+
+package_types:
+
+  - code: BOX
+    name: "Box"
+    description: "Cardboard box, usually containing strips or bottles."
+    is_active: true
+
+  - code: CARTON
+    name: "Carton"
+    description: "Bulk shipping carton."
+    is_active: true
+
+  - code: STRIP
+    name: "Strip"
+    description: "Blister strip of tablets or capsules."
+    is_active: true
+
+  - code: BLISTER
+    name: "Blister Pack"
+    description: "Sealed plastic blister with foil back."
+    is_active: true
+
+  - code: BOTTLE
+    name: "Bottle"
+    description: "Glass or plastic bottle for liquids/tablets."
+    is_active: true
+
+  - code: TUBE
+    name: "Tube"
+    description: "Aluminium or plastic tube for creams/gels/ointments."
+    is_active: true
+
+  - code: JAR
+    name: "Jar"
+    description: "Wide-mouth container for creams/powders."
+    is_active: true
+
+  - code: POUCH
+    name: "Pouch"
+    description: "Flexible sealed pouch."
+    is_active: true
+
+  - code: PACKET
+    name: "Packet"
+    description: "Small packet, often multi-dose sachets."
+    is_active: true
+
+  - code: SACHET
+    name: "Sachet"
+    description: "Single-dose sachet."
+    is_active: true
+
+  - code: VIAL
+    name: "Vial"
+    description: "Small sealed glass container for injectable/liquid."
+    is_active: true
+
+  - code: AMPOULE
+    name: "Ampoule"
+    description: "Sealed glass ampoule for injectable."
+    is_active: true
+
+  - code: CAN
+    name: "Can"
+    description: "Metal can (e.g. protein powder)."
+    is_active: true
+
+  - code: BAG
+    name: "Bag"
+    description: "IV fluid bag or similar."
+    is_active: true

@@ -9,7 +9,7 @@
 
 ## Context
 
-MediCore ERP is used from multiple devices (POS terminals, back-office
+Pharmaciano ERP is used from multiple devices (POS terminals, back-office
 laptops, phones). Sessions must:
 
 - Survive across app restarts on the client.

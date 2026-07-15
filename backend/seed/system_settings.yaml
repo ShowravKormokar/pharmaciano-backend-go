@@ -1,0 +1,435 @@
+# =============================================================================
+# Pharmaciano ERP — Default System Settings
+#
+# Loaded by cmd/seed on first boot (idempotent upsert by `key`).
+# organization_id=null means a global default; per-org overrides can be
+# created at runtime via the settings API.
+#
+# `value_type` tells the runtime how to parse the string:
+#   string | int | float | bool | json | duration
+# `is_sensitive=true` hides the value from non-admin API responses.
+# =============================================================================
+
+version: 1
+description: "Default system settings applied to a fresh organization."
+
+settings:
+
+  # ----- App identity -------------------------------------------------------
+  - key: app.name
+    value: "Pharmaciano ERP"
+    value_type: string
+    description: "Public application name used in invoices and emails."
+    is_sensitive: false
+
+  - key: app.locale
+    value: "en-BD"
+    value_type: string
+    description: "Default locale (BCP-47)."
+    is_sensitive: false
+
+  - key: app.timezone
+    value: "Asia/Dhaka"
+    value_type: string
+    description: "Default IANA timezone."
+    is_sensitive: false
+
+  - key: app.currency
+    value: "BDT"
+    value_type: string
+    description: "ISO-4217 currency code."
+    is_sensitive: false
+
+  - key: app.currency_symbol
+    value: "৳"
+    value_type: string
+    description: "Display symbol for currency."
+    is_sensitive: false
+
+  - key: app.date_format
+    value: "DD-MMM-YYYY"
+    value_type: string
+    description: "Preferred date display format."
+    is_sensitive: false
+
+  - key: app.time_format
+    value: "HH:mm"
+    value_type: string
+    description: "24-hour time display format."
+    is_sensitive: false
+
+  - key: app.decimal_places
+    value: "2"
+    value_type: int
+    description: "Number of decimal places for money display."
+    is_sensitive: false
+
+  # ----- Invoice / POS ------------------------------------------------------
+  - key: invoice.prefix
+    value: "INV"
+    value_type: string
+    description: "Prefix for POS invoice numbers."
+    is_sensitive: false
+
+  - key: invoice.number_padding
+    value: "6"
+    value_type: int
+    description: "Zero-padding width for invoice sequence."
+    is_sensitive: false
+
+  - key: invoice.reset_frequency
+    value: "yearly"
+    value_type: string
+    description: "When the invoice sequence resets. yearly | monthly | never"
+    is_sensitive: false
+
+  - key: invoice.footer_note
+    value: "Thank you for your purchase. Medicines once sold are not returnable except for defects."
+    value_type: string
+    description: "Fixed footer text on printed invoices."
+    is_sensitive: false
+
+  - key: invoice.show_customer
+    value: "true"
+    value_type: bool
+    description: "Print customer name/phone on invoice."
+    is_sensitive: false
+
+  - key: pos.allow_negative_stock
+    value: "false"
+    value_type: bool
+    description: "Whether POS may sell below available stock (advisory)."
+    is_sensitive: false
+
+  - key: pos.default_payment_method
+    value: "cash"
+    value_type: string
+    description: "Default payment method in POS UI."
+    is_sensitive: false
+
+  - key: pos.rounding_mode
+    value: "nearest"
+    value_type: string
+    description: "Rounding for tender totals: nearest | up | down | none."
+    is_sensitive: false
+
+  - key: pos.rounding_precision
+    value: "1.00"
+    value_type: float
+    description: "Rounding precision in the base currency unit."
+    is_sensitive: false
+
+  # ----- Purchase workflow --------------------------------------------------
+  - key: purchase.prefix
+    value: "PO"
+    value_type: string
+    description: "Prefix for purchase order numbers."
+    is_sensitive: false
+
+  - key: purchase.requires_approval
+    value: "true"
+    value_type: bool
+    description: "If true, purchases must be approved before dispatch."
+    is_sensitive: false
+
+  - key: purchase.approval_threshold
+    value: "0.00"
+    value_type: float
+    description: "Purchases above this amount require approval; 0 = always."
+    is_sensitive: false
+
+  - key: purchase.auto_receive_on_approve
+    value: "false"
+    value_type: bool
+    description: "Auto-create receipt when a purchase is approved (single-branch shops)."
+    is_sensitive: false
+
+  # ----- Inventory / batch --------------------------------------------------
+  - key: inventory.batch_selection_strategy
+    value: "FEFO"
+    value_type: string
+    description: "Batch selection: FEFO (first-expiry-first-out) | FIFO | LIFO | MANUAL."
+    is_sensitive: false
+
+  - key: inventory.low_stock_threshold_pct
+    value: "20"
+    value_type: int
+    description: "Trigger low-stock alert when quantity ≤ this % of min_stock_threshold."
+    is_sensitive: false
+
+  - key: inventory.expiry_alert_days
+    value: "90"
+    value_type: int
+    description: "Days before expiry to raise a warning notification."
+    is_sensitive: false
+
+  - key: inventory.expiry_critical_days
+    value: "30"
+    value_type: int
+    description: "Days before expiry to raise a critical notification."
+    is_sensitive: false
+
+  - key: inventory.block_expired_from_sale
+    value: "true"
+    value_type: bool
+    description: "Block sale of batches past expiry_date."
+    is_sensitive: false
+
+  # ----- Tax ---------------------------------------------------------------
+  - key: tax.default_rate_percent
+    value: "0.00"
+    value_type: float
+    description: "Default VAT/GST rate when medicine has none set."
+    is_sensitive: false
+
+  - key: tax.price_includes_tax
+    value: "true"
+    value_type: bool
+    description: "Whether displayed prices include tax by default."
+    is_sensitive: false
+
+  - key: tax.rounding
+    value: "line"
+    value_type: string
+    description: "Tax rounding: line | invoice."
+    is_sensitive: false
+
+  # ----- Security -----------------------------------------------------------
+  - key: security.password.min_length
+    value: "10"
+    value_type: int
+    description: "Minimum password length."
+    is_sensitive: false
+
+  - key: security.password.require_upper
+    value: "true"
+    value_type: bool
+    is_sensitive: false
+
+  - key: security.password.require_lower
+    value: "true"
+    value_type: bool
+    is_sensitive: false
+
+  - key: security.password.require_digit
+    value: "true"
+    value_type: bool
+    is_sensitive: false
+
+  - key: security.password.require_symbol
+    value: "true"
+    value_type: bool
+    is_sensitive: false
+
+  - key: security.password.history_size
+    value: "5"
+    value_type: int
+    description: "Prevent reuse of last N passwords."
+    is_sensitive: false
+
+  - key: security.password.expiry_days
+    value: "180"
+    value_type: int
+    description: "Force password change after N days (0 = never)."
+    is_sensitive: false
+
+  - key: security.login.lockout_threshold
+    value: "5"
+    value_type: int
+    description: "Failed attempts before account lockout."
+    is_sensitive: false
+
+  - key: security.login.lockout_duration
+    value: "15m"
+    value_type: duration
+    description: "Duration of lockout after threshold reached."
+    is_sensitive: false
+
+  - key: security.session.idle_timeout
+    value: "30m"
+    value_type: duration
+    description: "Log out after N minutes of inactivity."
+    is_sensitive: false
+
+  - key: security.session.absolute_timeout
+    value: "168h"
+    value_type: duration
+    description: "Absolute maximum session lifetime (7 days)."
+    is_sensitive: false
+
+  - key: security.session.max_concurrent_per_user
+    value: "10"
+    value_type: int
+    description: "Maximum active sessions per user across devices."
+    is_sensitive: false
+
+  - key: security.jwt.access_ttl
+    value: "15m"
+    value_type: duration
+    is_sensitive: false
+
+  - key: security.jwt.refresh_ttl
+    value: "168h"
+    value_type: duration
+    is_sensitive: false
+
+  - key: security.mfa.enabled
+    value: "false"
+    value_type: bool
+    description: "Enable TOTP MFA feature (per-user opt-in)."
+    is_sensitive: false
+
+  # ----- Notifications ------------------------------------------------------
+  - key: notifications.channels
+    value: '["in_app","websocket"]'
+    value_type: json
+    description: "Enabled delivery channels. email/sms wired later."
+    is_sensitive: false
+
+  - key: notifications.retention_days
+    value: "90"
+    value_type: int
+    description: "Auto-dismiss in-app notifications older than N days."
+    is_sensitive: false
+
+  - key: notifications.default_priority
+    value: "normal"
+    value_type: string
+    is_sensitive: false
+
+  - key: notifications.broadcast_max_recipients
+    value: "10000"
+    value_type: int
+    description: "Cap on recipients for a single broadcast."
+    is_sensitive: false
+
+  # ----- Audit --------------------------------------------------------------
+  - key: audit.retention_days
+    value: "365"
+    value_type: int
+    description: "Hot audit retention before archival."
+    is_sensitive: false
+
+  - key: audit.archive_after_days
+    value: "90"
+    value_type: int
+    description: "Move audit rows to archive table after N days."
+    is_sensitive: false
+
+  - key: audit.async_write
+    value: "true"
+    value_type: bool
+    description: "Persist audit rows via background job for lower latency."
+    is_sensitive: false
+
+  # ----- Backup -------------------------------------------------------------
+  - key: backup.enabled
+    value: "true"
+    value_type: bool
+    is_sensitive: false
+
+  - key: backup.schedule
+    value: "0 2 * * *"
+    value_type: string
+    description: "Cron expression for daily backup (server local time)."
+    is_sensitive: false
+
+  - key: backup.retention_days
+    value: "30"
+    value_type: int
+    is_sensitive: false
+
+  - key: backup.compress
+    value: "true"
+    value_type: bool
+    is_sensitive: false
+
+  # ----- AI features --------------------------------------------------------
+  - key: ai.enabled
+    value: "false"
+    value_type: bool
+    description: "Master switch for AI features (forecasting, summaries)."
+    is_sensitive: false
+
+  - key: ai.forecast.default_horizon_days
+    value: "30"
+    value_type: int
+    description: "Default horizon for demand forecasts."
+    is_sensitive: false
+
+  - key: ai.forecast.min_history_days
+    value: "30"
+    value_type: int
+    description: "Minimum history required to run a forecast."
+    is_sensitive: false
+
+  - key: ai.forecast.cache_ttl
+    value: "6h"
+    value_type: duration
+    is_sensitive: false
+
+  - key: ai.forecast.cost_cap_usd_per_day
+    value: "5"
+    value_type: float
+    description: "Daily budget cap for AI provider spend."
+    is_sensitive: false
+
+  # ----- Reports / analytics ------------------------------------------------
+  - key: reports.default_page_size
+    value: "50"
+    value_type: int
+    is_sensitive: false
+
+  - key: reports.max_export_rows
+    value: "50000"
+    value_type: int
+    description: "Hard cap on rows in a single export job."
+    is_sensitive: false
+
+  - key: reports.timezone
+    value: "Asia/Dhaka"
+    value_type: string
+    is_sensitive: false
+
+  # ----- API ---------------------------------------------------------------
+  - key: api.rate_limit.enabled
+    value: "true"
+    value_type: bool
+    is_sensitive: false
+
+  - key: api.pagination.default_limit
+    value: "20"
+    value_type: int
+    is_sensitive: false
+
+  - key: api.pagination.max_limit
+    value: "100"
+    value_type: int
+    is_sensitive: false
+
+  # ----- Feature flags (defaults; UI-toggleable) ----------------------------
+  - key: feature.websocket_notifications
+    value: "true"
+    value_type: bool
+    is_sensitive: false
+
+  - key: feature.ledger_autopost
+    value: "true"
+    value_type: bool
+    is_sensitive: false
+
+  - key: feature.branch_transfers
+    value: "true"
+    value_type: bool
+    is_sensitive: false
+
+  - key: feature.ai_forecasting
+    value: "false"
+    value_type: bool
+    is_sensitive: false
+
+  - key: feature.payment_gateways
+    value: "false"
+    value_type: bool
+    description: "Payment gateway integrations (bKash, Nagad, cards) — future work."
+    is_sensitive: false

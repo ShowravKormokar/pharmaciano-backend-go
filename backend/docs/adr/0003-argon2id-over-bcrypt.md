@@ -9,7 +9,7 @@
 
 ## Context
 
-We need a password-hashing scheme for MediCore ERP users. The system stores
+We need a password-hashing scheme for Pharmaciano ERP users. The system stores
 identifiers for pharmacists, cashiers, accountants, managers and admins.
 Password data will be at rest in Postgres, encrypted only at the disk layer
 (TDE-equivalent) in production, so the hash must be robust to database

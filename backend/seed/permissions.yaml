@@ -1,0 +1,504 @@
+# =============================================================================
+# Pharmaciano ERP — Permissions Catalog
+#
+# Format: module:action
+# Every write endpoint requires one permission from this catalog.
+# Loaded by cmd/seed on first boot (idempotent upsert by (module, action)).
+# is_system=true → cannot be deleted through the API.
+# =============================================================================
+
+version: 1
+description: "Default permission catalog for Pharmaciano ERP. All entries are system permissions."
+
+permissions:
+
+  # --------------------------------------------------------------------------
+  # Identity & Access
+  # --------------------------------------------------------------------------
+  - module: users
+    action: create
+    description: "Create a new user account (SUPER_ADMIN only in practice)."
+    is_system: true
+  - module: users
+    action: view
+    description: "List and view user profiles."
+    is_system: true
+  - module: users
+    action: update
+    description: "Update user profile, status, stage, employment info."
+    is_system: true
+  - module: users
+    action: delete
+    description: "Soft-delete a user (revokes sessions, disables login)."
+    is_system: true
+  - module: users
+    action: assign
+    description: "Assign a role or branch scope to a user."
+    is_system: true
+  - module: users
+    action: revoke
+    description: "Revoke a role assignment from a user."
+    is_system: true
+  - module: users
+    action: export
+    description: "Export users list as CSV/XLSX."
+    is_system: true
+
+  - module: roles
+    action: create
+    description: "Create a dynamic role (e.g. JHON_SALESMAN)."
+    is_system: true
+  - module: roles
+    action: view
+    description: "List and view roles and their permissions."
+    is_system: true
+  - module: roles
+    action: update
+    description: "Rename or change description of a non-system role."
+    is_system: true
+  - module: roles
+    action: delete
+    description: "Delete a non-system role."
+    is_system: true
+  - module: roles
+    action: assign
+    description: "Assign or replace permissions on a role."
+    is_system: true
+
+  - module: permissions
+    action: view
+    description: "Read the permission catalog."
+    is_system: true
+
+  - module: sessions
+    action: view
+    description: "List active sessions (SUPER_ADMIN sees system-wide)."
+    is_system: true
+  - module: sessions
+    action: revoke
+    description: "Force-logout a user or a specific device."
+    is_system: true
+
+  # --------------------------------------------------------------------------
+  # Organization / Branch / Warehouse
+  # --------------------------------------------------------------------------
+  - module: organizations
+    action: view
+    description: "View own organization details."
+    is_system: true
+  - module: organizations
+    action: update
+    description: "Edit organization profile, licenses, contact info."
+    is_system: true
+
+  - module: branches
+    action: create
+    description: "Create a branch under the organization."
+    is_system: true
+  - module: branches
+    action: view
+    description: "List and view branches."
+    is_system: true
+  - module: branches
+    action: update
+    description: "Edit branch details."
+    is_system: true
+  - module: branches
+    action: delete
+    description: "Soft-delete a branch."
+    is_system: true
+
+  - module: warehouses
+    action: create
+    description: "Create a warehouse under a branch."
+    is_system: true
+  - module: warehouses
+    action: view
+    description: "List and view warehouses."
+    is_system: true
+  - module: warehouses
+    action: update
+    description: "Edit warehouse details."
+    is_system: true
+  - module: warehouses
+    action: delete
+    description: "Soft-delete a warehouse."
+    is_system: true
+
+  # --------------------------------------------------------------------------
+  # Master Data (categories, dosage forms, routes, package types, unit types,
+  # storage conditions, tax rates, drug groups/classes/therapeutic classes,
+  # generic medicines) — grouped under a single permission surface.
+  # --------------------------------------------------------------------------
+  - module: masterdata
+    action: create
+    description: "Create master data entries (category, dosage form, route, etc.)."
+    is_system: true
+  - module: masterdata
+    action: view
+    description: "Read master data entries."
+    is_system: true
+  - module: masterdata
+    action: update
+    description: "Update master data entries."
+    is_system: true
+  - module: masterdata
+    action: delete
+    description: "Soft-delete master data entries."
+    is_system: true
+
+  - module: brands
+    action: create
+    is_system: true
+  - module: brands
+    action: view
+    is_system: true
+  - module: brands
+    action: update
+    is_system: true
+  - module: brands
+    action: delete
+    is_system: true
+
+  - module: manufacturers
+    action: create
+    is_system: true
+  - module: manufacturers
+    action: view
+    is_system: true
+  - module: manufacturers
+    action: update
+    is_system: true
+  - module: manufacturers
+    action: delete
+    is_system: true
+
+  - module: suppliers
+    action: create
+    is_system: true
+  - module: suppliers
+    action: view
+    is_system: true
+  - module: suppliers
+    action: update
+    is_system: true
+  - module: suppliers
+    action: delete
+    is_system: true
+
+  # --------------------------------------------------------------------------
+  # Medicine Catalog
+  # --------------------------------------------------------------------------
+  - module: medicines
+    action: create
+    description: "Create a medicine in the central catalog."
+    is_system: true
+  - module: medicines
+    action: view
+    description: "Search and view medicines."
+    is_system: true
+  - module: medicines
+    action: update
+    description: "Edit medicine details (SUPER_ADMIN/ADMIN)."
+    is_system: true
+  - module: medicines
+    action: delete
+    description: "Soft-delete a medicine."
+    is_system: true
+  - module: medicines
+    action: import
+    description: "Bulk import medicines from CSV/XLSX."
+    is_system: true
+  - module: medicines
+    action: export
+    description: "Export medicines list."
+    is_system: true
+
+  # --------------------------------------------------------------------------
+  # Inventory (branch-scoped)
+  # --------------------------------------------------------------------------
+  - module: inventory
+    action: view
+    description: "View inventory batches, stock movements, expiry queues."
+    is_system: true
+  - module: inventory
+    action: adjust
+    description: "Manual quantity/price adjustment on a batch."
+    is_system: true
+  - module: inventory
+    action: transfer
+    description: "Create or receive a warehouse/branch transfer."
+    is_system: true
+  - module: inventory
+    action: deactivate
+    description: "Deactivate a batch (stop sales)."
+    is_system: true
+  - module: inventory
+    action: export
+    description: "Export inventory reports."
+    is_system: true
+
+  # --------------------------------------------------------------------------
+  # Purchase Workflow
+  # --------------------------------------------------------------------------
+  - module: purchases
+    action: create
+    description: "Create a draft purchase request."
+    is_system: true
+  - module: purchases
+    action: view
+    description: "List and view purchases."
+    is_system: true
+  - module: purchases
+    action: update
+    description: "Edit a purchase (draft only)."
+    is_system: true
+  - module: purchases
+    action: delete
+    description: "Delete a draft purchase."
+    is_system: true
+  - module: purchases
+    action: submit
+    description: "Submit a draft for approval."
+    is_system: true
+  - module: purchases
+    action: approve
+    description: "Approve a submitted purchase."
+    is_system: true
+  - module: purchases
+    action: reject
+    description: "Reject a submitted purchase."
+    is_system: true
+  - module: purchases
+    action: receive
+    description: "Receive stock against a purchase (creates inventory batches)."
+    is_system: true
+  - module: purchases
+    action: cancel
+    description: "Cancel a purchase (reverses journals if any)."
+    is_system: true
+  - module: purchases
+    action: export
+    description: "Export purchase list."
+    is_system: true
+
+  - module: purchase_payments
+    action: create
+    description: "Record a payment against a purchase."
+    is_system: true
+  - module: purchase_payments
+    action: view
+    is_system: true
+  - module: purchase_payments
+    action: update
+    description: "Edit a payment record (same-day only)."
+    is_system: true
+  - module: purchase_payments
+    action: delete
+    description: "Reverse a payment (creates reversal journal)."
+    is_system: true
+
+  # --------------------------------------------------------------------------
+  # Sales (POS)
+  # --------------------------------------------------------------------------
+  - module: sales
+    action: create
+    description: "Create a sale (POS checkout)."
+    is_system: true
+  - module: sales
+    action: view
+    description: "List and view sales, invoices."
+    is_system: true
+  - module: sales
+    action: update
+    description: "Edit a same-day sale (limited fields)."
+    is_system: true
+  - module: sales
+    action: void
+    description: "Void a same-day sale (reverses stock + ledger)."
+    is_system: true
+  - module: sales
+    action: refund
+    description: "Refund without restocking."
+    is_system: true
+  - module: sales
+    action: export
+    description: "Export sales report."
+    is_system: true
+
+  - module: sales_returns
+    action: create
+    description: "Create a sales return."
+    is_system: true
+  - module: sales_returns
+    action: view
+    is_system: true
+  - module: sales_returns
+    action: approve
+    description: "Approve return (restocks if applicable)."
+    is_system: true
+  - module: sales_returns
+    action: reject
+    description: "Reject a sales return."
+    is_system: true
+
+  # --------------------------------------------------------------------------
+  # Customers & Loyalty
+  # --------------------------------------------------------------------------
+  - module: customers
+    action: create
+    is_system: true
+  - module: customers
+    action: view
+    is_system: true
+  - module: customers
+    action: update
+    is_system: true
+  - module: customers
+    action: delete
+    is_system: true
+  - module: customers
+    action: export
+    is_system: true
+
+  - module: coupons
+    action: create
+    is_system: true
+  - module: coupons
+    action: view
+    is_system: true
+  - module: coupons
+    action: update
+    is_system: true
+  - module: coupons
+    action: delete
+    is_system: true
+
+  # --------------------------------------------------------------------------
+  # Accounting & Finance
+  # --------------------------------------------------------------------------
+  - module: ledger
+    action: view
+    description: "View journals, account balances, financial reports."
+    is_system: true
+  - module: ledger
+    action: post
+    description: "Post a manual journal entry."
+    is_system: true
+  - module: ledger
+    action: export
+    description: "Export ledger reports (TB, P&L, BS, cash-flow)."
+    is_system: true
+
+  - module: targets
+    action: create
+    description: "Set revenue/unit targets (org or branch)."
+    is_system: true
+  - module: targets
+    action: view
+    is_system: true
+  - module: targets
+    action: update
+    is_system: true
+  - module: targets
+    action: delete
+    is_system: true
+
+  # --------------------------------------------------------------------------
+  # Reports & Analytics
+  # --------------------------------------------------------------------------
+  - module: reports
+    action: view
+    is_system: true
+  - module: reports
+    action: export
+    is_system: true
+  - module: reports
+    action: schedule
+    description: "Create/manage scheduled report jobs."
+    is_system: true
+
+  - module: analytics
+    action: view
+    is_system: true
+  - module: analytics
+    action: export
+    is_system: true
+
+  # --------------------------------------------------------------------------
+  # AI Forecasting
+  # --------------------------------------------------------------------------
+  - module: ai
+    action: forecast
+    description: "Trigger demand/restock/business forecasts."
+    is_system: true
+  - module: ai
+    action: view
+    description: "View historical forecast runs."
+    is_system: true
+
+  # --------------------------------------------------------------------------
+  # Notifications
+  # --------------------------------------------------------------------------
+  - module: notifications
+    action: view
+    description: "View own inbox notifications."
+    is_system: true
+  - module: notifications
+    action: broadcast
+    description: "Send a notification to a scope (org / branch / role)."
+    is_system: true
+  - module: notifications
+    action: read
+    description: "Mark notifications as read."
+    is_system: true
+  - module: notifications
+    action: dismiss
+    description: "Dismiss notifications."
+    is_system: true
+
+  # --------------------------------------------------------------------------
+  # Audit
+  # --------------------------------------------------------------------------
+  - module: audit
+    action: view
+    description: "View audit log entries."
+    is_system: true
+  - module: audit
+    action: export
+    description: "Export audit log."
+    is_system: true
+
+  # --------------------------------------------------------------------------
+  # Settings & Feature Flags
+  # --------------------------------------------------------------------------
+  - module: settings
+    action: view
+    is_system: true
+  - module: settings
+    action: update
+    is_system: true
+
+  - module: feature_flags
+    action: view
+    is_system: true
+  - module: feature_flags
+    action: toggle
+    description: "Enable/disable feature flags."
+    is_system: true
+
+  # --------------------------------------------------------------------------
+  # Backup
+  # --------------------------------------------------------------------------
+  - module: backup
+    action: run
+    description: "Trigger a backup job."
+    is_system: true
+  - module: backup
+    action: view
+    description: "List backup history."
+    is_system: true
+  - module: backup
+    action: restore
+    description: "Restore from a backup (SUPER_ADMIN + MFA)."
+    is_system: true

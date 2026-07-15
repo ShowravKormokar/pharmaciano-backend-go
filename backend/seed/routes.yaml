@@ -1,0 +1,104 @@
+# =============================================================================
+# Pharmaciano ERP — Routes of Administration
+# Idempotent by `code`. Referenced by dosage_forms.yaml.
+# =============================================================================
+
+version: 1
+description: "Routes of administration used by dosage forms."
+
+routes:
+
+  - code: ORAL
+    name: "Oral"
+    description: "Administered by mouth (per os)."
+    is_active: true
+
+  - code: SL
+    name: "Sublingual"
+    description: "Under the tongue."
+    is_active: true
+
+  - code: BUCC
+    name: "Buccal"
+    description: "Between gum and cheek."
+    is_active: true
+
+  - code: TOPICAL
+    name: "Topical"
+    description: "Applied to skin surface."
+    is_active: true
+
+  - code: TRANS
+    name: "Transdermal"
+    description: "Through skin, systemic absorption."
+    is_active: true
+
+  - code: IV
+    name: "Intravenous"
+    description: "Directly into a vein."
+    is_active: true
+
+  - code: IM
+    name: "Intramuscular"
+    description: "Injected into muscle."
+    is_active: true
+
+  - code: SUBCUT
+    name: "Subcutaneous"
+    description: "Injected under the skin."
+    is_active: true
+
+  - code: ID
+    name: "Intradermal"
+    description: "Injected into the dermis."
+    is_active: true
+
+  - code: RECT
+    name: "Rectal"
+    description: "Administered into the rectum."
+    is_active: true
+
+  - code: VAG
+    name: "Vaginal"
+    description: "Administered into the vagina."
+    is_active: true
+
+  - code: OPH
+    name: "Ophthalmic"
+    description: "Into or on the eye."
+    is_active: true
+
+  - code: OTIC
+    name: "Otic"
+    description: "Into or on the ear."
+    is_active: true
+
+  - code: NASAL
+    name: "Nasal"
+    description: "Into the nasal cavity."
+    is_active: true
+
+  - code: INH
+    name: "Inhalation"
+    description: "Inhaled into the lungs."
+    is_active: true
+
+  - code: DENT
+    name: "Dental"
+    description: "Applied in the oral cavity for dental use."
+    is_active: true
+
+  - code: EPI
+    name: "Epidural"
+    description: "Into the epidural space."
+    is_active: true
+
+  - code: INTRA_ART
+    name: "Intra-articular"
+    description: "Into a joint space."
+    is_active: true
+
+  - code: IRR
+    name: "Irrigation"
+    description: "Washing of a body cavity or wound."
+    is_active: true

@@ -1,0 +1,59 @@
+# =============================================================================
+# Pharmaciano ERP — Bootstrap SUPER_ADMIN
+#
+# Created on first boot ONLY if no user with the SUPER_ADMIN role exists.
+# Password is read from the SUPER_ADMIN_INITIAL_PASSWORD environment variable
+# (never committed) and hashed with Argon2id before insert.
+#
+# `must_change_password: true` forces the operator to set a new password on
+# first login. The initial credentials should be rotated immediately.
+# =============================================================================
+
+version: 1
+description: "Default SUPER_ADMIN user; only created on empty database."
+
+super_admin:
+  # Identity
+  email:            "${SUPER_ADMIN_EMAIL:-superadmin@medicore.local}"
+  username:         "superadmin"
+  employee_code:    "SA-0001"
+  phone:            "${SUPER_ADMIN_PHONE:-}"
+
+  # Password comes from env, hashed with Argon2id at seed time.
+  password_env:     "SUPER_ADMIN_INITIAL_PASSWORD"
+  must_change_password: true
+
+  # Lifecycle
+  status:           "active"
+  stage:            "verified"
+  mfa_enabled:      false
+  joining_date:     "2026-01-01"
+  employment_type:  "full_time"
+
+  # Assignments
+  role:             "SUPER_ADMIN"
+  branch_scope:     null            # org-wide
+
+  # Profile
+  profile:
+    first_name:     "${SUPER_ADMIN_FIRST_NAME:-Super}"
+    last_name:      "${SUPER_ADMIN_LAST_NAME:-Admin}"
+    display_name:   "System Super Admin"
+    gender:         null
+    date_of_birth:  null
+
+  # Present address (optional; leave blank in seed, edit later via UI)
+  addresses: []
+  contacts:  []
+  educations: []
+  experiences: []
+  bank_accounts: []
+  documents:     []
+
+# Rules enforced by cmd/seed:
+#   1. If the SUPER_ADMIN role has zero users, this record is created.
+#   2. If any SUPER_ADMIN user already exists, this file is a no-op.
+#   3. The SUPER_ADMIN_INITIAL_PASSWORD env var MUST be set; otherwise the
+#      seeder aborts with a fatal error and no user is created.
+#   4. The seeded user is marked `must_change_password=true` so the operator
+#      is forced to rotate credentials on first login.

@@ -1,0 +1,361 @@
+# =============================================================================
+# Pharmaciano ERP — Default Roles
+#
+# Loaded by cmd/seed on first boot (idempotent upsert by name).
+# is_system=true → cannot be deleted or renamed through the API.
+# Priority: higher number wins in conflict scenarios (informational).
+#
+# The special role SUPER_ADMIN has permissions: ["*"] which the RBAC engine
+# expands to allow all module:action pairs.
+# =============================================================================
+
+version: 1
+description: "Default seeded system roles. Dynamic roles are created at runtime."
+
+roles:
+
+  # ----- OWNER / ADMIN TIER -------------------------------------------------
+
+  - name: SUPER_ADMIN
+    description: "Full, unrestricted access to the entire system. Immutable, single instance per org, bootstrapped from env vars."
+    is_system: true
+    is_active: true
+    priority: 100
+    scope: organization
+    permissions: ["*"]
+
+  - name: ADMIN
+    description: "Delegate of SUPER_ADMIN. Manages users, master data, purchases and reports across all branches. Cannot alter SUPER_ADMIN."
+    is_system: true
+    is_active: true
+    priority: 90
+    scope: organization
+    permissions:
+      - "users:create"
+      - "users:view"
+      - "users:update"
+      - "users:delete"
+      - "users:assign"
+      - "users:revoke"
+      - "users:export"
+      - "roles:create"
+      - "roles:view"
+      - "roles:update"
+      - "roles:delete"
+      - "roles:assign"
+      - "permissions:view"
+      - "sessions:view"
+      - "sessions:revoke"
+      - "organizations:view"
+      - "organizations:update"
+      - "branches:create"
+      - "branches:view"
+      - "branches:update"
+      - "branches:delete"
+      - "warehouses:create"
+      - "warehouses:view"
+      - "warehouses:update"
+      - "warehouses:delete"
+      - "masterdata:create"
+      - "masterdata:view"
+      - "masterdata:update"
+      - "masterdata:delete"
+      - "brands:create"
+      - "brands:view"
+      - "brands:update"
+      - "brands:delete"
+      - "manufacturers:create"
+      - "manufacturers:view"
+      - "manufacturers:update"
+      - "manufacturers:delete"
+      - "suppliers:create"
+      - "suppliers:view"
+      - "suppliers:update"
+      - "suppliers:delete"
+      - "medicines:create"
+      - "medicines:view"
+      - "medicines:update"
+      - "medicines:delete"
+      - "medicines:import"
+      - "medicines:export"
+      - "inventory:view"
+      - "inventory:adjust"
+      - "inventory:transfer"
+      - "inventory:deactivate"
+      - "inventory:export"
+      - "purchases:create"
+      - "purchases:view"
+      - "purchases:update"
+      - "purchases:delete"
+      - "purchases:submit"
+      - "purchases:approve"
+      - "purchases:reject"
+      - "purchases:receive"
+      - "purchases:cancel"
+      - "purchases:export"
+      - "purchase_payments:create"
+      - "purchase_payments:view"
+      - "purchase_payments:update"
+      - "purchase_payments:delete"
+      - "sales:view"
+      - "sales:export"
+      - "sales_returns:view"
+      - "sales_returns:approve"
+      - "sales_returns:reject"
+      - "customers:create"
+      - "customers:view"
+      - "customers:update"
+      - "customers:delete"
+      - "customers:export"
+      - "coupons:create"
+      - "coupons:view"
+      - "coupons:update"
+      - "coupons:delete"
+      - "ledger:view"
+      - "ledger:export"
+      - "targets:create"
+      - "targets:view"
+      - "targets:update"
+      - "targets:delete"
+      - "reports:view"
+      - "reports:export"
+      - "reports:schedule"
+      - "analytics:view"
+      - "analytics:export"
+      - "ai:forecast"
+      - "ai:view"
+      - "notifications:view"
+      - "notifications:broadcast"
+      - "notifications:read"
+      - "notifications:dismiss"
+      - "audit:view"
+      - "audit:export"
+      - "settings:view"
+      - "settings:update"
+      - "feature_flags:view"
+      - "feature_flags:toggle"
+      - "backup:run"
+      - "backup:view"
+
+  # ----- BRANCH-LEVEL MANAGEMENT --------------------------------------------
+
+  - name: BRANCH_MANAGER
+    description: "Manages a single branch: staff, inventory, purchase requests, day-close, branch reports."
+    is_system: true
+    is_active: true
+    priority: 70
+    scope: branch
+    permissions:
+      - "users:view"
+      - "sessions:view"
+      - "branches:view"
+      - "warehouses:view"
+      - "warehouses:update"
+      - "masterdata:view"
+      - "brands:view"
+      - "manufacturers:view"
+      - "suppliers:view"
+      - "medicines:view"
+      - "inventory:view"
+      - "inventory:adjust"
+      - "inventory:transfer"
+      - "inventory:deactivate"
+      - "inventory:export"
+      - "purchases:create"
+      - "purchases:view"
+      - "purchases:update"
+      - "purchases:submit"
+      - "purchases:cancel"
+      - "purchases:export"
+      - "purchase_payments:view"
+      - "sales:view"
+      - "sales:export"
+      - "sales:void"
+      - "sales_returns:view"
+      - "sales_returns:approve"
+      - "sales_returns:reject"
+      - "customers:create"
+      - "customers:view"
+      - "customers:update"
+      - "customers:export"
+      - "coupons:view"
+      - "targets:view"
+      - "reports:view"
+      - "reports:export"
+      - "analytics:view"
+      - "notifications:view"
+      - "notifications:read"
+      - "notifications:dismiss"
+      - "audit:view"       # branch-scoped only, enforced in handler
+      - "settings:view"
+
+  # ----- FINANCE ------------------------------------------------------------
+
+  - name: ACCOUNTANT
+    description: "Manages ledger, journals, payments and financial reports across the organization. Read-only on medicine catalog."
+    is_system: true
+    is_active: true
+    priority: 65
+    scope: organization
+    permissions:
+      - "users:view"
+      - "branches:view"
+      - "warehouses:view"
+      - "masterdata:view"
+      - "brands:view"
+      - "manufacturers:view"
+      - "suppliers:view"
+      - "medicines:view"
+      - "inventory:view"
+      - "inventory:export"
+      - "purchases:view"
+      - "purchases:export"
+      - "purchase_payments:create"
+      - "purchase_payments:view"
+      - "purchase_payments:update"
+      - "purchase_payments:delete"
+      - "sales:view"
+      - "sales:export"
+      - "sales:refund"
+      - "customers:view"
+      - "customers:export"
+      - "coupons:view"
+      - "ledger:view"
+      - "ledger:post"
+      - "ledger:export"
+      - "targets:view"
+      - "reports:view"
+      - "reports:export"
+      - "reports:schedule"
+      - "analytics:view"
+      - "analytics:export"
+      - "notifications:view"
+      - "notifications:read"
+      - "notifications:dismiss"
+      - "audit:view"
+      - "settings:view"
+
+  # ----- OPERATIONS / FRONT DESK --------------------------------------------
+
+  - name: PHARMACIST
+    description: "Dispenses medicine, handles prescriptions, records sales. Cannot delete or change price."
+    is_system: true
+    is_active: true
+    priority: 40
+    scope: branch
+    permissions:
+      - "users:view"
+      - "branches:view"
+      - "warehouses:view"
+      - "masterdata:view"
+      - "brands:view"
+      - "manufacturers:view"
+      - "medicines:view"
+      - "inventory:view"
+      - "sales:create"
+      - "sales:view"
+      - "sales:update"
+      - "sales_returns:create"
+      - "sales_returns:view"
+      - "customers:create"
+      - "customers:view"
+      - "customers:update"
+      - "coupons:view"
+      - "notifications:view"
+      - "notifications:read"
+      - "notifications:dismiss"
+
+  - name: CASHIER
+    description: "POS operator. Creates sales and handles same-day payments. No pricing or master-data authority."
+    is_system: true
+    is_active: true
+    priority: 30
+    scope: branch
+    permissions:
+      - "branches:view"
+      - "warehouses:view"
+      - "masterdata:view"
+      - "medicines:view"
+      - "inventory:view"
+      - "sales:create"
+      - "sales:view"
+      - "sales_returns:create"
+      - "customers:create"
+      - "customers:view"
+      - "customers:update"
+      - "coupons:view"
+      - "notifications:view"
+      - "notifications:read"
+      - "notifications:dismiss"
+
+  - name: WAREHOUSE
+    description: "Receives purchases, records batches, handles transfers and expiry marking."
+    is_system: true
+    is_active: true
+    priority: 35
+    scope: branch
+    permissions:
+      - "branches:view"
+      - "warehouses:view"
+      - "warehouses:update"
+      - "masterdata:view"
+      - "brands:view"
+      - "manufacturers:view"
+      - "suppliers:view"
+      - "medicines:view"
+      - "inventory:view"
+      - "inventory:adjust"
+      - "inventory:transfer"
+      - "inventory:deactivate"
+      - "inventory:export"
+      - "purchases:view"
+      - "purchases:receive"
+      - "notifications:view"
+      - "notifications:read"
+      - "notifications:dismiss"
+
+  # ----- READ-ONLY ROLES ----------------------------------------------------
+
+  - name: AUDITOR
+    description: "Read-only across the organization; may export audit and financial reports."
+    is_system: true
+    is_active: true
+    priority: 20
+    scope: organization
+    permissions:
+      - "users:view"
+      - "roles:view"
+      - "permissions:view"
+      - "sessions:view"
+      - "organizations:view"
+      - "branches:view"
+      - "warehouses:view"
+      - "masterdata:view"
+      - "brands:view"
+      - "manufacturers:view"
+      - "suppliers:view"
+      - "medicines:view"
+      - "inventory:view"
+      - "inventory:export"
+      - "purchases:view"
+      - "purchases:export"
+      - "purchase_payments:view"
+      - "sales:view"
+      - "sales:export"
+      - "sales_returns:view"
+      - "customers:view"
+      - "customers:export"
+      - "coupons:view"
+      - "ledger:view"
+      - "ledger:export"
+      - "targets:view"
+      - "reports:view"
+      - "reports:export"
+      - "analytics:view"
+      - "analytics:export"
+      - "notifications:view"
+      - "audit:view"
+      - "audit:export"
+      - "settings:view"
+      - "feature_flags:view"
+      - "backup:view"

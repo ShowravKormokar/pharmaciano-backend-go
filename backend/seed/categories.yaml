@@ -1,0 +1,129 @@
+# =============================================================================
+# Pharmaciano ERP — Product Categories
+#
+# Two-level hierarchy: top-level categories with optional sub-categories.
+# Idempotent by `code`. `parent` refers to another category's `code`.
+# =============================================================================
+
+version: 1
+description: "Top-level product categories used across the pharmacy catalog."
+
+categories:
+
+  # ----- Medicine -----------------------------------------------------------
+  - code: MED
+    name: "Medicine"
+    description: "Prescription and over-the-counter human medicines."
+    sort_order: 10
+    is_active: true
+
+  - code: MED_OTC
+    name: "OTC Medicine"
+    parent: MED
+    description: "Over-the-counter medicines that do not require a prescription."
+    sort_order: 11
+    is_active: true
+
+  - code: MED_RX
+    name: "Prescription Medicine"
+    parent: MED
+    description: "Prescription-only medicines."
+    sort_order: 12
+    is_active: true
+
+  - code: MED_CTRL
+    name: "Controlled Drugs"
+    parent: MED
+    description: "Scheduled / controlled substances."
+    sort_order: 13
+    is_active: true
+
+  # ----- Surgical / Consumables --------------------------------------------
+  - code: SURG
+    name: "Surgical Products"
+    description: "Syringes, gauze, cotton, gloves, and other surgical consumables."
+    sort_order: 20
+    is_active: true
+
+  - code: CONS
+    name: "Medical Consumables"
+    description: "Disposable medical consumables."
+    sort_order: 25
+    is_active: true
+
+  - code: FIRST_AID
+    name: "First Aid"
+    description: "Bandages, antiseptics, first-aid kits."
+    sort_order: 27
+    is_active: true
+
+  # ----- Devices -----------------------------------------------------------
+  - code: DEV
+    name: "Medical Devices"
+    description: "Diagnostic and monitoring devices for home and clinical use."
+    sort_order: 30
+    is_active: true
+
+  - code: DEV_DIAG
+    name: "Diagnostic Kits"
+    parent: DEV
+    description: "Pregnancy, glucose, malaria and similar diagnostic kits."
+    sort_order: 31
+    is_active: true
+
+  # ----- Wellness / Nutrition ----------------------------------------------
+  - code: NUTR
+    name: "Nutrition"
+    description: "Protein powders, ORS, supplements, energy drinks."
+    sort_order: 40
+    is_active: true
+
+  - code: HERB
+    name: "Herbal Medicine"
+    description: "Ayurvedic and herbal preparations."
+    sort_order: 45
+    is_active: true
+
+  # ----- Personal & Baby Care ----------------------------------------------
+  - code: BABY
+    name: "Baby Care"
+    description: "Baby lotion, oil, soap, diapers, feeding bottles."
+    sort_order: 50
+    is_active: true
+
+  - code: PERSONAL
+    name: "Personal Care"
+    description: "Toothpaste, soaps, shampoos, sanitizers."
+    sort_order: 55
+    is_active: true
+
+  - code: COSMETIC
+    name: "Cosmetics"
+    description: "Face wash, creams, sunscreens, lip balms."
+    sort_order: 60
+    is_active: true
+
+  # ----- Other -------------------------------------------------------------
+  - code: LAB
+    name: "Laboratory Supplies"
+    description: "Test tubes, reagents, sample collection supplies."
+    sort_order: 70
+    is_active: true
+
+  - code: EQUIP
+    name: "Hospital Equipment"
+    description: "Nebulizers, wheelchairs, walkers, hospital beds."
+    sort_order: 80
+    is_active: true
+
+  - code: VET
+    name: "Veterinary Medicine"
+    description: "Medicines for animals."
+    sort_order: 90
+    is_active: true
+
+  - code: MISC
+    name: "Miscellaneous"
+    description: "Uncategorized items."
+    sort_order: 999
+    is_active: true

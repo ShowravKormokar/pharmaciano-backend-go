@@ -1,0 +1,223 @@
+# =============================================================================
+# Pharmaciano ERP — Dosage Forms
+#
+# Idempotent by `code`. `route` links to routes.yaml by code (optional).
+# =============================================================================
+
+version: 1
+description: "Pharmaceutical dosage forms grouped by route of administration."
+
+dosage_forms:
+
+  # ----- Oral --------------------------------------------------------------
+  - code: TAB
+    name: "Tablet"
+    route: ORAL
+    description: "Solid unit dose intended to be swallowed."
+    is_active: true
+  - code: CAP
+    name: "Capsule"
+    route: ORAL
+    is_active: true
+  - code: SOFTGEL
+    name: "Softgel"
+    route: ORAL
+    is_active: true
+  - code: MDT
+    name: "Mouth Dissolving Tablet"
+    route: ORAL
+    is_active: true
+  - code: LOZ
+    name: "Lozenge"
+    route: ORAL
+    is_active: true
+  - code: POWDER
+    name: "Powder"
+    route: ORAL
+    is_active: true
+  - code: GRAN
+    name: "Granules"
+    route: ORAL
+    is_active: true
+  - code: SACHET
+    name: "Sachet"
+    route: ORAL
+    is_active: true
+  - code: SUSP
+    name: "Suspension"
+    route: ORAL
+    is_active: true
+  - code: SYR
+    name: "Syrup"
+    route: ORAL
+    is_active: true
+  - code: SOL
+    name: "Solution"
+    route: ORAL
+    is_active: true
+  - code: DROP_ORAL
+    name: "Oral Drops"
+    route: ORAL
+    is_active: true
+  - code: ELIX
+    name: "Elixir"
+    route: ORAL
+    is_active: true
+  - code: EMUL
+    name: "Emulsion"
+    route: ORAL
+    is_active: true
+
+  # ----- Injectable --------------------------------------------------------
+  - code: INJ
+    name: "Injection"
+    route: IV
+    is_active: true
+  - code: INF
+    name: "Infusion"
+    route: IV
+    is_active: true
+  - code: IV_FLUID
+    name: "IV Fluid"
+    route: IV
+    is_active: true
+  - code: VIAL
+    name: "Vial"
+    route: IV
+    is_active: true
+  - code: AMP
+    name: "Ampoule"
+    route: IV
+    is_active: true
+  - code: PFS
+    name: "Prefilled Syringe"
+    route: SUBCUT
+    is_active: true
+
+  # ----- Topical -----------------------------------------------------------
+  - code: CREAM
+    name: "Cream"
+    route: TOPICAL
+    is_active: true
+  - code: OINT
+    name: "Ointment"
+    route: TOPICAL
+    is_active: true
+  - code: GEL
+    name: "Gel"
+    route: TOPICAL
+    is_active: true
+  - code: LOT
+    name: "Lotion"
+    route: TOPICAL
+    is_active: true
+  - code: PASTE
+    name: "Paste"
+    route: TOPICAL
+    is_active: true
+  - code: FOAM
+    name: "Foam"
+    route: TOPICAL
+    is_active: true
+  - code: SPRAY_TOP
+    name: "Topical Spray"
+    route: TOPICAL
+    is_active: true
+  - code: LIN
+    name: "Liniment"
+    route: TOPICAL
+    is_active: true
+
+  # ----- Eye ---------------------------------------------------------------
+  - code: EYE_DROP
+    name: "Eye Drop"
+    route: OPH
+    is_active: true
+  - code: EYE_OINT
+    name: "Eye Ointment"
+    route: OPH
+    is_active: true
+  - code: EYE_GEL
+    name: "Eye Gel"
+    route: OPH
+    is_active: true
+
+  # ----- Ear ---------------------------------------------------------------
+  - code: EAR_DROP
+    name: "Ear Drop"
+    route: OTIC
+    is_active: true
+  - code: EAR_SPRAY
+    name: "Ear Spray"
+    route: OTIC
+    is_active: true
+
+  # ----- Nose --------------------------------------------------------------
+  - code: NASAL_DROP
+    name: "Nasal Drop"
+    route: NASAL
+    is_active: true
+  - code: NASAL_SPRAY
+    name: "Nasal Spray"
+    route: NASAL
+    is_active: true
+
+  # ----- Rectal / Vaginal --------------------------------------------------
+  - code: SUPP
+    name: "Suppository"
+    route: RECT
+    is_active: true
+  - code: ENEMA
+    name: "Enema"
+    route: RECT
+    is_active: true
+  - code: PESSARY
+    name: "Pessary"
+    route: VAG
+    is_active: true
+  - code: VAG_CREAM
+    name: "Vaginal Cream"
+    route: VAG
+    is_active: true
+  - code: VAG_TAB
+    name: "Vaginal Tablet"
+    route: VAG
+    is_active: true
+
+  # ----- Inhalation --------------------------------------------------------
+  - code: INHALER
+    name: "Inhaler (MDI)"
+    route: INH
+    is_active: true
+  - code: DPI
+    name: "Dry Powder Inhaler"
+    route: INH
+    is_active: true
+  - code: NEB_SOL
+    name: "Nebulizer Solution"
+    route: INH
+    is_active: true
+
+  # ----- Dental ------------------------------------------------------------
+  - code: DENT_GEL
+    name: "Dental Gel"
+    route: DENT
+    is_active: true
+  - code: MOUTHWASH
+    name: "Mouth Wash"
+    route: DENT
+    is_active: true
+  - code: DENT_PASTE
+    name: "Dental Paste"
+    route: DENT
+    is_active: true
+
+  # ----- Transdermal / Other -----------------------------------------------
+  - code: PATCH
+    name: "Transdermal Patch"
+    route: TRANS
+    is_active: true
+  - code: GUM
+    name: "Medicated Chewing Gum"
+    route: ORAL
+    is_active: true

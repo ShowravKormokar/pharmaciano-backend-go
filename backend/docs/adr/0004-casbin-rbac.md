@@ -9,7 +9,7 @@
 
 ## Context
 
-MediCore ERP has strong access-control requirements:
+Pharmaciano ERP has strong access-control requirements:
 
 - A hard-wired **SUPER_ADMIN** that can do everything.
 - System roles (ADMIN, MANAGER, PHARMACIST, CASHIER, ACCOUNTANT, WAREHOUSE,

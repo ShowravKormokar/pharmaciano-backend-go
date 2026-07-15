@@ -1,0 +1,90 @@
+# =============================================================================
+# Pharmaciano ERP — Storage Conditions
+# Idempotent by `code`. Temperatures in Celsius.
+# =============================================================================
+
+version: 1
+description: "Standard storage conditions per medicine label requirements."
+
+storage_conditions:
+
+  - code: ROOM
+    name: "Room Temperature"
+    min_temp_celsius: 15
+    max_temp_celsius: 30
+    humidity_max_percent: 65
+    protect_from_light: false
+    protect_from_moisture: false
+    description: "Store below 30°C in a dry place."
+    is_active: true
+
+  - code: COOL
+    name: "Cool"
+    min_temp_celsius: 8
+    max_temp_celsius: 15
+    humidity_max_percent: 65
+    protect_from_light: false
+    protect_from_moisture: true
+    description: "Store between 8°C and 15°C."
+    is_active: true
+
+  - code: FRIDGE
+    name: "Refrigerated (2–8°C)"
+    min_temp_celsius: 2
+    max_temp_celsius: 8
+    humidity_max_percent: null
+    protect_from_light: true
+    protect_from_moisture: true
+    description: "Store in a refrigerator; do NOT freeze."
+    is_active: true
+
+  - code: FREEZE
+    name: "Frozen"
+    min_temp_celsius: -25
+    max_temp_celsius: -10
+    humidity_max_percent: null
+    protect_from_light: true
+    protect_from_moisture: true
+    description: "Store in a freezer; keep frozen until use."
+    is_active: true
+
+  - code: DEEP_FREEZE
+    name: "Deep Frozen"
+    min_temp_celsius: -80
+    max_temp_celsius: -60
+    humidity_max_percent: null
+    protect_from_light: true
+    protect_from_moisture: true
+    description: "Ultra-low temperature storage (e.g. mRNA vaccines)."
+    is_active: true
+
+  - code: LIGHT_PROTECT
+    name: "Room Temperature (Protect from Light)"
+    min_temp_celsius: 15
+    max_temp_celsius: 30
+    humidity_max_percent: 65
+    protect_from_light: true
+    protect_from_moisture: false
+    description: "Room temperature, protect from direct sunlight."
+    is_active: true
+
+  - code: DRY
+    name: "Dry Place"
+    min_temp_celsius: 15
+    max_temp_celsius: 30
+    humidity_max_percent: 40
+    protect_from_light: false
+    protect_from_moisture: true
+    description: "Store below 30°C in a dry place with humidity ≤40%."
+    is_active: true
+
+  - code: CTRL_SUB
+    name: "Controlled Substance Cabinet"
+    min_temp_celsius: 15
+    max_temp_celsius: 30
+    humidity_max_percent: 65
+    protect_from_light: false
+    protect_from_moisture: false
+    description: "Locked cabinet with restricted access; log every dispense."
+    requires_lock: true
+    is_active: true
