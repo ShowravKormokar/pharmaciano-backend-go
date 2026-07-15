@@ -1,0 +1,69 @@
+# =============================================================================
+# Dev overrides — loaded when APP_ENV=dev
+# Optimised for laptop development. Do not use in production.
+# =============================================================================
+
+app:
+  env: dev
+
+server:
+  host: 0.0.0.0
+  port: 8080
+
+database:
+  host: localhost
+  port: 5432
+  name: medicore_dev
+  user: medicore
+  sslmode: disable
+  pool:
+    max_conns: 10
+    min_conns: 1
+
+redis:
+  host: localhost
+  port: 6379
+  db: 0
+
+jwt:
+  algorithm: HS256
+  access_token_ttl: 60m           # longer TTL for easier local debugging
+  refresh_token_ttl: 168h
+
+refresh_cookie:
+  domain: localhost
+  secure: false
+  samesite: lax
+
+logging:
+  level: debug
+  format: console
+  output: stdout
+
+telemetry:
+  metrics:
+    enabled: true
+  tracing:
+    enabled: false
+
+rate_limit:
+  enabled: false                  # disable in dev for smooth manual testing
+
+ai:
+  enabled: false
+
+features:
+  ai_forecasting: false
+  websocket_notifications: true
+
+backup:
+  enabled: false
+
+# Dev-only pprof endpoint
+pprof:
+  enabled: true
+  listen: "127.0.0.1:6060"
+
+seed:
+  auto_run_on_boot: true
+  reset_before_seed: false
