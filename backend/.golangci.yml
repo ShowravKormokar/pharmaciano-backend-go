@@ -1,0 +1,242 @@
+# ==============================================================================
+# golangci-lint configuration for MediCore ERP backend
+# Docs: https://golangci-lint.run/usage/configuration/
+# ==============================================================================
+
+run:
+  timeout: 5m
+  go: "1.22"
+  tests: true
+  allow-parallel-runners: true
+  modules-download-mode: readonly
+
+output:
+  formats:
+    - format: colored-line-number
+      path: stdout
+  print-issued-lines: true
+  print-linter-name: true
+  sort-results: true
+
+# ------------------------------------------------------------------------------
+# Linters
+# ------------------------------------------------------------------------------
+linters:
+  disable-all: true
+  enable:
+    # correctness
+    - govet
+    - staticcheck
+    - errcheck
+    - ineffassign
+    - unused
+    - gosimple
+    - typecheck
+    - bodyclose
+    - contextcheck
+    - errorlint
+    - exhaustive
+    - nilerr
+    - nilnil
+    - noctx
+    - rowserrcheck
+    - sqlclosecheck
+    - unparam
+    - wastedassign
+
+    # security
+    - gosec
+    - bidichk
+
+    # style / formatting
+    - gofmt
+    - gofumpt
+    - goimports
+    - misspell
+    - stylecheck
+    - revive
+    - whitespace
+    - unconvert
+    - dupword
+
+    # complexity / maintainability
+    - gocognit
+    - gocyclo
+    - dupl
+    - funlen
+    - lll
+    - nakedret
+    - nestif
+    - prealloc
+
+    # performance
+    - copyloopvar
+    - makezero
+    - perfsprint
+
+    # tests
+    - testifylint
+    - tparallel
+    - thelper
+
+# ------------------------------------------------------------------------------
+# Linter settings
+# ------------------------------------------------------------------------------
+linters-settings:
+  govet:
+    enable-all: true
+    disable:
+      - fieldalignment
+      - shadow
+
+  staticcheck:
+    checks: ["all", "-ST1000", "-ST1003"]
+
+  errcheck:
+    check-type-assertions: true
+    check-blank: false
+    exclude-functions:
+      - (io.Closer).Close
+      - (*database/sql.Rows).Close
+
+  errorlint:
+    errorf: true
+    asserts: true
+    comparison: true
+
+  exhaustive:
+    default-signifies-exhaustive: true
+
+  gosec:
+    excludes:
+      - G104 # audited err returns
+      - G404 # allow math/rand in non-crypto paths
+    severity: medium
+    confidence: medium
+
+  gocognit:
+    min-complexity: 20
+
+  gocyclo:
+    min-complexity: 15
+
+  funlen:
+    lines: 120
+    statements: 60
+    ignore-comments: true
+
+  lll:
+    line-length: 140
+    tab-width: 4
+
+  nestif:
+    min-complexity: 5
+
+  dupl:
+    threshold: 150
+
+  nakedret:
+    max-func-lines: 30
+
+  revive:
+    ignore-generated-header: true
+    severity: warning
+    rules:
+      - name: blank-imports
+      - name: context-as-argument
+      - name: context-keys-type
+      - name: dot-imports
+      - name: error-return
+      - name: error-strings
+      - name: error-naming
+      - name: exported
+        arguments: [checkPrivateReceivers, disableStutteringCheck]
+      - name: increment-decrement
+      - name: var-naming
+      - name: var-declaration
+      - name: package-comments
+      - name: range
+      - name: receiver-naming
+      - name: time-naming
+      - name: unexported-return
+      - name: indent-error-flow
+      - name: errorf
+      - name: empty-block
+      - name: superfluous-else
+      - name: unused-parameter
+      - name: unreachable-code
+      - name: redefines-builtin-id
+
+  gofumpt:
+    module-path: github.com/YOUR_ORG/medicore-erp-backend
+    extra-rules: true
+
+  goimports:
+    local-prefixes: github.com/YOUR_ORG/medicore-erp-backend
+
+  misspell:
+    locale: US
+
+  stylecheck:
+    checks: ["all", "-ST1003"]
+
+  testifylint:
+    enable-all: true
+
+  perfsprint:
+    int-conversion: true
+    err-error: true
+    errorf: true
+    sprintf1: true
+
+# ------------------------------------------------------------------------------
+# Issue rules
+# ------------------------------------------------------------------------------
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  new: false
+  fix: false
+  uniq-by-line: true
+
+  exclude-dirs:
+    - vendor
+    - migrations
+    - docs
+    - deployments
+    - tests/load
+    - internal/generated
+    - .git
+
+  exclude-files:
+    - ".*\\.pb\\.go$"
+    - ".*_mock\\.go$"
+    - ".*_gen\\.go$"
+
+  exclude-rules:
+    # Tests can be looser.
+    - path: _test\.go
+      linters:
+        - funlen
+        - dupl
+        - gocognit
+        - gocyclo
+        - gosec
+        - lll
+        - errcheck
+
+    # Migrations runner + seed script naturally have long init funcs.
+    - path: cmd/(seed|migrate)/
+      linters:
+        - funlen
+        - gocognit
+
+    # Generated mocks
+    - path: tests/mocks/
+      linters:
+        - all
+
+    # Allow snake_case in DB struct tags without stylecheck complaints.
+    - text: "ST1003:"
+      linters:
+        - stylecheck

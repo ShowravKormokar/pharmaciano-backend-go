@@ -1,0 +1,90 @@
+# ---- VCS ----
+.git
+.gitignore
+.github
+.gitattributes
+
+# ---- Docs & assets ----
+*.md
+!README.md
+docs/
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+
+# ---- Local env ----
+.env
+.env.*
+!.env.example
+
+# ---- Go build artifacts ----
+bin/
+build/
+dist/
+vendor/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+coverage.txt
+coverage.html
+profile.out
+*.prof
+
+# ---- Editors / IDE ----
+.idea/
+.vscode/
+.fleet/
+.zed/
+*.swp
+*.swo
+*~
+
+# ---- OS metadata ----
+.DS_Store
+Thumbs.db
+
+# ---- Test / coverage / logs ----
+tests/tmp/
+tmp/
+logs/
+*.log
+
+# ---- Docker / k8s files not needed inside the image ----
+deployments/
+docker-compose*.yml
+Dockerfile*
+!deployments/docker/api.Dockerfile
+!deployments/docker/worker.Dockerfile
+
+# ---- CI ----
+.github/
+.circleci/
+.travis.yml
+.gitlab-ci.yml
+
+# ---- Node / frontend leftovers (defensive) ----
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ---- Test fixtures we don't need in prod images ----
+tests/load/
+tests/integration/
+tests/mocks/
+
+# ---- Local scripts / dev helpers ----
+scripts/dev_up.sh
+scripts/dev_down.sh
+
+# ---- Backups ----
+*.bak
+*.backup
+*.sql.gz
+backups/
