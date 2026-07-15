@@ -1,0 +1,202 @@
+# =============================================================================
+# Continuous Integration — runs on every PR and push to main.
+# Jobs: lint  →  test (unit + integration)  →  build (multi-arch Docker image)
+# =============================================================================
+
+name: CI
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GO_VERSION: "1.22"
+  GOLANGCI_LINT_VERSION: "v1.59.1"
+  CGO_ENABLED: "0"
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Lint
+  # ---------------------------------------------------------------------------
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: gofmt check
+        run: |
+          diff=$(gofmt -s -l . | grep -v '^vendor/' || true)
+          if [ -n "$diff" ]; then
+            echo "The following files are not gofmt'ed:"
+            echo "$diff"
+            exit 1
+          fi
+
+      - name: go vet
+        run: go vet ./...
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: ${{ env.GOLANGCI_LINT_VERSION }}
+          args: --timeout=5m --config=.golangci.yml
+
+  # ---------------------------------------------------------------------------
+  # Unit + integration tests (real Postgres + Redis via services)
+  # ---------------------------------------------------------------------------
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: lint
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: pharmaciano
+          POSTGRES_PASSWORD: pharmaciano_ci
+          POSTGRES_DB: pharmaciano_test
+        ports: [5432:5432]
+        options: >-
+          --health-cmd "pg_isready -U pharmaciano -d pharmaciano_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports: [6379:6379]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      APP_ENV: dev
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_NAME: pharmaciano_test
+      DB_USER: pharmaciano
+      DB_PASSWORD: pharmaciano_ci
+      DB_SSLMODE: disable
+      REDIS_HOST: localhost
+      REDIS_PORT: 6379
+      JWT_SECRET: ci_test_only_secret_do_not_use_in_prod_min_32_bytes_xxx
+      FIELD_ENCRYPTION_KEY: MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Install migrate CLI
+        run: |
+          curl -sSfL https://github.com/golang-migrate/migrate/releases/download/v4.17.0/migrate.linux-amd64.tar.gz \
+            | tar xz && sudo mv migrate /usr/local/bin/
+
+      - name: Apply migrations
+        run: |
+          migrate -path migrations \
+            -database "postgres://pharmaciano:pharmaciano_ci@localhost:5432/pharmaciano_test?sslmode=disable" \
+            up
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Unit tests
+        run: |
+          go test -race -covermode=atomic \
+            -coverprofile=coverage.unit.out \
+            -timeout=5m \
+            $(go list ./... | grep -v '/tests/integration' | grep -v '/tests/load')
+
+      - name: Integration tests
+        run: |
+          go test -race -covermode=atomic \
+            -coverprofile=coverage.int.out \
+            -timeout=10m \
+            -tags=integration \
+            ./tests/integration/...
+
+      - name: Merge coverage
+        run: |
+          echo "mode: atomic" > coverage.out
+          tail -q -n +2 coverage.unit.out coverage.int.out >> coverage.out
+          go tool cover -func=coverage.out | tail -1
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage.out
+          retention-days: 7
+
+  # ---------------------------------------------------------------------------
+  # Build binaries + Docker images (no push on PR)
+  # ---------------------------------------------------------------------------
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Build binaries
+        run: |
+          mkdir -p bin
+          go build -trimpath -ldflags="-s -w -X main.version=${GITHUB_SHA::7}" -o bin/api     ./cmd/api
+          go build -trimpath -ldflags="-s -w -X main.version=${GITHUB_SHA::7}" -o bin/worker  ./cmd/worker
+          go build -trimpath -ldflags="-s -w -X main.version=${GITHUB_SHA::7}" -o bin/seed    ./cmd/seed
+          go build -trimpath -ldflags="-s -w -X main.version=${GITHUB_SHA::7}" -o bin/migrate ./cmd/migrate
+
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build API image (no push)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deployments/docker/api.Dockerfile
+          push: false
+          tags: pharmaciano-api:ci-${{ github.sha }}
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,scope=api,mode=max
+
+      - name: Build Worker image (no push)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deployments/docker/worker.Dockerfile
+          push: false
+          tags: pharmaciano-worker:ci-${{ github.sha }}
+          cache-from: type=gha,scope=worker
+          cache-to: type=gha,scope=worker,mode=max

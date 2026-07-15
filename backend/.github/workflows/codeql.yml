@@ -1,0 +1,66 @@
+# =============================================================================
+# CodeQL — GitHub Advanced Security static analysis for Go.
+# Runs on PR, push to main, and weekly cron.
+# =============================================================================
+
+name: CodeQL
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 4 * * 2"     # Every Tuesday 04:00 UTC
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+  security-events: write
+
+jobs:
+  analyze:
+    name: Analyze (Go)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [go]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache: true
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          queries: security-extended,security-and-quality
+          config: |
+            paths-ignore:
+              - vendor
+              - tests/load
+              - migrations
+              - docs
+              - deployments
+              - internal/generated
+              - tests/mocks
+
+      - name: Build
+        run: |
+          go build ./cmd/api
+          go build ./cmd/worker
+          go build ./cmd/seed
+          go build ./cmd/migrate
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
