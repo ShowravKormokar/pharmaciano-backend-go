@@ -68,7 +68,7 @@ func Load(opts LoadOptions) (*Config, error) {
 
 	// Unmarshal into typed struct
 	cfg := &Config{}
-	if err := v.Unmarshal(cgf, decoderOptions...); err != nil {
+	if err := v.Unmarshal(cfg, decoderOptions...); err != nil {
 		return nil, fmt.Errorf("config: unmarshal: %w", err)
 	}
 
