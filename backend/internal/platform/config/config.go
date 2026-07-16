@@ -87,7 +87,7 @@ func Load(opts LoadOptions) (*Config, error) {
 func MustLoad(opts LoadOptions) *Config {
 	c, err := Load(opts)
 	if err != nil {
-		fmt.Fprint(os.Stderr, "FATAL: %v\n", err)
+		fmt.Fprintf(os.Stderr, "FATAL: %v\n", err)
 		os.Exit(2)
 	}
 	return c
