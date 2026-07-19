@@ -2,11 +2,12 @@
 
 import (
 	"backend/internal/platform/config"
-	"backend/internal/platform/redis"
 	"context"
 	"errors"
 	"fmt"
 	"time"
+
+	"github.com/redis/go-redis/v9"
 
 	"go.uber.org/zap"
 )
@@ -14,8 +15,7 @@ import (
 type Client struct {
 	rdb *redis.Client
 	log *zap.Logger
-}git add .
-
+}
 
 // ErrKeyNotFound is returned from Get when the key is absent.
 var ErrKeyNotFound = errors.New("redis: key not found")
