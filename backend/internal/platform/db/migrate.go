@@ -7,7 +7,6 @@ import (
 	"fmt"
 
 	"github.com/golang-migrate/migrate/v4"
-	pgx5 "github.com/golang-migrate/migrate/v4/database/pgx/v5"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"go.uber.org/zap"
 )
@@ -94,4 +93,4 @@ func (m *Migrator) EnsureUpAtBoot(ctx context.Context, enabled bool) error {
 }
 
 // Compile-time guard: keep the pgx driver import in the binary.
-var _ = pgx5.WithConnection
+// var _ = pgx5.WithConnection
