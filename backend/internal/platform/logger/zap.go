@@ -59,7 +59,7 @@ func New(cfg config.LoggingConfig, appName, appVersion string) (*zap.Logger, err
 	core := zapcore.NewCore(encoder, sink, level)
 
 	if cfg.Sampling.Enabled && cfg.Sampling.Initial > 0 {
-		core = zapcore.NewSampler(core, time.Second, cfg.Sampling.Initial, cfg.Sampling.Thereafter)
+		core = zapcore.NewSamplerWithOptions(core, time.Second, cfg.Sampling.Initial, cfg.Sampling.Thereafter)
 	}
 
 	logger := zap.New(core,

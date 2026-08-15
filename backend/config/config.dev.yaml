@@ -13,8 +13,8 @@ server:
 database:
   host: localhost
   port: 5432
-  name: medicore_dev
-  user: medicore
+  name: pharmaciano_dev
+  user: pharmaciano
   sslmode: disable
   pool:
     max_conns: 10

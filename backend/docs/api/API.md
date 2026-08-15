@@ -1,6 +1,6 @@
 # Pharmaciano ERP — REST API Specification
 
-**Base URL:** `https://api.medicore.example.com`  
+**Base URL:** `https://api.pharmaciano.example.com`  
 **Current Version:** `v1`  
 **All endpoints:** `/api/v1/...`  
 **Content-Type:** `application/json`  
@@ -795,7 +795,7 @@ Server stores `(user_id, endpoint, request_hash, response)` for **24 h**. Same k
 Deprecated endpoints return:  
 Deprecation: true  
 Sunset: Wed, 01 Jul 2026 00:00:00 GMT  
-Link: https://docs.medicore.example.com/migrations/v2; rel="deprecation"  
+Link: https://docs.pharmaciano.example.com/migrations/v2; rel="deprecation"  
 Minimum notice: **180 days** before removal.  
 
 ## Appendix C — HTTP status matrix

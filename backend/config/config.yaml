@@ -1,10 +1,10 @@
 # =============================================================================
-# MediCore ERP — Default Configuration (committed)
+# Pharmaciano ERP — Default Configuration (committed)
 # Overridden by config/config.<env>.yaml then by environment variables.
 # =============================================================================
 
 app:
-  name: medicore-erp
+  name: pharmaciano-erp
   env: dev
   version: 0.1.0
   timezone: Asia/Dhaka
@@ -56,8 +56,8 @@ security:
 database:
   host: localhost
   port: 5432
-  name: medicore
-  user: medicore
+  name: pharmaciano
+  user: pharmaciano
   password: ""            # from env: DB_PASSWORD
   sslmode: disable
   timezone: UTC
@@ -98,8 +98,8 @@ asynq:
   dead_letter_ttl: 168h    # 7 days
 
 jwt:
-  issuer: medicore
-  audience: medicore-users
+  issuer: pharmaciano
+  audience: pharmaciano-users
   algorithm: HS256
   key_id: key-2026-07
   access_token_ttl: 15m
@@ -192,7 +192,7 @@ telemetry:
     listen: "127.0.0.1:9091"
   tracing:
     enabled: false
-    service_name: medicore-api
+    service_name: pharmaciano-api
     exporter: otlp
     endpoint: http://localhost:4318
     insecure: true
@@ -262,13 +262,13 @@ audit:
   archive_after_days: 90
 
 super_admin:
-  email: superadmin@medicore.local
+  email: superadmin@pharmaciano.local
   first_name: Super
   last_name: Admin
 
 organization_defaults:
-  name: Medico Drug House
-  slug: medico-drug-house
+  name: Pharmaciano Drug House
+  slug: Pharmaciano-drug-house
   country: Bangladesh
   currency: BDT
   timezone: Asia/Dhaka
