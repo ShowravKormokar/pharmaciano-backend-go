@@ -106,7 +106,7 @@ func WithOrgID(ctx context.Context, id string) context.Context {
 
 // WithBranchID
 func WithBranchID(ctx context.Context, id string) context.Context {
-	return context.WithValue(ctx, ctxKeyUserID, id)
+	return context.WithValue(ctx, ctxKeyBranchID, id)
 }
 
 // WithUserID
