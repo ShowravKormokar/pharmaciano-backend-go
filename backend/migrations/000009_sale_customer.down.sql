@@ -1,0 +1,10 @@
+-- ##### FILE: 000009_sale_customer.down.sql ##################################
+DROP TABLE IF EXISTS coupon_redemptions;
+DROP TABLE IF EXISTS offers;
+DROP TABLE IF EXISTS coupons;
+DROP TABLE IF EXISTS sales_return_items;
+DROP TABLE IF EXISTS sales_returns;
+DROP TABLE IF EXISTS sale_payments;
+DROP TABLE IF EXISTS sale_items;
+DROP TABLE IF EXISTS sales;
+DROP TABLE IF EXISTS customers;

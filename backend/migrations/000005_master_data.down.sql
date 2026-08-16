@@ -1,0 +1,15 @@
+-- ##### FILE: 000005_master_data.down.sql #####################################
+DROP TABLE IF EXISTS generic_medicines;
+DROP TABLE IF EXISTS therapeutic_classes;
+DROP TABLE IF EXISTS drug_classes;
+DROP TABLE IF EXISTS drug_groups;
+DROP TABLE IF EXISTS suppliers;
+DROP TABLE IF EXISTS brands;
+DROP TABLE IF EXISTS manufacturers;
+DROP TABLE IF EXISTS tax_rates;
+DROP TABLE IF EXISTS storage_conditions;
+DROP TABLE IF EXISTS unit_types;
+DROP TABLE IF EXISTS package_types;
+DROP TABLE IF EXISTS dosage_forms;
+DROP TABLE IF EXISTS routes;
+DROP TABLE IF EXISTS product_categories;

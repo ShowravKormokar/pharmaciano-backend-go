@@ -1,0 +1,14 @@
+-- ##### FILE: 000004_user_tables.down.sql #####################################
+DROP TABLE IF EXISTS password_resets;
+DROP TABLE IF EXISTS login_attempts;
+DROP TABLE IF EXISTS refresh_tokens;
+DROP TABLE IF EXISTS sessions;
+DROP TABLE IF EXISTS user_documents;
+DROP TABLE IF EXISTS user_bank_accounts;
+DROP TABLE IF EXISTS user_experiences;
+DROP TABLE IF EXISTS user_educations;
+DROP TABLE IF EXISTS user_contacts;
+DROP TABLE IF EXISTS user_addresses;
+DROP TABLE IF EXISTS user_profiles;
+DROP TABLE IF EXISTS user_roles;
+DROP TABLE IF EXISTS users;
