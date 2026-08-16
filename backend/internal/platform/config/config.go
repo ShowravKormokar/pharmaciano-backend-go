@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
 )
 
@@ -20,6 +21,13 @@ type LoadOptions struct {
 
 // Load reads defaults, overlays per-env YAML, then applies environment variables.
 func Load(opts LoadOptions) (*Config, error) {
+
+	_ = godotenv.Load()
+
+	if opts.ConfigDir == "" {
+		opts.ConfigDir = "config"
+	}
+
 	if opts.ConfigDir == "" {
 		opts.ConfigDir = "config"
 	}
