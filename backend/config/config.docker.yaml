@@ -20,8 +20,8 @@ cors:
 database:
   host: postgres
   port: 5432
-  name: medicore
-  user: medicore
+  name: pharmaciano
+  user: pharmaciano
   sslmode: disable
   pool:
     max_conns: 20

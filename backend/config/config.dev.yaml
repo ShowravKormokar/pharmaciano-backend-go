@@ -13,8 +13,8 @@ server:
 database:
   host: localhost
   port: 5432
-  name: pharmaciano_dev
-  user: pharmaciano
+  name: pharmaciano
+  user: postgres
   sslmode: disable
   pool:
     max_conns: 10
