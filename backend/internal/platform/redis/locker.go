@@ -61,7 +61,7 @@ func (l *Locker) Acquire(ctx context.Context, name string, opts LockOptions) (*L
 
 	attempts := opts.MaxRetries
 	for {
-		if err := m.LockContext(ctx); err != nil {
+		if err := m.LockContext(ctx); err == nil {
 			return &Lock{name: name, m: m, log: l.log}, nil
 		} else if !errors.Is(err, redsync.ErrFailed) {
 			return nil, fmt.Errorf("acquire %q: %w", key, err)
@@ -98,7 +98,7 @@ func (l *Locker) Do(ctx context.Context, name string, opts LockOptions, fn func(
 
 		if uerr := lock.Unlock(context.Background()); uerr != nil {
 			if retErr == nil {
-				retErr = fmt.Errorf("unlock %q:%w", name, &uerr)
+				retErr = fmt.Errorf("unlock %q: %w", name, uerr)
 			} else {
 				l.log.Warn("unlock failed", zap.String("name", name), zap.Error(uerr))
 			}
