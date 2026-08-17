@@ -45,6 +45,9 @@ telemetry:
     enabled: true
   tracing:
     enabled: false
+  health:
+    expose_errors: true   # dev- show raw error is helpfull 
+    cache_ttl: 2s
 
 rate_limit:
   enabled: false                  # disable in dev for smooth manual testing

@@ -190,6 +190,7 @@ telemetry:
     enabled: true
     path: /metrics
     listen: "127.0.0.1:9091"
+    auth_token: ""        # set on prod if :9091 reachable outside on firewall
   tracing:
     enabled: false
     service_name: pharmaciano-api
@@ -197,6 +198,9 @@ telemetry:
     endpoint: http://localhost:4318
     insecure: true
     sampling_ratio: 0.1
+  health:
+    expose_errors: false  # Default: public /readyz - naver show raw error
+    cache_ttl: 2s
 
 websocket:
   read_buffer_bytes: 1024
