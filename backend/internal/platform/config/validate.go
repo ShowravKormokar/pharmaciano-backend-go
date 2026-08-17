@@ -201,6 +201,24 @@ func (c *Config) Validate() error {
 		}
 	}
 
+	// Telemetry
+	if c.Telemetry.Metrics.Enabled {
+		if c.Telemetry.Metrics.Listen == "" {
+			errs.add("telemetry.metrics.listen is required when metrics.enabled=true")
+		}
+		if c.Telemetry.Metrics.Path == "" {
+			errs.add("telemetry.metrics.path is required when metrics.enabled=true")
+		}
+	}
+	if c.Telemetry.Tracing.Enabled {
+		if c.Telemetry.Tracing.Endpoint == "" {
+			errs.add("telemetry.tracing.endpoint is required when tracing.enabled=true")
+		}
+		if c.Telemetry.Tracing.SamplingRatio < 0 || c.Telemetry.Tracing.SamplingRatio > 1 {
+			errs.add("telemetry.tracing.sampling_ratio must be between 0 and 1 (got %v)", c.Telemetry.Tracing.SamplingRatio)
+		}
+	}
+
 	if len(errs) > 0 {
 		return errs.err()
 	}

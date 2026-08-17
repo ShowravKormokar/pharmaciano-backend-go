@@ -241,9 +241,10 @@ type LoggingConfig struct {
 
 type TelemetryConfig struct {
 	Metrics struct {
-		Enabled bool   `mapstructure:"enabled"`
-		Path    string `mapstructure:"path"`
-		Listen  string `mapstructure:"listen"`
+		Enabled   bool   `mapstructure:"enabled"`
+		Path      string `mapstructure:"path"`
+		Listen    string `mapstructure:"listen"`
+		AuthToken string `mapstructure:"auth_token"` // optional; protects /metrics with Bearer auth
 	} `mapstructure:"metrics"`
 	Tracing struct {
 		Enabled       bool    `mapstructure:"enabled"`
@@ -253,6 +254,10 @@ type TelemetryConfig struct {
 		Insecure      bool    `mapstructure:"insecure"`
 		SamplingRatio float64 `mapstructure:"sampling_ratio"`
 	} `mapstructure:"tracing"`
+	Health struct {
+		ExposeErrors bool          `mapstructure:"expose_errors"` // false in prod: sanitize /readyz errors
+		CacheTTL     time.Duration `mapstructure:"cache_ttl"`
+	} `mapstructure:"health"`
 }
 
 type WebSocketConfig struct {

@@ -188,6 +188,19 @@ func bindEnvVars(v *viper.Viper) {
 
 		"super_admin.email":            "SUPER_ADMIN_EMAIL",
 		"super_admin.initial_password": "SUPER_ADMIN_INITIAL_PASSWORD",
+
+		"telemetry.metrics.enabled":    "METRICS_ENABLED",
+		"telemetry.metrics.path":       "METRICS_PATH",
+		"telemetry.metrics.listen":     "METRICS_LISTEN",
+		"telemetry.metrics.auth_token": "METRICS_AUTH_TOKEN",
+
+		"telemetry.tracing.enabled":        "TRACING_ENABLED",
+		"telemetry.tracing.service_name":   "OTEL_SERVICE_NAME",
+		"telemetry.tracing.endpoint":       "OTEL_EXPORTER_OTLP_ENDPOINT",
+		"telemetry.tracing.insecure":       "OTEL_EXPORTER_OTLP_INSECURE",
+		"telemetry.tracing.sampling_ratio": "OTEL_SAMPLING_RATIO",
+
+		"telemetry.health.expose_errors": "HEALTH_EXPOSE_ERRORS",
 	}
 
 	for key, env := range binds {
