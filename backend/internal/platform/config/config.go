@@ -200,6 +200,10 @@ func bindEnvVars(v *viper.Viper) {
 		"telemetry.tracing.insecure":       "OTEL_EXPORTER_OTLP_INSECURE",
 		"telemetry.tracing.sampling_ratio": "OTEL_SAMPLING_RATIO",
 
+		"mailer.driver":     "MAILER_DRIVER",
+		"mailer.from_email": "MAILER_FROM_EMAIL",
+		"mailer.from_name":  "MAILER_FROM_NAME",
+
 		"telemetry.health.expose_errors": "HEALTH_EXPOSE_ERRORS",
 	}
 

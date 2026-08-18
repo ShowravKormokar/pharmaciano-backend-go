@@ -43,6 +43,7 @@ type Config struct {
 	Pagination  PaginationConfig   `mapstructure:"pagination"`
 	AI          AIConfig           `mapstructure:"ai"`
 	Storage     StorageConfig      `mapstructure:"storage"`
+	Mailer      MailerConfig       `mapstructure:"mailer"`
 	Backup      BackupConfig       `mapstructure:"backup"`
 	Features    FeatureFlags       `mapstructure:"features"`
 	Audit       AuditConfig        `mapstructure:"audit"`
@@ -307,6 +308,12 @@ type StorageConfig struct {
 		SecretKey string `mapstructure:"secret_key"`
 		UseSSL    bool   `mapstructure:"use_ssl"`
 	} `mapstructure:"s3"`
+}
+
+type MailerConfig struct {
+	Driver    string `mapstructure:"driver"`     // noop | disabled  (smtp/sendgrid/ses land later)
+	FromEmail string `mapstructure:"from_email"`
+	FromName  string `mapstructure:"from_name"`
 }
 
 type BackupConfig struct {

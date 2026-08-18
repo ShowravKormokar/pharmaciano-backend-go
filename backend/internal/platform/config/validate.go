@@ -176,6 +176,13 @@ func (c *Config) Validate() error {
 		errs.add("storage.driver %q invalid (want local|s3)", c.Storage.Driver)
 	}
 
+	// Mailer
+	switch strings.ToLower(strings.TrimSpace(c.Mailer.Driver)) {
+	case "", "noop", "disabled":
+	default:
+		errs.add("mailer.driver %q invalid (want: noop|disabled)", c.Mailer.Driver)
+	}
+
 	// Rate limit
 	if c.RateLimit.Enabled {
 		for name, p := range c.RateLimit.Policies {

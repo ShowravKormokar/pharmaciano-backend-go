@@ -50,6 +50,10 @@ type Metrics struct {
 	AICallDuration *prometheus.HistogramVec
 	AITokensUsed   *prometheus.CounterVec
 	AICostUSD      *prometheus.CounterVec
+
+	// Mailer
+	MailSendTotal    *prometheus.CounterVec
+	MailSendDuration *prometheus.HistogramVec
 }
 
 // New Matrics registers all collectors on fresh registry
@@ -245,6 +249,19 @@ func NewMetrics() *Metrics {
 		[]string{"provider", "endpoint"},
 	)
 
+	m.MailSendTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{Name: "mailer_send_total", Help: "Outbound mail/SMS attempts by provider and outcome."},
+		[]string{"provider", "outcome"},
+	)
+	m.MailSendDuration = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "mailer_send_duration_seconds",
+			Help:    "Outbound mail/SMS send latency.",
+			Buckets: []float64{0.01, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10},
+		},
+		[]string{"provider"},
+	)
+
 	reg.MustRegister(
 		m.HTTPRequestsTotal, m.HTTPRequestDuration, m.HTTPResponseSize, m.HTTPInFlight,
 		m.DBQueryDuration, m.DBQueriesTotal,
@@ -253,6 +270,7 @@ func NewMetrics() *Metrics {
 		m.SalesCompletedTotal, m.PurchasesApprovedTotal, m.LowStockAlertsTotal, m.ExpiryAlertsTotal,
 		m.JobDuration, m.JobsProcessed, m.JobsFailed, m.JobQueueSize,
 		m.AICallsTotal, m.AICallDuration, m.AITokensUsed, m.AICostUSD,
+		m.MailSendTotal, m.MailSendDuration,
 	)
 
 	return m

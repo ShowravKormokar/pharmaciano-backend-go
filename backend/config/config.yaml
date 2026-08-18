@@ -277,3 +277,8 @@ organization_defaults:
   currency: BDT
   timezone: Asia/Dhaka
   subscription_plan: enterprise
+
+mailer:
+  driver: noop
+  from_email: no-reply@pharmaciano.local
+  from_name: Pharmaciano ERP

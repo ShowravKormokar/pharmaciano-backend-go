@@ -15,6 +15,8 @@ const (
 
 	AttrRedisOperation = attribute.Key("redis.operation")
 
+	AttrMailerProvider = attribute.Key("mailer.provider")
+
 	AttrAIProvider = attribute.Key("ai.provider")
 	AttrAIEndpoint = attribute.Key("ai.endpoint")
 
