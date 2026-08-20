@@ -1,5 +1,4 @@
-﻿// Package storage is the abstract file-object channel (local disk today,
-// S3-compatible later — see New). It exists so the rest of the app never
+﻿// Package storage is the abstract file-object channel. It exists so the rest of the app never
 // touches os.* directly: repositories/services call Store.Put/Get/Delete and
 // stay ignorant of where bytes physically live, exactly like the Mailer
 // interface abstracts email delivery.
