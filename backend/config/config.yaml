@@ -237,6 +237,7 @@ storage:
   driver: local
   local_path: ./data/uploads
   max_file_size_mb: 25
+  fsync_on_write: true
   allowed_mime_types:
     - image/png
     - image/jpeg

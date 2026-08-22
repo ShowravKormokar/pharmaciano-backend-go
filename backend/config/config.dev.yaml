@@ -55,6 +55,9 @@ rate_limit:
 ai:
   enabled: false
 
+storage:
+  fsync_on_write: false
+
 features:
   ai_forecasting: false
   websocket_notifications: true
