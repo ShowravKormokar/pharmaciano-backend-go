@@ -54,6 +54,11 @@ type Metrics struct {
 	// Mailer
 	MailSendTotal    *prometheus.CounterVec
 	MailSendDuration *prometheus.HistogramVec
+
+	// Storage
+	StorageOpsTotal   *prometheus.CounterVec
+	StorageOpDuration *prometheus.HistogramVec
+	StorageBytesTotal *prometheus.CounterVec
 }
 
 // New Matrics registers all collectors on fresh registry
@@ -262,6 +267,23 @@ func NewMetrics() *Metrics {
 		[]string{"provider"},
 	)
 
+	m.StorageOpsTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{Name: "storage_ops_total", Help: "File-store operations by driver, op, outcome."},
+		[]string{"driver", "op", "outcome"},
+	)
+	m.StorageOpDuration = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "storage_op_duration_seconds",
+			Help:    "File-store operation latency.",
+			Buckets: []float64{0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5},
+		},
+		[]string{"driver", "op"},
+	)
+	m.StorageBytesTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{Name: "storage_bytes_total", Help: "Bytes moved through the file store."},
+		[]string{"driver", "op"},
+	)
+
 	reg.MustRegister(
 		m.HTTPRequestsTotal, m.HTTPRequestDuration, m.HTTPResponseSize, m.HTTPInFlight,
 		m.DBQueryDuration, m.DBQueriesTotal,
@@ -271,6 +293,7 @@ func NewMetrics() *Metrics {
 		m.JobDuration, m.JobsProcessed, m.JobsFailed, m.JobQueueSize,
 		m.AICallsTotal, m.AICallDuration, m.AITokensUsed, m.AICostUSD,
 		m.MailSendTotal, m.MailSendDuration,
+		m.StorageOpsTotal, m.StorageOpDuration, m.StorageBytesTotal,
 	)
 
 	return m
@@ -389,4 +412,20 @@ func (m *Metrics) Handler(authToken string) http.Handler {
 		}
 		h.ServeHTTP(rw, rq)
 	})
+}
+
+func (m *Metrics) ObserveStorageOp(driver, op string, dur time.Duration, err error) {
+	outcome := "success"
+	if err != nil {
+		outcome = "error"
+	}
+	m.StorageOpsTotal.WithLabelValues(driver, op, outcome).Inc()
+	m.StorageOpDuration.WithLabelValues(driver, op).Observe(dur.Seconds())
+}
+
+func (m *Metrics) AddStorageBytes(driver, op string, n int64) {
+	if n <= 0 {
+		return
+	}
+	m.StorageBytesTotal.WithLabelValues(driver, op).Add(float64(n))
 }
