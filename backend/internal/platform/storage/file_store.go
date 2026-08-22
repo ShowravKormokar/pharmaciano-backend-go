@@ -77,7 +77,7 @@ var (
 )
 
 // New builds the driver named in cfg.Driver. m may be nil (metrics optional);
-func New(cfg config.StorageConfig, log *zap.Logger, m *telemetry.Metrics) (store, error) {
+func New(cfg config.StorageConfig, log *zap.Logger, m *telemetry.Metrics) (Store, error) {
 	if log == nil {
 		log = zap.NewNop()
 	}
@@ -213,6 +213,167 @@ func (l *local) putObject(ctx context.Context, obj ObjectInput) (ObjectRef, int6
 	if err := os.MkdirAll(filepath.Dir(fullPath), 0o750); err != nil {
 		return ObjectRef{}, 0, fmt.Errorf("storage: mkdir: %w", err)
 	}
+
+	f, err := os.OpenFile(fullPath, os.O_CREATE|os.O_WRONLY|os.O_EXCL, 0o640)
+	if err != nil {
+		return ObjectRef{}, 0, fmt.Errorf("storage: create file: %w", err)
+	}
+
+	hasher := sha256.New()
+	limited := io.LimitReader(peeked, l.maxSize+1)
+	tee := io.TeeReader(limited, hasher)
+	cr := &ctxReader{ctx: ctx, r: tee}
+
+	n, copyErr := io.Copy(f, cr)
+	if copyErr == nil && n <= l.maxSize && l.fsync {
+		copyErr = f.Sync()
+	}
+	closeErr := f.Close()
+
+	switch {
+	case copyErr != nil:
+		_ = os.Remove(fullPath)
+		return ObjectRef{}, 0, fmt.Errorf("storage: write: %w", copyErr)
+	case n > l.maxSize:
+		_ = os.Remove(fullPath)
+		return ObjectRef{}, 0, ErrTooLarge
+	case closeErr != nil:
+		_ = os.Remove(fullPath)
+		return ObjectRef{}, 0, fmt.Errorf("storage: close: %w", closeErr)
+	}
+
+	meta := objectMeta{
+		Namespace:           ns,
+		OriginalName:        obj.OriginalName,
+		ContentType:         detected,
+		DeclaredContentType: obj.ContentType,
+		SHA256:              hex.EncodeToString(hasher.Sum(nil)),
+		Size:                n,
+		CreatedAt:           now,
+	}
+
+	if err := l.writeMeta(fullPath, meta); err != nil {
+		_ = os.Remove(fullPath)
+		return ObjectRef{}, 0, fmt.Errorf("storage: write metadata: %w", err)
+	}
+
+	l.log.Info("storage: object stored",
+		zap.String("namespace", ns),
+		zap.String("key", key),
+		zap.Int64("bytes", n),
+		zap.String("content_type", detected),
+	)
+
+	return ObjectRef{Namespace: ns, Key: key}, n, nil
+}
+
+// ---------- Get ------------------------
+func (l *local) Get(ctx context.Context, ref ObjectRef) (io.ReadCloser, ObjectInfo, error) {
+	ctx, span := telemetry.StartSpan(ctx, "storage.lcal.Get")
+
+	start := time.Now()
+	rc, info, err := l.getObject(ctx, ref)
+	telemetry.EndSpan(span, err)
+	if l.metrics != nil {
+		l.metrics.ObserveStorageOp("local", "get", time.Since(start), err)
+	}
+	if err != nil {
+		return nil, ObjectInfo{}, err
+	}
+	if l.metrics == nil {
+		return rc, info, nil
+	}
+
+	m := l.metrics
+	return &countingReadCloser{
+		ReadCloser: rc,
+		onClose: func(n int64, _ error) {
+			m.AddStorageBytes("local", "get", n)
+		},
+	}, info, nil
+}
+
+func (l *local) getObject(ctx context.Context, ref ObjectRef) (io.ReadCloser, ObjectInfo, error) {
+	if err := ctxErr(ctx); err != nil {
+		return nil, ObjectInfo{}, err
+	}
+	full, err := l.resolvePath(ref.Key)
+	if err != nil {
+		return nil, ObjectInfo{}, err
+	}
+
+	f, err := os.Open(full)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return nil, ObjectInfo{}, ErrNotFound
+		}
+		return nil, ObjectInfo{}, err
+	}
+
+	stat, err := f.Stat()
+	if err != nil {
+		f.Close()
+		return nil, ObjectInfo{}, err
+	}
+
+	info := ObjectInfo{Size: stat.Size(), CreatedAt: stat.ModTime()}
+
+	if meta, mErr := l.readMeta(full); mErr == nil {
+		info.ContentType = meta.ContentType
+		info.SHA256 = meta.SHA256
+		if !meta.CreatedAt.IsZero() {
+			info.CreatedAt = meta.CreatedAt
+		}
+	} else {
+		l.log.Debug("storage: metadata sidecar missing, falling back to sniff",
+			zap.String("key", ref.Key), zap.Error(mErr))
+		if ct, sErr := sniffFromFile(f); sErr == nil {
+			info.ContentType = ct
+		}
+	}
+
+	return f, info, nil
+}
+
+// ---- Delete -----------------------------
+
+func (l *local) Delete(ctx context.Context, ref ObjectRef) error {
+	ctx, span := telemetry.StartSpan(ctx, "storage.local.Delete",
+		attribute.String("storage.provider", "local"),
+	)
+	start := time.Now()
+	err := l.deleteObject(ctx, ref)
+	telemetry.EndSpan(span, err)
+	if l.metrics != nil {
+		l.metrics.ObserveStorageOp("local", "delete", time.Since(start), err)
+	}
+	return err
+}
+
+func (l *local) deleteObject(ctx context.Context, ref ObjectRef) error {
+	if err := ctxErr(ctx); err != nil {
+		return err
+	}
+	full, err := l.resolvePath(ref.Key)
+	if err != nil {
+		return err
+	}
+
+	// A couple of short retries make Delete resilient to transient
+	// "file in use" sharing violations on Windows (e.g. a virus scanner or
+	// a just-closed Get() handle) without needing platform-specific code.
+	// On Linux this loop never actually retries in practice — os.Remove
+	// there succeeds even on an open file.
+	rmErr := removeWithRetry(full, 3, 50*time.Millisecond)
+	_ = removeWithRetry(full+metaSuffix, 3, 50*time.Millisecond) // best-effort
+
+	if errors.Is(rmErr, os.ErrNotExist) {
+		return ErrNotFound
+	}
+	if rmErr != nil {
+		l.log.Warn("storage: delete failed", zap.String("key", ref.Key), zap.Error(rmErr))
+	}
+	return rmErr
 }
 
 // ---- URL / Close -----------------------------------
