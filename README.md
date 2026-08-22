@@ -11,7 +11,7 @@ double-entry ledger, AI forecasting, WebSocket notifications, audit trail.*
 [![PostgreSQL](https://img.shields.io/badge/postgres-16-336791?logo=postgresql)](https://www.postgresql.org/)
 [![Redis](https://img.shields.io/badge/redis-7-DC382D?logo=redis)](https://redis.io/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![CI](https://github.com/YOUR_ORG/medicore-erp-backend/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_ORG/medicore-erp-backend/actions/workflows/ci.yml)
+[![CI](https://github.com/ShowravKormokar/pharmaciano-backend-go/actions/workflows/ci.yml/badge.svg)](https://github.com/ShowravKormokar/pharmaciano-backend-go/blob/main/backend/.github/workflows/ci.yml)
 
 </div>
 
@@ -133,7 +133,7 @@ for the full rationale.
 
 ## Project Structure  
 ```
-medicore-erp-backend/
+backend/
 ├── cmd/                # entrypoints: api, worker, seed, migrate
 ├── internal/
 │   ├── modules/        # domain modules (auth, user, sale, purchase, …)
@@ -168,8 +168,8 @@ medicore-erp-backend/
 
 ```bash
 # 1. Clone
-git clone https://github.com/YOUR_ORG/medicore-erp-backend.git
-cd medicore-erp-backend
+git clone https://github.com/ShowravKormokar/pharmaciano-backend-go.git
+cd pharmaciano-erp-backend
 
 # 2. Copy env file
 cp .env.example .env
@@ -190,7 +190,7 @@ open http://localhost:8080/api/v1/docs   # Swagger UI
 ```
 
 Default super-admin credentials (only in dev; change immediately):  
-email:    superadmin@medicore.local
+email:    superadmin@pharmaciano.local
 password: read from .env — SUPER_ADMIN_INITIAL_PASSWORD  
 
 ### Common commands
