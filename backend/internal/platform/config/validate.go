@@ -160,6 +160,9 @@ func (c *Config) Validate() error {
 	}
 
 	// Storage
+	if c.Storage.MaxFileSizeMB <= 0 {
+		errs.add("storage.max_file_size_mb must be > 0")
+	}
 	switch c.Storage.Driver {
 	case "local":
 		if c.Storage.LocalPath == "" {

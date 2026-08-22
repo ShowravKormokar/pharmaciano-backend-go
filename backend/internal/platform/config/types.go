@@ -300,6 +300,7 @@ type StorageConfig struct {
 	LocalPath        string   `mapstructure:"local_path"`
 	MaxFileSizeMB    int      `mapstructure:"max_file_size_mb"`
 	AllowedMimeTypes []string `mapstructure:"allowed_mime_types"`
+	FsyncOnWrite     bool     `mapstructure:"fsync_on_write"`
 	S3               struct {
 		Endpoint  string `mapstructure:"endpoint"`
 		Region    string `mapstructure:"region"`

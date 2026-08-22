@@ -146,6 +146,8 @@ func applyDefaults(v *viper.Viper) {
 
 	v.SetDefault("pagination.default_limit", 20)
 	v.SetDefault("pagination.max_limit", 100)
+
+	v.SetDefault("storage.fsync_on_write", true)
 }
 
 // bindEnvVars maps env var names that don't map cleanly to dotted keys.
@@ -203,6 +205,8 @@ func bindEnvVars(v *viper.Viper) {
 		"mailer.driver":     "MAILER_DRIVER",
 		"mailer.from_email": "MAILER_FROM_EMAIL",
 		"mailer.from_name":  "MAILER_FROM_NAME",
+
+		"storage.fsync_on_write": "STORAGE_FSYNC_ON_WRITE",
 
 		"telemetry.health.expose_errors": "HEALTH_EXPOSE_ERRORS",
 	}
