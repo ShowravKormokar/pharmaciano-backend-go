@@ -149,6 +149,9 @@ const (
 	HeaderSunset          = "Sunset"
 	HeaderTotalCount      = "X-Total-Count"
 	HeaderNextCursor      = "X-Next-Cursor"
+	HeaderPage            = "X-Page"  
+	HeaderLimit           = "X-Limit" 
+	HeaderLink            = "Link"
 )
 
 // Cookies.
