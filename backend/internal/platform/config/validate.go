@@ -137,6 +137,14 @@ func (c *Config) Validate() error {
 		errs.add("logging.format must be json|console")
 	}
 
+	// Pagination
+	if len(c.Pagination.CursorSigningKey) < 32 {
+		errs.add("pagination.cursor_signing_key must be at least 32 bytes (set CURSOR_SIGNING_KEY)")
+	}
+	if c.Pagination.MaxLimit > 0 && c.Pagination.DefaultLimit > c.Pagination.MaxLimit {
+		errs.add("pagination.default_limit must not exceed pagination.max_limit")
+	}
+
 	// CORS
 	for _, o := range c.CORS.AllowOrigins {
 		if o == "*" && c.CORS.AllowCredentials {

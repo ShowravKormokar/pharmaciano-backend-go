@@ -207,6 +207,8 @@ func bindEnvVars(v *viper.Viper) {
 		"mailer.from_name":  "MAILER_FROM_NAME",
 
 		"storage.fsync_on_write": "STORAGE_FSYNC_ON_WRITE",
+		
+		"pagination.cursor_signing_key": "CURSOR_SIGNING_KEY",
 
 		"telemetry.health.expose_errors": "HEALTH_EXPOSE_ERRORS",
 	}

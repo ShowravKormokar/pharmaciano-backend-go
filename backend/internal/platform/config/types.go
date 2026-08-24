@@ -272,9 +272,9 @@ type WebSocketConfig struct {
 }
 
 type PaginationConfig struct {
-	DefaultLimit int    `mapstructure:"default_limit"`
-	MaxLimit     int    `mapstructure:"max_limit"`
-	CursorSecret string `mapstructure:"cursor_secret_env"`
+	DefaultLimit     int    `mapstructure:"default_limit"`
+	MaxLimit         int    `mapstructure:"max_limit"`
+	CursorSigningKey string `mapstructure:"cursor_signing_key"` //CursorSecret/cursor_secret_env
 }
 
 type AIConfig struct {
@@ -312,7 +312,7 @@ type StorageConfig struct {
 }
 
 type MailerConfig struct {
-	Driver    string `mapstructure:"driver"`     // noop | disabled  (smtp/sendgrid/ses land later)
+	Driver    string `mapstructure:"driver"` // noop | disabled  (smtp/sendgrid/ses land later)
 	FromEmail string `mapstructure:"from_email"`
 	FromName  string `mapstructure:"from_name"`
 }
