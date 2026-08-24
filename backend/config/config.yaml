@@ -216,7 +216,7 @@ websocket:
 pagination:
   default_limit: 20
   max_limit: 100
-  cursor_secret_env: JWT_SECRET
+  # cursor_secret_env: JWT_SECRET
 
 ai:
   enabled: false
