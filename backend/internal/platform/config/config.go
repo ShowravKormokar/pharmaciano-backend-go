@@ -14,24 +14,52 @@ import (
 // LoadOption controls where the loader looks for files
 type LoadOptions struct {
 	// ConfigDir is the directory containing config.yml
+	// If empty, the loader searches in multiple locations.
 	ConfigDir string
 	// EnvOverride forces APP_ENV. Empty = read from env or fall back to "dev".
 	EnvOverride string
 }
 
 // Load reads defaults, overlays per-env YAML, then applies environment variables.
+// It searches for config.yaml and .env in several locations.
 func Load(opts LoadOptions) (*Config, error) {
-
-	_ = godotenv.Load()
-
-	if opts.ConfigDir == "" {
-		opts.ConfigDir = "config"
+	// ---- Locate and load .env ----
+	// Build a list of candidate .env paths
+	envCandidates := []string{
+		".env",
+		"../.env",
+		"../../.env",
+	}
+	if opts.ConfigDir != "" {
+		envCandidates = append(envCandidates, filepath.Join(opts.ConfigDir, ".env"))
+	}
+	// Relative to executable
+	if exe, err := os.Executable(); err == nil {
+		exeDir := filepath.Dir(exe)
+		envCandidates = append(envCandidates,
+			filepath.Join(exeDir, ".env"),
+			filepath.Join(exeDir, "..", ".env"),
+		)
+	}
+	// Current working directory
+	if wd, err := os.Getwd(); err == nil {
+		envCandidates = append(envCandidates, filepath.Join(wd, ".env"))
 	}
 
-	if opts.ConfigDir == "" {
-		opts.ConfigDir = "config"
+	var envLoaded bool
+	for _, path := range envCandidates {
+		if _, err := os.Stat(path); err == nil {
+			if err := godotenv.Load(path); err == nil {
+				envLoaded = true
+				break
+			}
+		}
+	}
+	if !envLoaded {
+		// Not fatal – environment variables may already be set
 	}
 
+	// ---- Determine environment ----
 	env := strings.ToLower(strings.TrimSpace(opts.EnvOverride))
 	if env == "" {
 		env = strings.ToLower(strings.TrimSpace(os.Getenv("APP_ENV")))
@@ -40,23 +68,58 @@ func Load(opts LoadOptions) (*Config, error) {
 		env = "dev"
 	}
 
+	// ---- Locate config.yaml ----
+	baseDir := opts.ConfigDir
+	if baseDir == "" {
+		baseDir = "config"
+	}
+
+	candidates := []string{
+		filepath.Join(baseDir, "config.yaml"),
+		filepath.Join("..", baseDir, "config.yaml"),
+		filepath.Join("..", "..", baseDir, "config.yaml"),
+	}
+	// Relative to executable
+	if exe, err := os.Executable(); err == nil {
+		exeDir := filepath.Dir(exe)
+		candidates = append(candidates,
+			filepath.Join(exeDir, baseDir, "config.yaml"),
+			filepath.Join(exeDir, "..", baseDir, "config.yaml"),
+		)
+	}
+	// Current working directory
+	if wd, err := os.Getwd(); err == nil {
+		candidates = append(candidates, filepath.Join(wd, baseDir, "config.yaml"))
+	}
+
 	v := viper.New()
 	v.SetConfigType("yaml")
 
-	// Defaults (config/config.yaml)
-	base := filepath.Join(opts.ConfigDir, "config.yaml")
-	v.SetConfigFile(base)
-	if err := v.ReadInConfig(); err != nil {
-		return nil, fmt.Errorf("config: read %s: %w", base, err)
+	var usedConfigFile string
+	var found bool
+	for _, path := range candidates {
+		if _, err := os.Stat(path); err == nil {
+			usedConfigFile = path
+			found = true
+			break
+		}
+	}
+	if !found {
+		return nil, fmt.Errorf("config: could not find config.yaml in any of the searched paths: %v", candidates)
 	}
 
-	// Per-env overlay
-	envFile := filepath.Join(opts.ConfigDir, "config."+env+".yaml")
-	if _, err := os.Stat(envFile); err != nil {
+	v.SetConfigFile(usedConfigFile)
+	if err := v.ReadInConfig(); err != nil {
+		return nil, fmt.Errorf("config: read %s: %w", usedConfigFile, err)
+	}
+
+	// ---- Environment overlay (config.<env>.yaml) ----
+	envDir := filepath.Dir(usedConfigFile)
+	envFile := filepath.Join(envDir, "config."+env+".yaml")
+	if _, err := os.Stat(envFile); err == nil {
 		vEnv := viper.New()
 		vEnv.SetConfigType("yaml")
 		vEnv.SetConfigFile(envFile)
-
 		if err := vEnv.ReadInConfig(); err != nil {
 			return nil, fmt.Errorf("config: read %s: %w", envFile, err)
 		}
@@ -65,25 +128,24 @@ func Load(opts LoadOptions) (*Config, error) {
 		}
 	}
 
-	// Environment variable
+	// ---- Environment variables ----
 	v.SetEnvPrefix("")
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	v.AutomaticEnv()
-	bindEnvVars(v) // explicit binds for keys that don't follow the naming rule
+	bindEnvVars(v)
 
-	// Sensible defaults for anything YAML forgot
+	// ---- Apply defaults ----
 	applyDefaults(v)
 
-	// Unmarshal into typed struct
+	// ---- Unmarshal ----
 	cfg := &Config{}
 	if err := v.Unmarshal(cfg, decoderOptions...); err != nil {
 		return nil, fmt.Errorf("config: unmarshal: %w", err)
 	}
-
 	cfg.App.Env = env
 	cfg.raw = v
 
-	// Validate
+	// ---- Validate ----
 	if err := cfg.Validate(); err != nil {
 		return nil, err
 	}
@@ -91,7 +153,7 @@ func Load(opts LoadOptions) (*Config, error) {
 	return cfg, nil
 }
 
-// MustLoad is Load that panics on error. Use only in main().
+// MustLoad is Load that panics on error.
 func MustLoad(opts LoadOptions) *Config {
 	c, err := Load(opts)
 	if err != nil {
@@ -101,7 +163,7 @@ func MustLoad(opts LoadOptions) *Config {
 	return c
 }
 
-// ApplyDefaults sets fallback values for keys that must not be zero.
+// applyDefaults sets fallback values.
 func applyDefaults(v *viper.Viper) {
 	v.SetDefault("app.name", "pharmaciano-erp")
 	v.SetDefault("app.timezone", "Asia/Dhaka")
@@ -148,10 +210,21 @@ func applyDefaults(v *viper.Viper) {
 	v.SetDefault("pagination.max_limit", 100)
 
 	v.SetDefault("storage.fsync_on_write", true)
+
+	v.SetDefault("idempotency.ttl", 24*time.Hour)
+	v.SetDefault("idempotency.key_max_length", 128)
+
+	v.SetDefault("security.hsts.enabled", true)
+	v.SetDefault("security.hsts.max_age", 31536000)
+	v.SetDefault("security.hsts.include_subdomains", true)
+	v.SetDefault("security.hsts.preload", true)
+	v.SetDefault("security.csp", "default-src 'self'; frame-ancestors 'none'")
+	v.SetDefault("security.x_frame_options", "DENY")
+	v.SetDefault("security.x_content_type_options", "nosniff")
+	v.SetDefault("security.referrer_policy", "strict-origin-when-cross-origin")
 }
 
 // bindEnvVars maps env var names that don't map cleanly to dotted keys.
-// (Viper turns "server.port" → "SERVER_PORT" automatically; anything else that we want to accept goes here.)
 func bindEnvVars(v *viper.Viper) {
 	binds := map[string]string{
 		"app.env":      "APP_ENV",
@@ -207,7 +280,7 @@ func bindEnvVars(v *viper.Viper) {
 		"mailer.from_name":  "MAILER_FROM_NAME",
 
 		"storage.fsync_on_write": "STORAGE_FSYNC_ON_WRITE",
-		
+
 		"pagination.cursor_signing_key": "CURSOR_SIGNING_KEY",
 
 		"telemetry.health.expose_errors": "HEALTH_EXPOSE_ERRORS",
