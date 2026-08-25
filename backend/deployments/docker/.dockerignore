@@ -1,0 +1,41 @@
+# Git
+.git/
+.gitignore
+
+# Build artifacts
+*.exe
+*.test
+*.out
+coverage.out
+
+# Environment files
+.env
+.env.*
+
+# Logs
+logs/
+*.log
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+deployments/
+docker-compose*.yml
+*.Dockerfile
+.dockerignore
+
+# Testing
+tests/
+testdata/
+
+# Documentation
+docs/
+*.md

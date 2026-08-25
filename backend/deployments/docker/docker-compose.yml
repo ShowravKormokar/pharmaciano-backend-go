@@ -1,0 +1,195 @@
+# version: '3.8'  ← removed to avoid warning
+
+services:
+  api:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/api.Dockerfile
+    container_name: pharmaciano-api
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      APP_ENV: docker
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: pharmaciano
+      DB_USER: pharmaciano
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      JWT_SECRET: ${JWT_SECRET:-4f8c2a9d7b6e3f1c9a2d4e7f8b1c3d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1}
+      FIELD_ENCRYPTION_KEY: ${FIELD_ENCRYPTION_KEY:-q9X5zYV7kzZfQm3hV9x9pKf2m7hTn4z5u8vW1x2y3zA=}
+      FIELD_ENCRYPTION_KEY_ID: ${FIELD_ENCRYPTION_KEY_ID:-fe-2026-07}
+      SUPER_ADMIN_INITIAL_PASSWORD: ${SUPER_ADMIN_INITIAL_PASSWORD:-ChangeMe123!}
+      CURSOR_SIGNING_KEY: ${CURSOR_SIGNING_KEY:-4f8c2a9d7b6e3f1c9a2d4e7f8b1c3d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - pharmaciano-net
+    volumes:
+      - api-uploads:/root/data/uploads
+      - api-logs:/root/logs
+
+  worker:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/worker.Dockerfile
+    container_name: pharmaciano-worker
+    restart: unless-stopped
+    environment:
+      APP_ENV: docker
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: pharmaciano
+      DB_USER: pharmaciano
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      JWT_SECRET: ${JWT_SECRET:-4f8c2a9d7b6e3f1c9a2d4e7f8b1c3d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1}
+      FIELD_ENCRYPTION_KEY: ${FIELD_ENCRYPTION_KEY:-q9X5zYV7kzZfQm3hV9x9pKf2m7hTn4z5u8vW1x2y3zA=}
+      FIELD_ENCRYPTION_KEY_ID: ${FIELD_ENCRYPTION_KEY_ID:-fe-2026-07}
+      SUPER_ADMIN_INITIAL_PASSWORD: ${SUPER_ADMIN_INITIAL_PASSWORD:-ChangeMe123!}
+      CURSOR_SIGNING_KEY: ${CURSOR_SIGNING_KEY:-4f8c2a9d7b6e3f1c9a2d4e7f8b1c3d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - pharmaciano-net
+    volumes:
+      - worker-uploads:/root/data/uploads
+      - worker-logs:/root/logs
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: pharmaciano-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: pharmaciano
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: pharmaciano
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pharmaciano"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - pharmaciano-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: pharmaciano-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes --appendfsync everysec
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - pharmaciano-net
+
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: pharmaciano-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ../nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ../nginx/conf.d:/etc/nginx/conf.d:ro
+    depends_on:
+      - api
+    networks:
+      - pharmaciano-net
+
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    container_name: pharmaciano-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ../prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ../prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - pharmaciano-net
+
+  grafana:
+    image: grafana/grafana:10.4.0
+    container_name: pharmaciano-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_INSTALL_PLUGINS: grafana-piechart-panel
+    volumes:
+      - ../grafana/provisioning:/etc/grafana/provisioning:ro
+      - ../grafana/dashboards:/etc/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - pharmaciano-net
+
+  # Dev tools – adminer & asynqmon (optional)
+  adminer:
+    image: adminer:latest
+    container_name: pharmaciano-adminer
+    restart: unless-stopped
+    ports:
+      - "8081:8080"
+    depends_on:
+      - postgres
+    networks:
+      - pharmaciano-net
+
+  asynqmon:
+    image: hibiken/asynqmon:latest
+    container_name: pharmaciano-asynqmon
+    restart: unless-stopped
+    ports:
+      - "8082:8080"
+    environment:
+      REDIS_ADDR: redis:6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      REDIS_DB: 1
+    depends_on:
+      - redis
+    networks:
+      - pharmaciano-net
+
+networks:
+  pharmaciano-net:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  redis-data:
+  prometheus-data:
+  grafana-data:
+  api-uploads:
+  api-logs:
+  worker-uploads:
+  worker-logs:
