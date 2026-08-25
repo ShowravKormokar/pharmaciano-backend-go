@@ -1,0 +1,73 @@
+groups:
+  - name: pharmaciano_alerts
+    interval: 30s
+    rules:
+      # API down
+      - alert: APIDown
+        expr: up{job="pharmaciano-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Pharmaciano API is down"
+          description: "The API service has been unreachable for more than 1 minute."
+
+      # High 5xx error rate
+      - alert: High5xxErrors
+        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High 5xx error rate"
+          description: "Error rate is above 0.1 req/s for 5 minutes."
+
+      # High latency (p95 > 1s)
+      - alert: HighLatency
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, route)) > 1.0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High API latency (p95 > 1s)"
+          description: "p95 latency for {{ $labels.route }} is {{ $value }}s."
+
+      # Database connection pool exhausted
+      - alert: DBConnectionPoolExhausted
+        expr: db_pool_acquired_connections / db_pool_max_connections > 0.9
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "DB connection pool near saturation"
+          description: "Acquired connections are above 90% of max."
+
+      # Low stock alerts firing
+      - alert: LowStockAlerts
+        expr: inventory_low_stock_alerts_total > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low stock alerts triggered"
+          description: "There are {{ $value }} low stock alerts."
+
+      # Expiry alerts
+      - alert: ExpiryAlerts
+        expr: inventory_expiry_alerts_total > 3
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Expiry alerts triggered"
+          description: "There are {{ $value }} expiry alerts."
+
+      # Redis down
+      - alert: RedisDown
+        expr: redis_up{job="pharmaciano-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Redis is down"
+          description: "Redis service is unreachable."
