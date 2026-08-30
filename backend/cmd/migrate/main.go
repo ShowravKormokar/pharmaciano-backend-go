@@ -1,45 +1,72 @@
 ﻿package main
 
 import (
-	"fmt"
-	"os"
+	"flag"
+	"log"
 
 	"backend/internal/platform/config"
 	"backend/internal/platform/db"
 	"backend/internal/platform/logger"
-	"backend/migrations"
+	"backend/migrations" // import the embed package
+
+	"go.uber.org/zap"
 )
 
 func main() {
+	var (
+		direction = flag.String("direction", "up", "up or down")
+		steps     = flag.Int("steps", 0, "number of steps for down (0 = all)")
+		force     = flag.Int("force", -1, "force version")
+	)
+	flag.Parse()
+
+	// Load config
 	cfg := config.MustLoad(config.LoadOptions{})
-	log, err := logger.New(cfg.Logging, cfg.App.Name, cfg.App.Version)
+
+	// Logger
+	logger, err := logger.New(cfg.Logging, cfg.App.Name, cfg.App.Version)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+		log.Fatalf("logger: %v", err)
 	}
+	defer logger.Sync()
 
-	m, err := db.NewMigrator(cfg.DSN(), migrations.FS, ".", log)
+	// Connect to DB
+	dsn := cfg.DSN()
+
+	// Use embedded FS from migrations package
+	migrator, err := db.NewMigrator(dsn, migrations.FS, "migrations", logger)
 	if err != nil {
-		log.Fatal(err.Error())
+		logger.Fatal("migrator init", zap.Error(err))
 	}
-	defer m.Close()
+	defer migrator.Close()
 
-	cmd := "up"
-	if len(os.Args) > 1 {
-		cmd = os.Args[1]
+	if *force >= 0 {
+		if err := migrator.Force(*force); err != nil {
+			logger.Fatal("force version", zap.Error(err))
+		}
+		logger.Info("forced version", zap.Int("version", *force))
+		return
 	}
 
-	switch cmd {
+	switch *direction {
 	case "up":
-		if err := m.Up(); err != nil {
-			log.Fatal(err.Error())
+		if err := migrator.Up(); err != nil {
+			logger.Fatal("migrate up", zap.Error(err))
 		}
 	case "down":
-		if err := m.Down(1); err != nil {
-			log.Fatal(err.Error())
+		if *steps == 0 {
+			logger.Warn("down all migrations – this is destructive")
+			if err := migrator.Down(-1); err != nil {
+				logger.Fatal("migrate down all", zap.Error(err))
+			}
+		} else {
+			if err := migrator.Down(*steps); err != nil {
+				logger.Fatal("migrate down steps", zap.Error(err))
+			}
 		}
-	case "version":
-		v, dirty, _ := m.Version()
-		fmt.Printf("version=%d dirty=%v\n", v, dirty)
+	default:
+		logger.Fatal("unknown direction", zap.String("direction", *direction))
 	}
+
+	logger.Info("migration completed")
 }
