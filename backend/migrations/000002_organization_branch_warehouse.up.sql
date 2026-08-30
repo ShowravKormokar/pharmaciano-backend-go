@@ -1,4 +1,23 @@
--- ##### FILE: 000002_organization_branch_warehouse.up.sql #####################
+-- ---------------------------------------------------------------------------
+-- Prerequisites
+-- ---------------------------------------------------------------------------
+-- Enable the citext extension (used for case‑insensitive text columns).
+CREATE EXTENSION IF NOT EXISTS citext;
+
+-- The trigger function used by all tables to update `updated_at` on every row
+-- update. (Define it once here; in a real project this would usually live in
+-- migration 000001 or a shared file.)
+CREATE OR REPLACE FUNCTION set_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = now();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- ---------------------------------------------------------------------------
+-- Table: organizations
+-- ---------------------------------------------------------------------------
 CREATE TABLE organizations (
   id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name                  VARCHAR(200) NOT NULL,
@@ -26,11 +45,16 @@ CREATE TABLE organizations (
   updated_at            TIMESTAMPTZ  NOT NULL DEFAULT now(),
   deleted_at            TIMESTAMPTZ
 );
+
 CREATE UNIQUE INDEX ux_organizations_slug ON organizations(slug) WHERE deleted_at IS NULL;
 CREATE INDEX        ix_organizations_active ON organizations(is_active) WHERE deleted_at IS NULL;
+
 CREATE TRIGGER tr_organizations_upd BEFORE UPDATE ON organizations
   FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
+-- ---------------------------------------------------------------------------
+-- Table: branches
+-- ---------------------------------------------------------------------------
 CREATE TABLE branches (
   id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id  UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
@@ -53,12 +77,17 @@ CREATE TABLE branches (
   updated_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
   deleted_at       TIMESTAMPTZ
 );
+
 CREATE UNIQUE INDEX ux_branches_org_code ON branches(organization_id, code) WHERE deleted_at IS NULL;
 CREATE INDEX        ix_branches_org      ON branches(organization_id)      WHERE deleted_at IS NULL;
 CREATE INDEX        ix_branches_active   ON branches(organization_id, is_active) WHERE deleted_at IS NULL;
+
 CREATE TRIGGER tr_branches_upd BEFORE UPDATE ON branches
   FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
+-- ---------------------------------------------------------------------------
+-- Table: warehouses
+-- ---------------------------------------------------------------------------
 CREATE TABLE warehouses (
   id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id  UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
@@ -73,7 +102,13 @@ CREATE TABLE warehouses (
   updated_at       TIMESTAMPTZ  NOT NULL DEFAULT now(),
   deleted_at       TIMESTAMPTZ
 );
+
 CREATE UNIQUE INDEX ux_warehouses_branch_code ON warehouses(branch_id, code) WHERE deleted_at IS NULL;
 CREATE INDEX        ix_warehouses_branch      ON warehouses(branch_id)      WHERE deleted_at IS NULL;
+
+-- Enforce at most one main warehouse per branch (considering only non‑deleted rows).
+CREATE UNIQUE INDEX ux_warehouses_main_per_branch ON warehouses(branch_id)
+  WHERE is_main = TRUE AND deleted_at IS NULL;
+
 CREATE TRIGGER tr_warehouses_upd BEFORE UPDATE ON warehouses
   FOR EACH ROW EXECUTE FUNCTION set_updated_at();
