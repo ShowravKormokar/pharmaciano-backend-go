@@ -1,8 +1,3 @@
-// Package router assembles the Gin engine: it fixes the middleware order, wires
-// the operational endpoints (health, metrics) and mounts the versioned API. It
-// depends on the middleware container (behavioural contracts already injected)
-// and the platform telemetry helpers — never on domain modules directly, so the
-// HTTP wiring compiles and is testable before the modules land.
 package router
 
 import (
@@ -18,27 +13,23 @@ import (
 	"backend/pkg/response"
 )
 
-// Deps is the explicit set of collaborators the router needs. Passing them in a
-// struct keeps New's signature stable as the system grows.
+// ModuleRegistrar is the contract a domain module's HTTP handler satisfies to mount its routes.
+type ModuleRegistrar interface {
+	RegisterRoutes(rg *gin.RouterGroup, mw *middleware.Middleware)
+}
+
 type Deps struct {
 	Cfg     *config.Config
 	Log     *zap.Logger
 	Metrics *telemetry.Metrics
 	Health  *telemetry.Health
 	MW      *middleware.Middleware
+
+	// Modules are the domain route registrars, mounted under /api/v1 in the order given.
+	Modules []ModuleRegistrar
 }
 
 // New builds the fully wired Gin engine.
-//
-// Middleware order (outermost first):
-//
-//	telemetry(span+metrics) → request_id → recovery → access-log →
-//	security-headers → cors → body-limit → [per-route: rate-limit, auth,
-//	tenant, rbac, idempotency, audit] → handler
-//
-// The telemetry middleware is outermost so its server span and latency/metrics
-// cover the entire chain (including a Recovery-handled 500). Everything in
-// middleware.Global() then runs inside that span.
 func New(d Deps) *gin.Engine {
 	if d.Cfg != nil && d.Cfg.IsProd() {
 		gin.SetMode(gin.ReleaseMode)
@@ -76,10 +67,7 @@ func New(d Deps) *gin.Engine {
 	return engine
 }
 
-// configureProxies makes c.ClientIP() trustworthy. When the app sits behind a
-// known reverse proxy/load balancer we honour X-Forwarded-For, but only from
-// private-range hops so a public client can't spoof its address. Otherwise we
-// ignore forwarding headers entirely and use the raw socket address.
+// configureProxies makes c.ClientIP() trustworthy.
 func configureProxies(engine *gin.Engine, cfg *config.Config) {
 	if cfg != nil && cfg.Server.TrustProxy {
 		engine.ForwardedByClientIP = true
