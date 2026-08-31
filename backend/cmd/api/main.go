@@ -15,8 +15,11 @@ import (
 	"go.uber.org/zap"
 
 	"backend/internal/middleware"
+	"backend/internal/modules/auth"
 	"backend/internal/modules/branch"
 	"backend/internal/modules/organization"
+	"backend/internal/modules/rbac"
+	"backend/internal/modules/user"
 	"backend/internal/modules/warehouse"
 	"backend/internal/platform/config"
 	"backend/internal/platform/db"
@@ -25,6 +28,7 @@ import (
 	"backend/internal/platform/telemetry"
 	"backend/internal/platform/validator"
 	"backend/internal/router"
+	"backend/pkg/crypto"
 )
 
 func main() {
@@ -109,15 +113,6 @@ func run() error {
 	health.Register("postgres", func(ctx context.Context) error { return pg.Ping(ctx) })
 	health.Register("redis", func(ctx context.Context) error { return rdb.Ping(ctx) })
 
-	// --- Middleware container ---------------------------------------------------
-	// No domain deps yet → fail-closed stubs (New logs a warning). As modules land:
-	//   mw := middleware.New(cfg, log, rdb,
-	//       middleware.WithAuthenticator(authModule),
-	//       middleware.WithAuthorizer(rbacModule),
-	//       middleware.WithAuditSink(auditProducer),
-	//   )
-	mw := middleware.New(cfg, log, rdb)
-
 	// --- Request validator ------------------------------------------------------
 	// One shared, thread-safe validator (custom tags + json field names) for every
 	// module handler. Built once here so a bad tag registration fails fast at
@@ -127,15 +122,83 @@ func run() error {
 		return fmt.Errorf("validator init: %w", err)
 	}
 
+	// --- Shared password hasher (Argon2id) --------------------------------------
+	// One tuned hasher process-wide, shared by auth (verify on login, hash on
+	// reset) and user (hash on create) so the cost profile can never diverge
+	// between them. pkg/crypto redeclares the parameter shape rather than importing
+	// config, so the composition root maps the two field-for-field; any zero field
+	// degrades to a safe default inside NewPasswordHasher.
+	hasher := crypto.NewPasswordHasher(crypto.Argon2Params{
+		MemoryKB:    cfg.Password.Argon2.MemoryKB,
+		Time:        cfg.Password.Argon2.Time,
+		Parallelism: cfg.Password.Argon2.Parallelism,
+		KeyLength:   cfg.Password.Argon2.KeyLength,
+		SaltLength:  cfg.Password.Argon2.SaltLength,
+	})
+
+	// --- Access-control modules (construction order: rbac → auth → user) --------
+	// These are built before the middleware container because two of them satisfy
+	// ports the middleware consumes (auth is the Authenticator, rbac the
+	// Authorizer). None of them need the container at construction — it is handed to
+	// RegisterRoutes later — so there is no cycle.
+	//
+	// rbac owns the policy engine. auth borrows its ResolveAccess to snapshot the
+	// caller's role + permissions into each access token. user delegates role
+	// assignment to rbac's Service and session revocation to auth's Service; it
+	// imports neither concretely (both are consumer-side ports).
+	rbacModule := rbac.New(pg, val, log)
+
+	// Plant the fixed permission/role catalogue (idempotent; self-manages its own
+	// transaction + advisory lock), then warm the enforcer snapshot synchronously so
+	// a policy-load failure aborts startup rather than surfacing later as blanket
+	// denials — the enforcer fails closed until the first Load succeeds.
+	if serr := rbacModule.Seeder.Seed(ctx); serr != nil {
+		return fmt.Errorf("rbac seed: %w", serr)
+	}
+	if lerr := rbacModule.Enforcer.Load(ctx); lerr != nil {
+		return fmt.Errorf("rbac enforcer initial load: %w", lerr)
+	}
+	// Bound staleness against out-of-band policy edits (the service also reloads
+	// immediately after each mutation). The reload goroutine stops when ctx is
+	// cancelled at shutdown; interval 0 applies the enforcer's 30s default.
+	rbacModule.Enforcer.StartAutoReload(ctx, 0)
+
+	// auth returns an error (unlike the leaf modules) so a mis-secured JWT config —
+	// short/empty secret, non-positive TTL — fails the boot instead of minting
+	// forgeable or instantly-expired tokens.
+	authModule, err := auth.New(pg, cfg, hasher, rbacModule.Enforcer, val, log)
+	if err != nil {
+		return fmt.Errorf("auth module init: %w", err)
+	}
+
+	// user is a leaf module exposing its *Handler directly (no Module wrapper): it
+	// hands back nothing the composition root needs to hold.
+	userHandler := user.New(pg, val, hasher, rbacModule.Service, authModule.Service, log)
+
+	// --- Middleware container ---------------------------------------------------
+	// Inject the real authenticator (auth) and authorizer (rbac) so Protected
+	// routes validate tokens and enforce permissions for real. The audit sink is
+	// left as the built-in nop stub until the Asynq audit producer lands; New logs a
+	// warning so the stub wiring can never ship unnoticed.
+	mw := middleware.New(cfg, log, rdb,
+		middleware.WithAuthenticator(authModule.Service),
+		middleware.WithAuthorizer(rbacModule.Enforcer),
+	)
+
 	// --- Domain modules ---------------------------------------------------------
 	// Each module's New assembles its own repository → service → handler from the
 	// shared Postgres pool, validator and logger, and exposes RegisterRoutes. The
-	// router mounts them (in this order) under /api/v1 purely through the
-	// ModuleRegistrar interface, so it never imports these packages.
+	// router mounts them under /api/v1 purely through the ModuleRegistrar interface,
+	// so it never imports these packages. auth and rbac are Modules whose
+	// RegisterRoutes delegates to their handler; user exposes its Handler directly.
+	// Listing order is cosmetic — the mounted paths do not overlap.
 	modules := []router.ModuleRegistrar{
 		organization.New(pg, val, log),
 		branch.New(pg, val, log),
 		warehouse.New(pg, val, log),
+		rbacModule,
+		authModule,
+		userHandler,
 	}
 
 	// --- Router -----------------------------------------------------------------
