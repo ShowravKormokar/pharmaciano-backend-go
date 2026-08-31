@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
 )
@@ -215,6 +216,15 @@ func IsCheckViolation(err error) bool {
 // IsSerializationFailure reports whether err is a "40001" (retriable).
 func IsSerializationFailure(err error) bool {
 	return matchSQLState(err, "40001")
+}
+
+// ConstraintName returns the name of the violated Postgres constraint
+func ConstraintName(err error) string {
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) {
+		return pgErr.ConstraintName
+	}
+	return ""
 }
 
 func matchSQLState(err error, code string) bool {

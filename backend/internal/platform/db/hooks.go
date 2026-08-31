@@ -81,23 +81,14 @@ func (z zapPgxAdapter) Log(ctx context.Context, level tracelog.LogLevel, msg str
 
 // compactSQL collapses whitespace so slow-query lines stay one row in Kibana.
 func compactSQL(s string) string {
-	s = strings.ReplaceAll(s, "\n", " ")
-	s = strings.ReplaceAll(s, "\t", " ")
-
-	for strings.Contains(s, " ") {
-		s = strings.ReplaceAll(s, "  ", " ")
-	}
+	s = strings.Join(strings.Fields(s), " ")
 	if len(s) > 500 {
-		return s[:500] + "…"
+		return s[:500] + "..."
 	}
-	return strings.TrimSpace(s)
+	return s
 }
 
 // Tenant-scope helpers.
-// The API's `tenant` middleware puts org_id/branch_id/user_id/request_id on
-// the request context. Repositories read them from here to add mandatory
-// WHERE clauses. This is defence-in-depth: even if a handler forgets, the
-// repository will require the value and refuse to run.
 
 // WithOrgID
 func WithOrgID(ctx context.Context, id string) context.Context {
