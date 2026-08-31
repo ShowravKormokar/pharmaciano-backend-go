@@ -29,6 +29,7 @@ type SeedData struct {
 	Permissions []PermissionSeed `yaml:"permissions"`
 	Roles       []RoleSeed       `yaml:"roles"`
 	SuperAdmin  SuperAdminSeed   `yaml:"super_admin"`
+	Settings    []SettingSeed    `yaml:"settings"`
 }
 
 type PermissionSeed struct {
@@ -49,9 +50,29 @@ type RoleSeed struct {
 }
 
 type SuperAdminSeed struct {
-	Email     string `yaml:"email"`
-	FirstName string `yaml:"first_name"`
-	LastName  string `yaml:"last_name"`
+	Email          string `yaml:"email"`
+	Username       string `yaml:"username"`
+	EmployeeCode   string `yaml:"employee_code"`
+	Phone          string `yaml:"phone"`
+	FirstName      string `yaml:"first_name"`
+	LastName       string `yaml:"last_name"`
+	Status         string `yaml:"status"`
+	Stage          string `yaml:"stage"`
+	JoiningDate    string `yaml:"joining_date"`
+	EmploymentType string `yaml:"employment_type"`
+	Role           string `yaml:"role"`
+	Profile        struct {
+		FirstName string `yaml:"first_name"`
+		LastName  string `yaml:"last_name"`
+	} `yaml:"profile"`
+}
+
+type SettingSeed struct {
+	Key         string `yaml:"key"`
+	Value       string `yaml:"value"`
+	ValueType   string `yaml:"value_type"`
+	Description string `yaml:"description"`
+	IsSensitive bool   `yaml:"is_sensitive"`
 }
 
 func main() {
@@ -101,6 +122,9 @@ func main() {
 			loggr.Fatal("seed rbac data", zap.Error(err))
 		}
 	}
+	if err := seedSettings(ctx, pg.Pool(), seedData.Settings); err != nil {
+		loggr.Fatal("seed system settings", zap.Error(err))
+	}
 
 	if *seedUser {
 		if orgID == uuid.Nil {
@@ -127,6 +151,7 @@ func loadSeedData() (SeedData, error) {
 		"permissions.yaml",
 		"roles.yaml",
 		"super_admin.yaml",
+		"system_settings.yaml",
 	}
 
 	var data SeedData
@@ -248,10 +273,9 @@ func seedRBAC(ctx context.Context, pool *pgxpool.Pool, data SeedData) error {
 		}
 		if _, err := pool.Exec(ctx, `
 			INSERT INTO permissions (module, action, description, is_system)
-			SELECT $1, $2, $3, $4
-			WHERE NOT EXISTS (
-				SELECT 1 FROM permissions WHERE module = $1 AND action = $2 AND deleted_at IS NULL
-			)`, module, action, permission.Description, permission.IsSystem); err != nil {
+			VALUES ($1, $2, $3, $4)
+			ON CONFLICT (module, action) DO UPDATE
+			SET description = EXCLUDED.description, is_system = EXCLUDED.is_system`, module, action, permission.Description, permission.IsSystem); err != nil {
 			return fmt.Errorf("insert permission %s:%s: %w", module, action, err)
 		}
 	}
@@ -262,13 +286,27 @@ func seedRBAC(ctx context.Context, pool *pgxpool.Pool, data SeedData) error {
 		}
 		if _, err := pool.Exec(ctx, `
 			INSERT INTO roles (organization_id, name, description, is_active, is_system, priority)
-			SELECT NULL, $1, $2, $3, $4, $5
-			WHERE NOT EXISTS (
-				SELECT 1 FROM roles WHERE organization_id IS NULL AND name = $1 AND deleted_at IS NULL
-			)`, role.Name, role.Description, role.IsActive, role.IsSystem, role.Priority); err != nil {
+			VALUES (NULL, $1, $2, $3, $4, $5)
+			ON CONFLICT DO NOTHING`, role.Name, role.Description, role.IsActive, role.IsSystem, role.Priority); err != nil {
 			return fmt.Errorf("insert role %s: %w", role.Name, err)
 		}
+		if _, err := pool.Exec(ctx, `
+			UPDATE roles SET description = $2, is_active = $3, is_system = $4, priority = $5
+			WHERE organization_id IS NULL AND name = $1 AND deleted_at IS NULL`, role.Name, role.Description, role.IsActive, role.IsSystem, role.Priority); err != nil {
+			return fmt.Errorf("update role %s: %w", role.Name, err)
+		}
 		for _, perm := range role.Permissions {
+			if strings.TrimSpace(perm) == "*" {
+				if _, err := pool.Exec(ctx, `
+					INSERT INTO role_permissions (role_id, permission_id)
+					SELECT r.id, p.id FROM roles r CROSS JOIN permissions p
+					WHERE r.organization_id IS NULL AND r.name = $1 AND r.deleted_at IS NULL
+					  AND p.deleted_at IS NULL
+					  AND NOT EXISTS (SELECT 1 FROM role_permissions rp WHERE rp.role_id = r.id AND rp.permission_id = p.id)`, role.Name); err != nil {
+					return fmt.Errorf("assign all permissions to role %s: %w", role.Name, err)
+				}
+				continue
+			}
 			module, action := normalizePermissionSpec(perm)
 			if module == "" || action == "" {
 				continue
@@ -289,6 +327,30 @@ func seedRBAC(ctx context.Context, pool *pgxpool.Pool, data SeedData) error {
 				)`, role.Name, module, action); err != nil {
 				return fmt.Errorf("assign permission %s to role %s: %w", perm, role.Name, err)
 			}
+		}
+	}
+	return nil
+}
+
+func seedSettings(ctx context.Context, pool *pgxpool.Pool, settings []SettingSeed) error {
+	for _, setting := range settings {
+		key := strings.TrimSpace(setting.Key)
+		if key == "" {
+			continue
+		}
+		valueType := setting.ValueType
+		if valueType == "duration" {
+			valueType = "string"
+		}
+		var id uuid.UUID
+		err := pool.QueryRow(ctx, `SELECT id FROM system_settings WHERE organization_id IS NULL AND key = $1 AND deleted_at IS NULL`, key).Scan(&id)
+		if errors.Is(err, pgx.ErrNoRows) {
+			err = pool.QueryRow(ctx, `INSERT INTO system_settings (key, value, value_type, description, is_sensitive) VALUES ($1,$2,$3,$4,$5) RETURNING id`, key, setting.Value, valueType, setting.Description, setting.IsSensitive).Scan(&id)
+		} else if err == nil {
+			_, err = pool.Exec(ctx, `UPDATE system_settings SET value = $2, value_type = $3, description = $4, is_sensitive = $5, updated_at = now() WHERE id = $1`, id, setting.Value, valueType, setting.Description, setting.IsSensitive)
+		}
+		if err != nil {
+			return fmt.Errorf("upsert setting %s: %w", key, err)
 		}
 	}
 	return nil
@@ -348,6 +410,21 @@ func normalizePermissionSpec(value string) (string, string) {
 }
 
 func seedSuperAdmin(ctx context.Context, pool *pgxpool.Pool, cfg *config.Config, orgID uuid.UUID, admin SuperAdminSeed) error {
+	if strings.Contains(admin.Email, "${") || strings.TrimSpace(admin.Email) == "" {
+		admin.Email = cfg.SuperAdmin.Email
+	}
+	if strings.Contains(admin.FirstName, "${") || strings.TrimSpace(admin.FirstName) == "" {
+		admin.FirstName = admin.Profile.FirstName
+	}
+	if strings.Contains(admin.FirstName, "${") || strings.TrimSpace(admin.FirstName) == "" {
+		admin.FirstName = cfg.SuperAdmin.FirstName
+	}
+	if strings.Contains(admin.LastName, "${") || strings.TrimSpace(admin.LastName) == "" {
+		admin.LastName = admin.Profile.LastName
+	}
+	if strings.Contains(admin.LastName, "${") || strings.TrimSpace(admin.LastName) == "" {
+		admin.LastName = cfg.SuperAdmin.LastName
+	}
 	if strings.TrimSpace(admin.Email) == "" {
 		return fmt.Errorf("super admin email is empty")
 	}
@@ -369,14 +446,18 @@ func seedSuperAdmin(ctx context.Context, pool *pgxpool.Pool, cfg *config.Config,
 		return fmt.Errorf("hash password: %w", err)
 	}
 
-	username := strings.ToLower(strings.Split(admin.Email, "@")[0])
+	username := strings.ToLower(strings.TrimSpace(admin.Username))
+	if username == "" || strings.Contains(username, "${") {
+		username = strings.ToLower(strings.Split(admin.Email, "@")[0])
+	}
 	var userID uuid.UUID
 	if err := pool.QueryRow(ctx, `
 		INSERT INTO users (
-			organization_id, email, username, password_hash, status, stage,
-			must_change_password, failed_attempts, mfa_enabled
-		) VALUES ($1, $2, $3, $4, 'active', 'verified', TRUE, 0, FALSE)
-		RETURNING id`, orgID, strings.ToLower(admin.Email), username, passwordHash).Scan(&userID); err != nil {
+			organization_id, email, username, employee_code, phone, password_hash, status, stage,
+			must_change_password, failed_attempts, mfa_enabled, joining_date, employment_type
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, TRUE, 0, FALSE, $9, $10)
+		RETURNING id`, orgID, strings.ToLower(admin.Email), username, admin.EmployeeCode, admin.Phone, passwordHash,
+		valueOrDefault(admin.Status, "active"), valueOrDefault(admin.Stage, "verified"), admin.JoiningDate, admin.EmploymentType).Scan(&userID); err != nil {
 		return fmt.Errorf("insert user: %w", err)
 	}
 
@@ -388,7 +469,8 @@ func seedSuperAdmin(ctx context.Context, pool *pgxpool.Pool, cfg *config.Config,
 	}
 
 	var roleID uuid.UUID
-	if err := pool.QueryRow(ctx, `SELECT id FROM roles WHERE name = 'SUPER_ADMIN' AND organization_id IS NULL AND deleted_at IS NULL`).Scan(&roleID); err != nil {
+	roleName := valueOrDefault(admin.Role, "SUPER_ADMIN")
+	if err := pool.QueryRow(ctx, `SELECT id FROM roles WHERE name = $1 AND organization_id IS NULL AND deleted_at IS NULL`, roleName).Scan(&roleID); err != nil {
 		return fmt.Errorf("read super admin role: %w", err)
 	}
 
@@ -402,6 +484,13 @@ func seedSuperAdmin(ctx context.Context, pool *pgxpool.Pool, cfg *config.Config,
 	}
 
 	return nil
+}
+
+func valueOrDefault(value, fallback string) string {
+	if strings.TrimSpace(value) == "" {
+		return fallback
+	}
+	return value
 }
 
 func hashPassword(plain string) (string, error) {
