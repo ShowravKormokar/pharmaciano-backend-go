@@ -100,3 +100,9 @@ CREATE UNIQUE INDEX ux_purchase_receipts_no ON purchase_receipts(receipt_no) WHE
 CREATE INDEX ix_purchase_receipts_purchase ON purchase_receipts(purchase_id);
 CREATE TRIGGER tr_purchase_receipts_upd BEFORE UPDATE ON purchase_receipts
   FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+ALTER TABLE inventory_batches
+  ADD CONSTRAINT fk_inventory_batches_purchase
+  FOREIGN KEY (purchase_id) REFERENCES purchases(id) ON DELETE SET NULL,
+  ADD CONSTRAINT fk_inventory_batches_purchase_item
+  FOREIGN KEY (purchase_item_id) REFERENCES purchase_items(id) ON DELETE SET NULL;

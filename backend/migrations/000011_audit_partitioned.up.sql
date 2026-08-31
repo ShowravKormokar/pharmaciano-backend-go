@@ -45,7 +45,7 @@ CREATE INDEX ix_audit_logs_outcome ON audit_logs(outcome);
 -- Archive table (unpartitioned, but can be partitioned similarly if needed).
 CREATE TABLE audit_log_archive (LIKE audit_logs INCLUDING ALL);
 -- Remove the default partition inheritance? Actually archive is separate, not partitioned.
-ALTER TABLE audit_log_archive DROP CONSTRAINT IF EXISTS audit_logs_pkey;
+ALTER TABLE audit_log_archive DROP CONSTRAINT IF EXISTS audit_log_archive_pkey;
 ALTER TABLE audit_log_archive ADD PRIMARY KEY (id);
 
 CREATE INDEX ix_audit_log_archive_created ON audit_log_archive(created_at DESC);
