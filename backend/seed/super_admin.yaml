@@ -14,7 +14,7 @@ description: "Default SUPER_ADMIN user; only created on empty database."
 
 super_admin:
   # Identity
-  email:            "${SUPER_ADMIN_EMAIL:-superadmin@medicore.local}"
+  email:            "${SUPER_ADMIN_EMAIL:-superadmin@pharmaciano.local}"
   username:         "superadmin"
   employee_code:    "SA-0001"
   phone:            "${SUPER_ADMIN_PHONE:-}"
@@ -27,7 +27,7 @@ super_admin:
   status:           "active"
   stage:            "verified"
   mfa_enabled:      false
-  joining_date:     "2026-01-01"
+  joining_date:     "2026-08-31"
   employment_type:  "full_time"
 
   # Assignments
