@@ -25,6 +25,10 @@ services:
       SUPER_ADMIN_INITIAL_PASSWORD: ${SUPER_ADMIN_INITIAL_PASSWORD:-ChangeMe123!}
       CURSOR_SIGNING_KEY: ${CURSOR_SIGNING_KEY:-4f8c2a9d7b6e3f1c9a2d4e7f8b1c3d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1}
     depends_on:
+      migrate:
+        condition: service_completed_successfully
+      seed:
+        condition: service_completed_successfully
       postgres:
         condition: service_healthy
       redis:
@@ -34,6 +38,12 @@ services:
     volumes:
       - api-uploads:/root/data/uploads
       - api-logs:/root/logs
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/livez >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
 
   worker:
     build:
@@ -57,6 +67,10 @@ services:
       SUPER_ADMIN_INITIAL_PASSWORD: ${SUPER_ADMIN_INITIAL_PASSWORD:-ChangeMe123!}
       CURSOR_SIGNING_KEY: ${CURSOR_SIGNING_KEY:-4f8c2a9d7b6e3f1c9a2d4e7f8b1c3d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1}
     depends_on:
+      migrate:
+        condition: service_completed_successfully
+      seed:
+        condition: service_completed_successfully
       postgres:
         condition: service_healthy
       redis:
@@ -66,6 +80,60 @@ services:
     volumes:
       - worker-uploads:/root/data/uploads
       - worker-logs:/root/logs
+
+  migrate:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/api.Dockerfile
+    container_name: pharmaciano-migrate
+    restart: "no"
+    command: ["./migrate", "-direction", "up"]
+    environment:
+      APP_ENV: docker
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: pharmaciano
+      DB_USER: pharmaciano
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_SSLMODE: disable
+      JWT_SECRET: ${JWT_SECRET:-4f8c2a9d7b6e3f1c9a2d4e7f8b1c3d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1}
+      FIELD_ENCRYPTION_KEY: ${FIELD_ENCRYPTION_KEY:-q9X5zYV7kzZfQm3hV9x9pKf2m7hTn4z5u8vW1x2y3zA=}
+      FIELD_ENCRYPTION_KEY_ID: ${FIELD_ENCRYPTION_KEY_ID:-fe-2026-07}
+      CURSOR_SIGNING_KEY: ${CURSOR_SIGNING_KEY:-4f8c2a9d7b6e3f1c9a2d4e7f8b1c3d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - pharmaciano-net
+
+  seed:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/api.Dockerfile
+    container_name: pharmaciano-seed
+    restart: "no"
+    command: ["./seed-bin"]
+    environment:
+      APP_ENV: docker
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: pharmaciano
+      DB_USER: pharmaciano
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_SSLMODE: disable
+      JWT_SECRET: ${JWT_SECRET:-4f8c2a9d7b6e3f1c9a2d4e7f8b1c3d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1}
+      FIELD_ENCRYPTION_KEY: ${FIELD_ENCRYPTION_KEY:-q9X5zYV7kzZfQm3hV9x9pKf2m7hTn4z5u8vW1x2y3zA=}
+      FIELD_ENCRYPTION_KEY_ID: ${FIELD_ENCRYPTION_KEY_ID:-fe-2026-07}
+      CURSOR_SIGNING_KEY: ${CURSOR_SIGNING_KEY:-4f8c2a9d7b6e3f1c9a2d4e7f8b1c3d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1}
+      SUPER_ADMIN_EMAIL: ${SUPER_ADMIN_EMAIL:-superadmin@pharmaciano.local}
+      SUPER_ADMIN_INITIAL_PASSWORD: ${SUPER_ADMIN_INITIAL_PASSWORD:-ChangeMe123!}
+      SUPER_ADMIN_FIRST_NAME: ${SUPER_ADMIN_FIRST_NAME:-Super}
+      SUPER_ADMIN_LAST_NAME: ${SUPER_ADMIN_LAST_NAME:-Admin}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    networks:
+      - pharmaciano-net
 
   postgres:
     image: postgres:16-alpine
@@ -114,7 +182,8 @@ services:
       - ../nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ../nginx/conf.d:/etc/nginx/conf.d:ro
     depends_on:
-      - api
+      api:
+        condition: service_healthy
     networks:
       - pharmaciano-net
 
