@@ -34,7 +34,7 @@ func main() {
 	dsn := cfg.DSN()
 
 	// Use embedded FS from migrations package
-	migrator, err := db.NewMigrator(dsn, migrations.FS, "migrations", logger)
+	migrator, err := db.NewMigrator(dsn, migrations.FS, ".", logger)
 	if err != nil {
 		logger.Fatal("migrator init", zap.Error(err))
 	}
