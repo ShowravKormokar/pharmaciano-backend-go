@@ -146,7 +146,8 @@ func run() error {
 	// caller's role + permissions into each access token. user delegates role
 	// assignment to rbac's Service and session revocation to auth's Service; it
 	// imports neither concretely (both are consumer-side ports).
-	rbacModule := rbac.New(pg, val, log)
+	rbacModule := rbac.New(pg, rdb, val, log)
+	// rbacModule := rbac.New(pg, val, log)
 
 	// Plant the fixed permission/role catalogue (idempotent; self-manages its own
 	// transaction + advisory lock), then warm the enforcer snapshot synchronously so
@@ -182,7 +183,8 @@ func run() error {
 	// warning so the stub wiring can never ship unnoticed.
 	mw := middleware.New(cfg, log, rdb,
 		middleware.WithAuthenticator(authModule.Service),
-		middleware.WithAuthorizer(rbacModule.Enforcer),
+		// middleware.WithAuthorizer(rbacModule.Enforcer),
+		middleware.WithAuthorizer(rbacModule.Authorizer),
 	)
 
 	// --- Domain modules ---------------------------------------------------------
