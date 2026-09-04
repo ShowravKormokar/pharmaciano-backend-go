@@ -21,6 +21,7 @@ import (
 	"backend/internal/modules/rbac"
 	"backend/internal/modules/user"
 	"backend/internal/modules/warehouse"
+	"backend/internal/platform/audit"
 	"backend/internal/platform/config"
 	"backend/internal/platform/db"
 	"backend/internal/platform/logger"
@@ -146,7 +147,7 @@ func run() error {
 	// caller's role + permissions into each access token. user delegates role
 	// assignment to rbac's Service and session revocation to auth's Service; it
 	// imports neither concretely (both are consumer-side ports).
-	rbacModule := rbac.New(pg, rdb, val, log)
+	rbacModule := rbac.New(pg, rdb, val, metrics, log)
 	// rbacModule := rbac.New(pg, val, log)
 
 	// Plant the fixed permission/role catalogue (idempotent; self-manages its own
@@ -167,7 +168,7 @@ func run() error {
 	// auth returns an error (unlike the leaf modules) so a mis-secured JWT config —
 	// short/empty secret, non-positive TTL — fails the boot instead of minting
 	// forgeable or instantly-expired tokens.
-	authModule, err := auth.New(pg, cfg, hasher, rbacModule.Enforcer, val, log)
+	authModule, err := auth.New(pg, cfg, rdb, metrics, hasher, rbacModule.Enforcer, val, log)
 	if err != nil {
 		return fmt.Errorf("auth module init: %w", err)
 	}
@@ -179,12 +180,14 @@ func run() error {
 	// --- Middleware container ---------------------------------------------------
 	// Inject the real authenticator (auth) and authorizer (rbac) so Protected
 	// routes validate tokens and enforce permissions for real. The audit sink is
-	// left as the built-in nop stub until the Asynq audit producer lands; New logs a
-	// warning so the stub wiring can never ship unnoticed.
+	// wired to the durable PostgreSQL audit_logs table.
 	mw := middleware.New(cfg, log, rdb,
 		middleware.WithAuthenticator(authModule.Service),
 		// middleware.WithAuthorizer(rbacModule.Enforcer),
 		middleware.WithAuthorizer(rbacModule.Authorizer),
+		middleware.WithMetrics(metrics),
+		middleware.WithSessionToucher(authModule.Service),
+		middleware.WithAuditSink(audit.NewPostgresAuditSink(pg, log)),
 	)
 
 	// --- Domain modules ---------------------------------------------------------
