@@ -145,6 +145,7 @@ rate_limit:
     login_per_ip: { limit: 20, window: 15m }
     refresh: { limit: 60, window: 1m }
     reset: { limit: 3,  window: 1h }
+    forgot: { limit: 3,  window: 1h }
     pos_checkout: { limit: 30, window: 1m }
     search: { limit: 60, window: 1m }
     export: { limit: 5,  window: 1h }
