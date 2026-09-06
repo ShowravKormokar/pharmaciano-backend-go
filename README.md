@@ -7,6 +7,9 @@
 *Auth, RBAC, inventory with FEFO batch tracking, POS, purchase workflow,
 double-entry ledger, AI forecasting, WebSocket notifications, audit trail.*
 
+<img width="1983" height="793" alt="pharmaciano_ERP" src="https://github.com/user-attachments/assets/b9fcb7e3-7045-4787-87dc-feec4b497613" />
+
+
 [![Go Version](https://img.shields.io/badge/go-1.22%2B-00ADD8?logo=go)](https://go.dev/)
 [![PostgreSQL](https://img.shields.io/badge/postgres-16-336791?logo=postgresql)](https://www.postgresql.org/)
 [![Redis](https://img.shields.io/badge/redis-7-DC382D?logo=redis)](https://redis.io/)
