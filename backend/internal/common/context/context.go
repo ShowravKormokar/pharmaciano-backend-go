@@ -1,4 +1,4 @@
-﻿// Package appctx centralises every value we stash on request context. Using
+// Package appctx centralises every value we stash on request context. Using
 // typed keys (unexported) guarantees no collisions with third-party packages
 // and no accidental overwrites. Named "appctx" (not "context") so importers
 // can still `import "context"` for the stdlib package in the same file
@@ -25,11 +25,13 @@ const (
 	keyUserID
 	keyOrgID
 	keyBranchID
+	keyBranchIDs
 	keySessionID
 	keyRoleName
 	keyPermissions
 	keyStage
 	keyStatus
+	keyAuthzVersion
 	keyClientIP
 	keyUserAgent
 	keyDeviceFP
@@ -39,15 +41,27 @@ const (
 
 // Principal is the compact identity carried on every authenticated request.
 // It is populated by the `auth` middleware after JWT validation.
+//
+// Branch semantics (ADR §19):
+//   - BranchID  — the user's *home* branch (a single id, or nil for org-wide).
+//     Legacy single-branch principals keep working through this field.
+//   - BranchIDs — the *effective subset* the principal may act on. For an
+//     org-wide user this is empty (nil). For a branch-bound user it contains
+//     the single home branch. For a multi-branch principal (regional
+//     manager, etc.) it contains every branch they are currently assigned
+//     to. The list is server-derived from user_branch_assignments and is
+//     baked into the JWT, so the client never gets to expand it.
 type Principal struct {
-	UserID      uuid.UUID
-	OrgID       uuid.UUID
-	BranchID    *uuid.UUID // nil = org-wide user (SUPER_ADMIN)
-	SessionID   uuid.UUID
-	RoleName    string // canonical role (SUPER_ADMIN, MANAGER, ...)
-	Permissions []string
-	Stage       enums.UserStage
-	Status      enums.UserStatus
+	UserID       uuid.UUID
+	OrgID        uuid.UUID
+	BranchID     *uuid.UUID   // home / primary branch; nil for org-wide
+	BranchIDs    []uuid.UUID  // effective subset; nil/empty = org-wide scope
+	SessionID    uuid.UUID
+	RoleName     string       // canonical role (SUPER_ADMIN, MANAGER, ...)
+	Permissions  []string
+	Stage        enums.UserStage
+	Status       enums.UserStatus
+	AuthzVersion int64
 }
 
 // internals
@@ -87,6 +101,11 @@ func WithPrincipal(ctx context.Context, p Principal) context.Context {
 	if p.BranchID != nil {
 		ctx = context.WithValue(ctx, keyBranchID, *p.BranchID)
 	}
+	if len(p.BranchIDs) > 0 {
+		ids := make([]uuid.UUID, len(p.BranchIDs))
+		copy(ids, p.BranchIDs)
+		ctx = context.WithValue(ctx, keyBranchIDs, ids)
+	}
 	ctx = context.WithValue(ctx, keySessionID, p.SessionID)
 	ctx = context.WithValue(ctx, keyRoleName, p.RoleName)
 
@@ -98,6 +117,7 @@ func WithPrincipal(ctx context.Context, p Principal) context.Context {
 
 	ctx = context.WithValue(ctx, keyStage, p.Stage)
 	ctx = context.WithValue(ctx, keyStatus, p.Status)
+	ctx = context.WithValue(ctx, keyAuthzVersion, p.AuthzVersion)
 	return ctx
 }
 
@@ -166,6 +186,21 @@ func BranchID(ctx context.Context) *uuid.UUID {
 	return nil
 }
 
+// BranchIDs returns the principal's effective branch subset (a defensive
+// copy). For an org-wide principal the slice is nil; for a branch-bound
+// principal it carries every branch id the principal may act on (one entry
+// for a single-branch user, many for a multi-branch user). The slice is
+// always nil-safe to range over.
+func BranchIDs(ctx context.Context) []uuid.UUID {
+	v, _ := ctx.Value(keyBranchIDs).([]uuid.UUID)
+	if v == nil {
+		return nil
+	}
+	out := make([]uuid.UUID, len(v))
+	copy(out, v)
+	return out
+}
+
 func Stage(ctx context.Context) enums.UserStage {
 	v, _ := ctx.Value(keyStage).(enums.UserStage)
 	return v
@@ -175,6 +210,7 @@ func Status(ctx context.Context) enums.UserStatus {
 	v, _ := ctx.Value(keyStatus).(enums.UserStatus)
 	return v
 }
+func AuthzVersion(ctx context.Context) int64 { v, _ := ctx.Value(keyAuthzVersion).(int64); return v }
 
 func ClientIP(ctx context.Context) string  { v, _ := ctx.Value(keyClientIP).(string); return v }
 func UserAgent(ctx context.Context) string { v, _ := ctx.Value(keyUserAgent).(string); return v }
@@ -188,14 +224,16 @@ func CurrentPrincipal(ctx context.Context) (Principal, bool) {
 		return Principal{}, false
 	}
 	return Principal{
-		UserID:      uid,
-		OrgID:       OrgID(ctx),
-		BranchID:    BranchID(ctx),
-		SessionID:   SessionID(ctx),
-		RoleName:    RoleName(ctx),
-		Permissions: Permissions(ctx),
-		Stage:       Stage(ctx),
-		Status:      Status(ctx),
+		UserID:       uid,
+		OrgID:        OrgID(ctx),
+		BranchID:     BranchID(ctx),
+		BranchIDs:    BranchIDs(ctx),
+		SessionID:    SessionID(ctx),
+		RoleName:     RoleName(ctx),
+		Permissions:  Permissions(ctx),
+		Stage:        Stage(ctx),
+		Status:       Status(ctx),
+		AuthzVersion: AuthzVersion(ctx),
 	}, true
 }
 
@@ -219,6 +257,34 @@ func HasPermission(ctx context.Context, module, action string) bool {
 // IsSuperAdmin reports whether the current role is SUPER_ADMIN.
 func IsSuperAdmin(ctx context.Context) bool {
 	return RoleName(ctx) == constants.RoleSuperAdmin
+}
+
+// BranchScope reports the effective branch scope of the request — the
+// subset of branches the principal may target. Semantics (ADR §19):
+//
+//   - Org-wide principal (SUPER_ADMIN/ADMIN) with no requested selector →
+//     nil (caller filters "no branch" / org-wide queries).
+//   - Org-wide principal with an X-Branch-IDs selector → the selector
+//     intersected with the org's branches (the org is bounded by
+//     appctx.OrgID, so a foreign branch id can never enter here).
+//   - Branch-bound principal with no selector → the principal's
+//     BranchIDs (single entry for a legacy user, many for a multi-branch
+//     regional role).
+//   - Branch-bound principal with a selector → the selector intersected
+//     with the principal's BranchIDs (defense-in-depth: a client can never
+//     widen beyond the subset baked into the JWT).
+//
+// The bool is false when the principal has NO branch scope and no selector
+// either (caller must treat the request as org-wide).
+func BranchScope(ctx context.Context) (effective []uuid.UUID, orgWide bool) {
+	assigned := BranchIDs(ctx)
+	if len(assigned) == 0 {
+		// Org-wide role (SUPER_ADMIN / ADMIN) with no branch in the token:
+		// caller decides between org-wide queries and a selector-driven subset.
+		return nil, true
+	}
+	// Branch-bound: must narrow to the assigned set; no client escalation.
+	return assigned, false
 }
 
 func IsActive(ctx context.Context) bool {
