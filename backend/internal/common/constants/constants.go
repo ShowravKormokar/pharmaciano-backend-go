@@ -139,7 +139,8 @@ var AllActions = []string{
 // HTTP headers (custom).
 const (
 	HeaderRequestID       = "X-Request-ID"
-	HeaderBranchScope     = "X-Branch-ID"
+	HeaderBranchScope     = "X-Branch-ID"  // legacy single-id branch selector
+	HeaderBranchIDs       = "X-Branch-IDs" // multi-branch subset (comma-separated UUIDs)
 	HeaderIdempotencyKey  = "Idempotency-Key"
 	HeaderRateLimitLimit  = "X-RateLimit-Limit"
 	HeaderRateLimitRemain = "X-RateLimit-Remaining"
@@ -149,9 +150,14 @@ const (
 	HeaderSunset          = "Sunset"
 	HeaderTotalCount      = "X-Total-Count"
 	HeaderNextCursor      = "X-Next-Cursor"
-	HeaderPage            = "X-Page"  
-	HeaderLimit           = "X-Limit" 
+	HeaderPage            = "X-Page"
+	HeaderLimit           = "X-Limit"
 	HeaderLink            = "Link"
+	// HeaderClientType lets a caller tell the auth endpoints whether the
+	// response is consumed by a browser (cookie-only refresh token, no JSON
+	// leak) or by a non-browser client (mobile/server-to-server, refresh
+	// token echoed in the body). Values: "browser" | anything else.
+	HeaderClientType = "X-Client-Type"
 )
 
 // Cookies.
