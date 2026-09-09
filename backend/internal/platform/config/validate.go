@@ -1,4 +1,4 @@
-﻿package config
+package config
 
 import (
 	"encoding/base64"
@@ -75,16 +75,21 @@ func (c *Config) Validate() error {
 
 	// JWT
 	alg := strings.ToUpper(c.JWT.Algorithm)
-	if !oneOf(alg, "HS256", "HS384", "HS512", "RS256", "RS384", "RS512", "ES256", "EdDSA") {
-		errs.add("jwt.algorithm %q not supported", c.JWT.Algorithm)
+	if alg != "HS256" {
+		errs.add("jwt.algorithm must be HS256")
 	}
-	if strings.HasPrefix(alg, "HS") {
-		if len(c.JWT.Secret) < 32 {
-			errs.add("jwt.secret must be at least 32 bytes for %s", alg)
+	if len(c.JWT.Secret) < 32 {
+		errs.add("jwt.secret must be at least 32 bytes for HS256")
+	}
+	if strings.TrimSpace(c.JWT.KeyID) == "" {
+		errs.add("jwt.key_id is required")
+	}
+	for kid, secret := range c.JWT.PreviousSecrets {
+		if strings.TrimSpace(kid) == "" || kid == c.JWT.KeyID {
+			errs.add("jwt.previous_secrets contains an invalid or duplicate key id")
 		}
-	} else {
-		if c.JWT.PrivateKeyPath == "" || c.JWT.PublicKeyPath == "" {
-			errs.add("jwt.private_key_path and jwt.public_key_path are required for %s", alg)
+		if len(secret) < 32 {
+			errs.add("jwt.previous_secrets.%s must be at least 32 bytes", kid)
 		}
 	}
 	if c.JWT.Issuer == "" {
@@ -116,6 +121,9 @@ func (c *Config) Validate() error {
 	}
 	if c.IsProd() && !c.Cookie.Secure {
 		errs.add("refresh_cookie.secure must be true in production")
+	}
+	if strings.EqualFold(c.Cookie.SameSite, "none") && !c.Cookie.Secure {
+		errs.add("refresh_cookie.secure must be true when samesite=none")
 	}
 
 	// Argon2

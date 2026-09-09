@@ -1,4 +1,4 @@
-﻿package config
+package config
 
 import (
 	"time"
@@ -151,16 +151,20 @@ type AsynqConfig struct {
 }
 
 type JWTConfig struct {
-	Issuer          string        `mapstructure:"issuer"`
-	Audience        string        `mapstructure:"audience"`
-	Algorithm       string        `mapstructure:"algorithm"`
-	KeyID           string        `mapstructure:"key_id"`
-	Secret          string        `mapstructure:"secret"`
-	AccessTokenTTL  time.Duration `mapstructure:"access_token_ttl"`
-	RefreshTokenTTL time.Duration `mapstructure:"refresh_token_ttl"`
-	ClockSkew       time.Duration `mapstructure:"clock_skew"`
-	PrivateKeyPath  string        `mapstructure:"private_key_path"`
-	PublicKeyPath   string        `mapstructure:"public_key_path"`
+	Issuer    string `mapstructure:"issuer"`
+	Audience  string `mapstructure:"audience"`
+	Algorithm string `mapstructure:"algorithm"`
+	KeyID     string `mapstructure:"key_id"`
+	Secret    string `mapstructure:"secret"`
+	// PreviousSecrets maps a retiring HS256 key id to its verification secret.
+	// Tokens are always minted with Secret/KeyID; these keys are verification-only
+	// during a deliberately bounded rotation overlap.
+	PreviousSecrets map[string]string `mapstructure:"previous_secrets"`
+	AccessTokenTTL  time.Duration     `mapstructure:"access_token_ttl"`
+	RefreshTokenTTL time.Duration     `mapstructure:"refresh_token_ttl"`
+	ClockSkew       time.Duration     `mapstructure:"clock_skew"`
+	PrivateKeyPath  string            `mapstructure:"private_key_path"`
+	PublicKeyPath   string            `mapstructure:"public_key_path"`
 }
 
 type CookieConfig struct {
@@ -186,6 +190,26 @@ type PasswordConfig struct {
 	RequireDigit  bool `mapstructure:"require_digit"`
 	RequireSymbol bool `mapstructure:"require_symbol"`
 	HistorySize   int  `mapstructure:"history_size"`
+
+	// Pepper is the server-side secret mixed into the password before
+	// Argon2id (ADR §6). A stolen database dump therefore still does not
+	// let an attacker brute-force passwords. Two slots are exposed:
+	//   - Current   — used to mint new hashes
+	//   - Previous  — accepted for verification during a rotation window
+	//                so already-hashed passwords keep working until the
+	//                next successful login transparently re-mints them
+	//                under the current pepper.
+	// Both CurrentID and PreviousID are short tags embedded in the PHC
+	// string so operators can audit which pepper generation a row
+	// belongs to. Leaving Current empty disables the pepper and degrades
+	// to the bare Argon2id hasher (still strong, but rotation support
+	// is then unavailable).
+	Pepper struct {
+		CurrentID  string `mapstructure:"current_id"`
+		Current    string `mapstructure:"current"`
+		PreviousID string `mapstructure:"previous_id"`
+		Previous   string `mapstructure:"previous"`
+	} `mapstructure:"pepper"`
 }
 
 type EncryptionConfig struct {
