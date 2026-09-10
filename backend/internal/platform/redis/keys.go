@@ -1,4 +1,4 @@
-﻿package redis
+package redis
 
 import (
 	"fmt"
@@ -10,6 +10,15 @@ const KeyPrefix = "mc"
 // Sessions and Tokens
 func SessionKey(sessionID uuid.UUID) string {
 	return fmt.Sprintf("%s:sess:%s", KeyPrefix, sessionID)
+}
+
+// SessionCacheKey is the versioned projection key for the Authenticate hot path
+// (ADR §17). The trailing generation makes a revoked/rotated session's cached
+// projection unusable at once: the row's security_generation counter advances
+// on every revoke and the new lookup writes under a new key, so the old entry
+// is naturally orphaned and the TTL reaps it.
+func SessionCacheKey(sessionID uuid.UUID, generation int64) string {
+	return fmt.Sprintf("%s:sess:%s:g%d", KeyPrefix, sessionID, generation)
 }
 
 func UserSessionsKey(userID uuid.UUID) string {
@@ -63,6 +72,22 @@ func IdempotencyKey(userID uuid.UUID, key string) string {
 // RBAC and catalog caches
 func UserPermissionsKey(userID uuid.UUID) string {
 	return fmt.Sprintf("%s:rbac:user:%s", KeyPrefix, userID)
+}
+// AuthorizationContextKey is the versioned projection key used by the RBAC
+// authorization cache (ADR §25). It includes every server-side dimension that
+// changes the resolved Access for a (user, org) pair — the user's durable
+// authz_version and the org's rbac_generation — so a single bump on either
+// side makes the cached projection unreachable without per-entry invalidation
+// (ADR §30). A stale entry expires on its TTL.
+func AuthorizationContextKey(orgID, userID uuid.UUID, authzVersion int64) string {
+	return fmt.Sprintf("%s:authz:v1:org:%s:user:%s:uv:%d", KeyPrefix, orgID, userID, authzVersion)
+}
+
+// OrgRBACGenerationKey is the per-organization counter used by the RBAC cache
+// for O(1) org-wide invalidation (ADR §30). A read-through cache populates it
+// lazily; a write on role/permission changes advances it in the same tx.
+func OrgRBACGenerationKey(orgID uuid.UUID) string {
+	return fmt.Sprintf("%s:rbac:orggen:%s", KeyPrefix, orgID)
 }
 func RolePermissionsKey(roleID uuid.UUID) string {
 	return fmt.Sprintf("%s:rbac:role:%s", KeyPrefix, roleID)
