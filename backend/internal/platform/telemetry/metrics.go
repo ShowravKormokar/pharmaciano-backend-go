@@ -28,10 +28,36 @@ type Metrics struct {
 	RedisOpDuration *prometheus.HistogramVec
 	RedisOpsTotal   *prometheus.CounterVec
 
-	// Auth
-	LoginAttemptsTotal *prometheus.CounterVec
-	TokenIssuedTotal   *prometheus.CounterVec
-	TokenReuseDetected prometheus.Counter
+	// Auth — login, refresh, MFA, password, session-cache, account-lifecycle
+	LoginAttemptsTotal      *prometheus.CounterVec // outcome: success | invalid_credentials | locked | inactive | unknown_email | mfa_required
+	TokenIssuedTotal        *prometheus.CounterVec // kind: access | refresh
+	TokenReuseDetected      prometheus.Counter
+	RefreshAttemptsTotal    *prometheus.CounterVec // outcome: success | invalid_token | expired | reuse | session_inactive | account_inactive | error
+	MFAChallengesTotal      *prometheus.CounterVec // outcome: success | invalid | required
+	PasswordChangesTotal    *prometheus.CounterVec // outcome: success | wrong_current | weak_new | mismatch
+	PasswordResetsIssued    *prometheus.CounterVec // outcome: known_user | unknown_user
+	PasswordResetsRedeemed  *prometheus.CounterVec // outcome: success | invalid_token | expired
+	AccountLockoutsTotal    *prometheus.CounterVec // outcome: triggered | released
+	AccountEmailRateLimited *prometheus.CounterVec // bucket: login_forgot_reset
+
+	// Session cache (ADR §17)
+	SessionCacheHitsTotal   *prometheus.CounterVec // outcome: hit | miss | error | corrupt
+	SessionCacheStoreTotal  *prometheus.CounterVec // outcome: stored | error
+	SessionCacheInvalidated *prometheus.CounterVec // reason: logout | revoke_user | revoke_other | revoke_all | security_generation_bump
+
+	// Authorization — allow/deny/cache/version-bump counters
+	AuthzDecisionsTotal *prometheus.CounterVec // outcome: allow | deny | error
+	AuthzCacheTotal     *prometheus.CounterVec // outcome: hit | miss | stale | error | skip
+	AuthzResolveSeconds *prometheus.HistogramVec
+	AuthzVersionBumps   *prometheus.CounterVec // scope: user | org
+	RBACGenerationBumps *prometheus.CounterVec // reason: role_created | role_updated | role_deleted | role_permissions_set | explicit
+	AuthzCacheErrors    prometheus.Counter     // count of corruption / read-error events observed in-process
+
+	// Security / rate limiting / tenant / branch
+	RateLimitedTotal       *prometheus.CounterVec // policy: ip | account_email | per_tenant | global
+	SecurityDenialsTotal   *prometheus.CounterVec // reason: tenant_mismatch | branch_scope_denied | csrf | trusted_proxy
+	TrustedProxyBlocked    *prometheus.CounterVec // reason: missing_xff | forwarded_for_untrusted
+	StepUpRequiredTotal    *prometheus.CounterVec // outcome: satisfied | denied | skipped
 
 	// Business
 	SalesCompletedTotal    *prometheus.CounterVec
@@ -146,7 +172,7 @@ func NewMetrics() *Metrics {
 			Name: "auth_login_attempts_total",
 			Help: "Login attempts by outcome.",
 		},
-		[]string{"outcome"}, // success | invalid_credentials | locked | inactive
+		[]string{"outcome"}, // success | invalid_credentials | locked | inactive | unknown_email | mfa_required
 	)
 	m.TokenIssuedTotal = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
@@ -160,6 +186,152 @@ func NewMetrics() *Metrics {
 			Name: "auth_refresh_reuse_detected_total",
 			Help: "Detected refresh-token reuse events.",
 		},
+	)
+	m.RefreshAttemptsTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "auth_refresh_attempts_total",
+			Help: "Refresh attempts by outcome.",
+		},
+		[]string{"outcome"}, // success | invalid_token | expired | reuse | session_inactive | account_inactive | error
+	)
+	m.MFAChallengesTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "auth_mfa_challenges_total",
+			Help: "MFA challenge outcomes.",
+		},
+		[]string{"outcome"}, // success | invalid | required
+	)
+	m.PasswordChangesTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "auth_password_changes_total",
+			Help: "Password change outcomes.",
+		},
+		[]string{"outcome"}, // success | wrong_current | weak_new | mismatch
+	)
+	m.PasswordResetsIssued = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "auth_password_resets_issued_total",
+			Help: "Password reset issuance by outcome.",
+		},
+		[]string{"outcome"}, // known_user | unknown_user
+	)
+	m.PasswordResetsRedeemed = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "auth_password_resets_redeemed_total",
+			Help: "Password reset redemption outcomes.",
+		},
+		[]string{"outcome"}, // success | invalid_token | expired
+	)
+	m.AccountLockoutsTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "auth_account_lockouts_total",
+			Help: "Account lockout events by outcome.",
+		},
+		[]string{"outcome"}, // triggered | released
+	)
+	m.AccountEmailRateLimited = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "auth_account_email_rate_limited_total",
+			Help: "Distributed account/email rate-limiter hits by bucket.",
+		},
+		[]string{"bucket"}, // login | forgot | reset
+	)
+
+	// Session cache (ADR §17)
+	m.SessionCacheHitsTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "auth_session_cache_total",
+			Help: "Session cache lookups by outcome.",
+		},
+		[]string{"outcome"}, // hit | miss | error | corrupt
+	)
+	m.SessionCacheStoreTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "auth_session_cache_store_total",
+			Help: "Session cache store attempts by outcome.",
+		},
+		[]string{"outcome"}, // stored | error
+	)
+	m.SessionCacheInvalidated = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "auth_session_cache_invalidated_total",
+			Help: "Session cache invalidation events by reason.",
+		},
+		[]string{"reason"}, // logout | revoke_user | revoke_other | revoke_all | security_generation_bump
+	)
+
+	// Authorization
+	m.AuthzDecisionsTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "authz_decisions_total",
+			Help: "Authorization decisions by outcome.",
+		},
+		[]string{"outcome"}, // allow | deny | error
+	)
+	m.AuthzCacheTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "authz_cache_total",
+			Help: "Authorization cache lookups by outcome.",
+		},
+		[]string{"outcome"}, // hit | miss | stale | error | skip
+	)
+	m.AuthzResolveSeconds = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "authz_resolve_seconds",
+			Help:    "Authorization resolution latency.",
+			Buckets: []float64{0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1},
+		},
+		[]string{"source"}, // cache | enforcer | error
+	)
+	m.AuthzVersionBumps = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "authz_version_bumps_total",
+			Help: "Authorization version bumps by scope.",
+		},
+		[]string{"scope"}, // user | org
+	)
+	m.RBACGenerationBumps = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "rbac_generation_bumps_total",
+			Help: "RBAC generation bumps by reason.",
+		},
+		[]string{"reason"}, // role_created | role_updated | role_deleted | role_permissions_set | explicit
+	)
+	m.AuthzCacheErrors = prometheus.NewCounter(
+		prometheus.CounterOpts{
+			Name: "authz_cache_errors_total",
+			Help: "Authorization cache corruption / read-error events.",
+		},
+	)
+
+	// Security
+	m.RateLimitedTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "security_rate_limited_total",
+			Help: "Requests rejected by rate limiting by policy.",
+		},
+		[]string{"policy"}, // ip | account_email | per_tenant | global
+	)
+	m.SecurityDenialsTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "security_denials_total",
+			Help: "Requests denied by security middleware by reason.",
+		},
+		[]string{"reason"}, // tenant_mismatch | branch_scope_denied | csrf | trusted_proxy
+	)
+	m.TrustedProxyBlocked = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "security_trusted_proxy_blocked_total",
+			Help: "Requests rejected by trusted-proxy policy.",
+		},
+		[]string{"reason"}, // missing_xff | forwarded_for_untrusted
+	)
+	m.StepUpRequiredTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "security_step_up_total",
+			Help: "Step-up authentication outcomes.",
+		},
+		[]string{"outcome"}, // satisfied | denied | skipped
 	)
 
 	// Sales Collector
@@ -288,7 +460,19 @@ func NewMetrics() *Metrics {
 		m.HTTPRequestsTotal, m.HTTPRequestDuration, m.HTTPResponseSize, m.HTTPInFlight,
 		m.DBQueryDuration, m.DBQueriesTotal,
 		m.RedisOpDuration, m.RedisOpsTotal,
+		// Auth
 		m.LoginAttemptsTotal, m.TokenIssuedTotal, m.TokenReuseDetected,
+		m.RefreshAttemptsTotal, m.MFAChallengesTotal, m.PasswordChangesTotal,
+		m.PasswordResetsIssued, m.PasswordResetsRedeemed,
+		m.AccountLockoutsTotal, m.AccountEmailRateLimited,
+		// Session cache
+		m.SessionCacheHitsTotal, m.SessionCacheStoreTotal, m.SessionCacheInvalidated,
+		// Authorization
+		m.AuthzDecisionsTotal, m.AuthzCacheTotal, m.AuthzResolveSeconds,
+		m.AuthzVersionBumps, m.RBACGenerationBumps, m.AuthzCacheErrors,
+		// Security
+		m.RateLimitedTotal, m.SecurityDenialsTotal, m.TrustedProxyBlocked, m.StepUpRequiredTotal,
+		// Business / jobs / ai / mailer / storage
 		m.SalesCompletedTotal, m.PurchasesApprovedTotal, m.LowStockAlertsTotal, m.ExpiryAlertsTotal,
 		m.JobDuration, m.JobsProcessed, m.JobsFailed, m.JobQueueSize,
 		m.AICallsTotal, m.AICallDuration, m.AITokensUsed, m.AICostUSD,
@@ -359,6 +543,66 @@ func (m *Metrics) ObserveTokenIssued(kind string) {
 }
 func (m *Metrics) RecordTokenReuse() {
 	m.TokenReuseDetected.Inc()
+}
+func (m *Metrics) ObserveRefreshAttempt(outcome string) {
+	m.RefreshAttemptsTotal.WithLabelValues(outcome).Inc()
+}
+func (m *Metrics) ObserveMFAChallenge(outcome string) {
+	m.MFAChallengesTotal.WithLabelValues(outcome).Inc()
+}
+func (m *Metrics) ObservePasswordChange(outcome string) {
+	m.PasswordChangesTotal.WithLabelValues(outcome).Inc()
+}
+func (m *Metrics) ObservePasswordResetIssued(outcome string) {
+	m.PasswordResetsIssued.WithLabelValues(outcome).Inc()
+}
+func (m *Metrics) ObservePasswordResetRedeemed(outcome string) {
+	m.PasswordResetsRedeemed.WithLabelValues(outcome).Inc()
+}
+func (m *Metrics) ObserveAccountLockout(outcome string) {
+	m.AccountLockoutsTotal.WithLabelValues(outcome).Inc()
+}
+func (m *Metrics) ObserveAccountEmailRateLimit(bucket string) {
+	m.AccountEmailRateLimited.WithLabelValues(bucket).Inc()
+}
+func (m *Metrics) ObserveSessionCache(outcome string) {
+	m.SessionCacheHitsTotal.WithLabelValues(outcome).Inc()
+}
+func (m *Metrics) ObserveSessionCacheStore(outcome string) {
+	m.SessionCacheStoreTotal.WithLabelValues(outcome).Inc()
+}
+func (m *Metrics) ObserveSessionCacheInvalidate(reason string) {
+	m.SessionCacheInvalidated.WithLabelValues(reason).Inc()
+}
+func (m *Metrics) ObserveAuthzDecision(outcome string) {
+	m.AuthzDecisionsTotal.WithLabelValues(outcome).Inc()
+}
+func (m *Metrics) ObserveAuthzCache(outcome string) {
+	m.AuthzCacheTotal.WithLabelValues(outcome).Inc()
+}
+func (m *Metrics) ObserveAuthzResolve(source string, dur time.Duration) {
+	m.AuthzResolveSeconds.WithLabelValues(source).Observe(dur.Seconds())
+}
+func (m *Metrics) ObserveAuthzVersionBump(scope string) {
+	m.AuthzVersionBumps.WithLabelValues(scope).Inc()
+}
+func (m *Metrics) ObserveRBACGenerationBump(reason string) {
+	m.RBACGenerationBumps.WithLabelValues(reason).Inc()
+}
+func (m *Metrics) IncAuthzCacheError() {
+	m.AuthzCacheErrors.Inc()
+}
+func (m *Metrics) ObserveRateLimited(policy string) {
+	m.RateLimitedTotal.WithLabelValues(policy).Inc()
+}
+func (m *Metrics) ObserveSecurityDenial(reason string) {
+	m.SecurityDenialsTotal.WithLabelValues(reason).Inc()
+}
+func (m *Metrics) ObserveTrustedProxyBlocked(reason string) {
+	m.TrustedProxyBlocked.WithLabelValues(reason).Inc()
+}
+func (m *Metrics) ObserveStepUp(outcome string) {
+	m.StepUpRequiredTotal.WithLabelValues(outcome).Inc()
 }
 
 func (m *Metrics) ObserveSaleCompleted(branchID string) {
