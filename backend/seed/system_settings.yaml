@@ -317,9 +317,9 @@ settings:
     is_sensitive: false
 
   - key: audit.async_write
-    value: "true"
+    value: "false"
     value_type: bool
-    description: "Persist audit rows via background job for lower latency."
+    description: "Persist audit rows via background job for lower latency. Currently false: the PostgresAuditSink writes synchronously. Set true only once a bounded async producer/consumer worker exists."
     is_sensitive: false
 
   # ----- Backup -------------------------------------------------------------
