@@ -44,7 +44,14 @@ func (m *Middleware) SecurityHeaders() gin.HandlerFunc {
 		}
 		if sec.HSTS.Enabled {
 			enableHSTS = true
-			hstsValue = buildHSTS(sec.HSTS.MaxAge, sec.HSTS.IncludeSubdomains, sec.HSTS.Preload)
+			// Preload is a near-irreversible global commitment (browsers add the
+			// domain to their HSTS-preload list, and removal takes months). It must
+			// only be advertised in a production context where the operator has
+			// explicitly opted in. A dev/staging env must never emit preload even
+			// if a copy-pasted config sets it, so we gate on the effective
+			// environment here.
+			preload := sec.HSTS.Preload && m.cfg.IsProd()
+			hstsValue = buildHSTS(sec.HSTS.MaxAge, sec.HSTS.IncludeSubdomains, preload)
 		}
 	}
 
