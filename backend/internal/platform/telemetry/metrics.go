@@ -3,6 +3,8 @@
 import (
 	"net/http"
 	"strconv"
+	"strings"
+	"crypto/subtle"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -648,13 +650,22 @@ func (m *Metrics) Handler(authToken string) http.Handler {
 		return h
 	}
 
-	want := "Bearer" + authToken
+	// Parse "Authorization: Bearer <token>" into scheme + token. The original
+	// code compared the raw header to "Bearer"+token (missing space), so every
+	// well-formed client header — which includes the space — failed the exact
+	// string match and got a spurious 401. We split on the scheme, trim any
+	// incidental whitespace, and compare the token with a constant-time
+	// comparison so the timing does not leak the token length to a guesser.
 	return http.HandlerFunc(func(rw http.ResponseWriter, rq *http.Request) {
-		if rq.Header.Get("Authorization") != want {
-			http.Error(rw, "unauthorized", http.StatusUnauthorized)
+		header := rq.Header.Get("Authorization")
+		scheme, token, ok := strings.Cut(header, " ")
+		if ok && strings.EqualFold(scheme, "Bearer") && subtle.ConstantTimeCompare(
+			[]byte(strings.TrimSpace(token)), []byte(authToken),
+		) == 1 {
+			h.ServeHTTP(rw, rq)
 			return
 		}
-		h.ServeHTTP(rw, rq)
+		http.Error(rw, "unauthorized", http.StatusUnauthorized)
 	})
 }
 
