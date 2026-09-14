@@ -19,7 +19,21 @@ type corsPolicy struct {
 	maxAgeSeconds string
 }
 
-func (m *Middleware) CORS() gin.HandlerFunc {
+// unsafeMethods lists the methods whose cross-site invocation could mutate
+// state, hence the ones the OriginGuard rejects on a disallowed Origin. GET,
+// HEAD, and OPTIONS are side-effect-free and safe. (TRACE is excluded because
+// the server does not route it; CONNECT is not part of the HTTP server's API.)
+var unsafeMethods = map[string]bool{
+	http.MethodPost:   true,
+	http.MethodPut:    true,
+	http.MethodPatch:  true,
+	http.MethodDelete: true,
+}
+
+// buildCORSPolicy resolves the allowed-origin set from config once at
+// construction. CORS() and OriginGuard() share it so the CSRF origin check and
+// the CORS response header always agree on what is a legitimate browser origin.
+func (m *Middleware) buildCORSPolicy() corsPolicy {
 	p := corsPolicy{
 		methods:       "GET, POST, PUT, PATCH, DELETE, OPTIONS",
 		maxAgeSeconds: "600",
@@ -48,6 +62,11 @@ func (m *Middleware) CORS() gin.HandlerFunc {
 			}
 		}
 	}
+	return p
+}
+
+func (m *Middleware) CORS() gin.HandlerFunc {
+	p := m.buildCORSPolicy()
 
 	return func(c *gin.Context) {
 		origin := c.GetHeader("Origin")
