@@ -2,6 +2,8 @@ package middleware
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+	"go.uber.org/zap"
 
 	appctx "backend/internal/common/context"
 	errs "backend/internal/errors"
@@ -41,6 +43,45 @@ func (m *Middleware) Auth() gin.HandlerFunc {
 		ctx := appctx.WithPrincipal(c.Request.Context(), principal)
 		c.Request = c.Request.WithContext(ctx)
 
+		c.Next()
+	}
+}
+
+// IdleSession enforces the configured idle timeout (config.Session.IdleTimeout).
+// It runs after Auth so the session id is on the context. On every request it
+// checks whether the session has been idle longer than the configured window;
+// if so, it rejects the request with 401 Unauthenticated (client must log in
+// again). When the session is still active, it touches last_seen_at atomically
+// via the injected SessionToucher so the idle clock resets.
+//
+// A zero or negative IdleTimeout disables the middleware entirely (it is a
+// no-op pass-through). A nil SessionToucher also degrades to pass-through so
+// the chain is testable without a database.
+func (m *Middleware) IdleSession() gin.HandlerFunc {
+	if m == nil || m.cfg == nil || m.cfg.Session.IdleTimeout <= 0 || m.toucher == nil {
+		return func(c *gin.Context) { c.Next() }
+	}
+	return func(c *gin.Context) {
+		ctx := c.Request.Context()
+		sessionID := appctx.SessionID(ctx)
+		if sessionID == uuid.Nil {
+			m.abortError(c, errs.Unauthenticated().
+				WithMeta("reason", "idle-session check requires an authenticated session"))
+			return
+		}
+		now := m.now()
+		ip := appctx.ClientIP(ctx)
+		var ipPtr *string
+		if ip != "" {
+			ipPtr = &ip
+		}
+		if active, err := m.toucher.TouchSession(ctx, sessionID, ipPtr, now, m.cfg.Session.IdleTimeout); err != nil {
+			m.logFor(c).Warn("idle-session touch failed", zap.Error(err))
+		} else if !active {
+			m.abortError(c, errs.Unauthenticated().
+				WithMeta("reason", "session has exceeded the idle timeout"))
+			return
+		}
 		c.Next()
 	}
 }
