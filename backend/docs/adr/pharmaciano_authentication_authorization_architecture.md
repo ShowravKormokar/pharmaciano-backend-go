@@ -3639,7 +3639,7 @@ role changed
 [ ] Secure refresh cookie
 [ ] HttpOnly refresh cookie
 [ ] SameSite configured
-[ ] CSRF strategy
+[x] CSRF strategy — SameSite + OriginGuard middleware (ADR §12, see OriginGuard() in internal/middleware)
 [ ] explicit CORS
 [ ] trusted proxy
 [ ] request limits

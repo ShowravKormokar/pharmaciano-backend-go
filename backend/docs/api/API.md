@@ -249,13 +249,13 @@ X-Next-Cursor: eyJpZCI6...   (when cursor pagination is used)
 | 401 | `TOKEN_EXPIRED` | Access token expired — refresh. |
 | 401 | `TOKEN_REUSE_DETECTED` | Refresh token reuse. Whole family revoked. |
 | 403 | `FORBIDDEN` | RBAC denies. |
-| 403 | `ACCOUNT_LOCKED` | Too many failed logins. |
 | 403 | `ACCOUNT_INACTIVE` | Status ≠ active. |
 | 404 | `NOT_FOUND` | Resource missing or soft-deleted. |
 | 409 | `CONFLICT` | Duplicate, or state-machine violation. |
 | 409 | `IDEMPOTENCY_KEY_CONFLICT` | Same key, different payload. |
 | 422 | `BUSINESS_RULE_VIOLATION` | e.g. selling below cost, expired batch. |
 | 423 | `RESOURCE_LOCKED` | Concurrent edit conflict. |
+| 423 | `ACCOUNT_LOCKED` | Too many failed logins — retry after `retry_after_seconds`. |
 | 429 | `RATE_LIMITED` | Retry-After present. |
 | 500 | `INTERNAL_ERROR` | Unhandled. |
 | 502 | `UPSTREAM_ERROR` | AI provider / third party. |

@@ -552,7 +552,8 @@ mc:authz:v1:
 org:O1:
 user:U1:
 uv:8:
-og:31
+og:31:
+br:*        (effective branch subset; "*" = org-wide)
 
 If the user loses a role:
 
@@ -1072,7 +1073,7 @@ org:{organization_id}:
 user:{user_id}:
 uv:{authz_version}:
 og:{rbac_generation}:
-scope:{effective_scope_id}
+br:{branch_token}   (implemented as the deterministic effective branch subset, "*" for org-wide; see buildAuthzKey/branchToken)
 
 If branch scope affects permissions, the cache identity MUST distinguish it.
 
