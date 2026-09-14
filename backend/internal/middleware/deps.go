@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 
 	"backend/internal/common/constants"
@@ -23,6 +24,13 @@ type Authenticator interface {
 	Authenticate(ctx context.Context, bearerToken string) (appctx.Principal, error)
 }
 
+// SessionToucher is an optional port the auth module satisfies so the
+// IdleSession middleware can refresh last_seen_at without reaching into the
+// service layer directly. A nil implementation is a no-op touch.
+type SessionToucher interface {
+	TouchSession(ctx context.Context, sessionID uuid.UUID, ip *string, now time.Time, idleTimeout time.Duration) (bool, error)
+}
+
 type Authorizer interface {
 	Enforce(ctx context.Context, sub, dom, obj, act string) (bool, error)
 }
@@ -36,13 +44,15 @@ type AuditSink interface {
 
 // Middleware carries the dependencies shared by all middleware.
 type Middleware struct {
-	cfg   *config.Config
-	log   *zap.Logger
-	redis *redis.Client
+	cfg     *config.Config
+	log     *zap.Logger
+	redis   *redis.Client
+	metrics *telemetry.Metrics
 
 	authn Authenticator
 	authz Authorizer
 	audit AuditSink
+	toucher SessionToucher
 
 	// now is an injectable clock so time-sensitive middleware (rate limiting, token-bucket refills) are deterministic in tests. Defaults to time.Now.
 	now func() time.Time
@@ -86,6 +96,30 @@ func WithClock(now func() time.Time) Option {
 	}
 }
 
+// WithMetrics injects the shared Prometheus metrics. Nil is safe — the
+// middleware observability helpers treat a nil *Metrics as a no-op.
+func WithMetrics(m *telemetry.Metrics) Option {
+	return func(mw *Middleware) {
+		if m != nil {
+			mw.metrics = m
+		}
+	}
+}
+
+// WithSessionToucher injects the optional idle-session toucher. When nil
+// the IdleSession middleware is a no-op pass-through.
+func WithSessionToucher(t SessionToucher) Option {
+	return func(mw *Middleware) {
+		if t != nil {
+			mw.toucher = t
+		}
+	}
+}
+
+// Metrics returns the injected metrics, or nil if none were injected. All
+// callers must be nil-tolerant (see observability.go).
+func (m *Middleware) Metrics() *telemetry.Metrics { return m.metrics }
+
 func New(cfg *config.Config, log *zap.Logger, rdb *redis.Client, opts ...Option) *Middleware {
 	if log == nil {
 		log = zap.NewNop()
@@ -126,6 +160,7 @@ func (m *Middleware) Global() []gin.HandlerFunc {
 		m.AccessLog(),
 		m.SecurityHeaders(),
 		m.CORS(),
+		m.OriginGuard(), // CSRF origin validation on state-changing requests (ADR §12)
 		m.BodyLimit(),
 	}
 }
@@ -133,6 +168,7 @@ func (m *Middleware) Global() []gin.HandlerFunc {
 func (m *Middleware) Protected(module, action string) []gin.HandlerFunc {
 	return []gin.HandlerFunc{
 		m.Auth(),
+		m.IdleSession(),
 		m.Tenant(),
 		m.RBAC(module, action),
 	}
@@ -174,7 +210,6 @@ func bearerToken(h string) (token string, ok bool) {
 	token = strings.TrimSpace(h[len(prefix):])
 	return token, token != ""
 }
-
 
 func (m *Middleware) abortError(c *gin.Context, err error) {
 	if c.IsAborted() {
@@ -262,10 +297,12 @@ func (nopAuditSink) Record(context.Context, AuditEntry) {}
 // # Chain order (outermost → innermost)
 //
 //	request_id → telemetry(span) → recovery → access-log → security-headers →
-//	cors → body-limit → [timeout] → [rate-limit] → auth → tenant → rbac →
-//	[idempotency] → handler → [audit]
+//	cors → origin-check → body-limit → [timeout] → [rate-limit] → auth →
+//	tenant → rbac → [idempotency] → handler → [audit]
 //
-// The first six form the always-on Global() chain. auth→tenant→rbac form the
+// The first seven form the always-on Global() chain. auth→tenant→rbac form the
 // Protected() chain: "token valid → scope set → permission checked → handler",
-// exactly as the architecture plan specifies. Bracketed stages are applied
-// per route-family by the router.
+// exactly as the architecture plan specifies. origin-check is the CSRF origin
+// validator (ADR §12) and runs before auth so a cross-site forged request is
+// refused before any token work. Bracketed stages are applied per route-family
+// by the router.
