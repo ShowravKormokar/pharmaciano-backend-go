@@ -26,6 +26,7 @@ import (
 	"backend/internal/platform/db"
 	"backend/internal/platform/logger"
 	"backend/internal/platform/redis"
+	"backend/internal/platform/retention"
 	"backend/internal/platform/telemetry"
 	"backend/internal/platform/validator"
 	"backend/internal/router"
@@ -114,6 +115,33 @@ func run() error {
 	health.Register("postgres", func(ctx context.Context) error { return pg.Ping(ctx) })
 	health.Register("redis", func(ctx context.Context) error { return rdb.Ping(ctx) })
 
+	// --- Retention / cleanup worker -------------------------------------------
+	// Purges expired sessions, dead refresh tokens, used/expired password resets
+	// and MFA challenges in bounded batches. Bound to the root ctx so a graceful
+	// shutdown (signal → ctx.Done()) stops it before the server drains; the
+	// deferred Wait gives an in-flight DELETE up to one second to finish.
+	retentionWorker := retention.New(pg.Pool(), retention.Config{
+		Enabled:              cfg.Cleanup.Enabled,
+		Interval:             cfg.Cleanup.Interval,
+		BatchSize:            cfg.Cleanup.BatchSize,
+		SessionsGrace:        cfg.Cleanup.SessionsGrace,
+		RefreshTokensGrace:   cfg.Cleanup.RefreshTokensGrace,
+		PasswordResetsGrace:  cfg.Cleanup.PasswordResetsGrace,
+		MFAChallengesGrace:   cfg.Cleanup.MFAChallengesGrace,
+	}, log)
+	retentionDone := make(chan struct{})
+	go func() {
+		defer close(retentionDone)
+		_ = retentionWorker.Run(ctx) // returns ctx.Err() on shutdown; not fatal
+	}()
+	defer func() {
+		select {
+		case <-retentionDone:
+		case <-time.After(time.Second):
+			log.Warn("retention worker did not stop within 1s")
+		}
+	}()
+
 	// --- Request validator ------------------------------------------------------
 	// One shared, thread-safe validator (custom tags + json field names) for every
 	// module handler. Built once here so a bad tag registration fails fast at
@@ -136,6 +164,21 @@ func run() error {
 		KeyLength:   cfg.Password.Argon2.KeyLength,
 		SaltLength:  cfg.Password.Argon2.SaltLength,
 	})
+
+	// Server-side pepper (ADR §6): mix a site secret into the password before
+	// Argon2id so a leaked database dump still does not unlock passwords offline.
+	// auth.New wraps this same hasher itself (buildPepperedHasher); the user module
+	// does not wrap, so it must receive the peppered wrapper here — otherwise a user
+	// created through /users would be minted with an UNPEPPERED hash that the
+	// peppered login path rejects (pepperFor("") fails once a pepper is configured).
+	// Building the wrapper once and handing it to BOTH keeps every hash minted in
+	// this process (user create, password change, reset, super-admin seed) under the
+	// exact same pepper the login path verifies against.
+	pepperedHashes := crypto.NewPepperedHasher(
+		hasher,
+		[]byte(cfg.Password.Pepper.Current), cfg.Password.Pepper.CurrentID,
+		[]byte(cfg.Password.Pepper.Previous), cfg.Password.Pepper.PreviousID,
+	)
 
 	// --- Access-control modules (construction order: rbac → auth → user) --------
 	// These are built before the middleware container because two of them satisfy
@@ -168,26 +211,50 @@ func run() error {
 	// auth returns an error (unlike the leaf modules) so a mis-secured JWT config —
 	// short/empty secret, non-positive TTL — fails the boot instead of minting
 	// forgeable or instantly-expired tokens.
-	authModule, err := auth.New(pg, cfg, rdb, metrics, hasher, rbacModule.Enforcer, val, log)
+	//
+	// The MFA TOTP secret is stored encrypted at rest (users.mfa_secret_encrypted)
+	// under the field-encryption keyring derived from config. The current key
+	// encrypts new values; retired keys are kept so existing ciphertext still
+	// decrypts until it is rotated (crypto.KeyRing.Rotate). The config requires a
+	// current_key_id and a 32-byte base64 current_key and is validated at load, so a
+	// missing or malformed key fails the boot here (fatal) rather than at first MFA
+	// verify.
+	encKeys := map[string]string{cfg.Encryption.CurrentKeyID: cfg.Encryption.CurrentKey}
+	for id, k := range cfg.Encryption.OldKeys {
+		encKeys[id] = k
+	}
+	keyring, err := crypto.NewKeyRing(cfg.Encryption.CurrentKeyID, encKeys)
+	if err != nil {
+		return fmt.Errorf("field-encryption keyring: %w", err)
+	}
+
+	authModule, err := auth.New(pg, cfg, rdb, metrics, hasher, rbacModule.Enforcer, keyring, val, log)
 	if err != nil {
 		return fmt.Errorf("auth module init: %w", err)
 	}
 
 	// user is a leaf module exposing its *Handler directly (no Module wrapper): it
-	// hands back nothing the composition root needs to hold.
-	userHandler := user.New(pg, val, hasher, rbacModule.Service, authModule.Service, log)
+	// hands back nothing the composition root needs to hold. The same auth service
+	// satisfies both the SessionRevoker port (status change/delete cuts sessions)
+	// and the AuthzBumper port (branch assignment grants/revokes bump the epoch so
+	// stale tokens lose the old scope immediately).
+	userHandler := user.New(pg, val, pepperedHashes, rbacModule.Service, authModule.Service, authModule.Service, log)
 
 	// --- Middleware container ---------------------------------------------------
 	// Inject the real authenticator (auth) and authorizer (rbac) so Protected
 	// routes validate tokens and enforce permissions for real. The audit sink is
-	// wired to the durable PostgreSQL audit_logs table.
+	// fanned out to the durable PostgreSQL audit_logs table (authority) and, when
+	// audit.loki.enabled, a parallel best-effort Loki stream that powers the
+	// real-time Audit dashboard. Loki failure never breaks the request path.
+	pgAudit := audit.NewPostgresAuditSink(pg, log)
+	lokiAudit := audit.NewLokiAuditSink(cfg.Audit.Loki, log)
 	mw := middleware.New(cfg, log, rdb,
 		middleware.WithAuthenticator(authModule.Service),
 		// middleware.WithAuthorizer(rbacModule.Enforcer),
 		middleware.WithAuthorizer(rbacModule.Authorizer),
 		middleware.WithMetrics(metrics),
 		middleware.WithSessionToucher(authModule.Service),
-		middleware.WithAuditSink(audit.NewPostgresAuditSink(pg, log)),
+		middleware.WithAuditSink(audit.NewFanoutAuditSink(pgAudit, lokiAudit)),
 	)
 
 	// --- Domain modules ---------------------------------------------------------
