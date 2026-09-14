@@ -217,11 +217,31 @@ func applyDefaults(v *viper.Viper) {
 	v.SetDefault("security.hsts.enabled", true)
 	v.SetDefault("security.hsts.max_age", 31536000)
 	v.SetDefault("security.hsts.include_subdomains", true)
-	v.SetDefault("security.hsts.preload", true)
+	v.SetDefault("security.hsts.preload", false) // opt-in: preload is a near-irreversible global commitment
 	v.SetDefault("security.csp", "default-src 'self'; frame-ancestors 'none'")
 	v.SetDefault("security.x_frame_options", "DENY")
 	v.SetDefault("security.x_content_type_options", "nosniff")
 	v.SetDefault("security.referrer_policy", "strict-origin-when-cross-origin")
+	v.SetDefault("security.origin_check.enabled", true)
+
+	// Audit — durable Postgres store + optional Loki observability stream.
+	v.SetDefault("audit.enabled", true)
+	v.SetDefault("audit.partition_by", "month")
+	v.SetDefault("audit.retention_days", 365)
+	v.SetDefault("audit.archive_after_days", 90)
+	v.SetDefault("audit.loki.enabled", false)
+	v.SetDefault("audit.loki.batch_size", 256)
+	v.SetDefault("audit.loki.flush_interval", 500*time.Millisecond)
+	v.SetDefault("audit.loki.timeout", 3*time.Second)
+
+	// Cleanup / retention worker
+	v.SetDefault("cleanup.enabled", true)
+	v.SetDefault("cleanup.interval", time.Hour)
+	v.SetDefault("cleanup.batch_size", 500)
+	v.SetDefault("cleanup.sessions_grace", 24*time.Hour)
+	v.SetDefault("cleanup.refresh_tokens_grace", 24*time.Hour)
+	v.SetDefault("cleanup.password_resets_grace", 24*time.Hour)
+	v.SetDefault("cleanup.mfa_challenges_grace", 24*time.Hour)
 }
 
 // bindEnvVars maps env var names that don't map cleanly to dotted keys.

@@ -137,6 +137,40 @@ func (c *Config) Validate() error {
 		errs.add("password.argon2.parallelism must be ≥ 1")
 	}
 
+	// Pepper (ADR §6). A configured current pepper must carry a non-empty id (the
+	// id is embedded in each PHC string so the login path can route verification to
+	// the right secret and detect rotation); a previous pepper must carry a distinct
+	// id. Without these, a configured-but-id-less pepper would emit hashes tagged ""
+	// that the verification path treats as unpeppered — silently disabling the
+	// pepper — so fail boot rather than degrade.
+	if c.Password.Pepper.Current != "" {
+		if strings.TrimSpace(c.Password.Pepper.CurrentID) == "" {
+			errs.add("password.pepper.current_id is required when password.pepper.current is set")
+		}
+		if len(c.Password.Pepper.Current) < 16 {
+			errs.add("password.pepper.current must be at least 16 bytes (set PEPPER_CURRENT)")
+		}
+	} else {
+		// A site that has ever configured a pepper cannot safely run without one:
+		// every existing hash embeds a pepper id the unpeppered path cannot verify.
+		if strings.TrimSpace(c.Password.Pepper.CurrentID) != "" {
+			errs.add("password.pepper.current is required when password.pepper.current_id is set")
+		}
+	}
+	if c.Password.Pepper.Previous != "" {
+		if strings.TrimSpace(c.Password.Pepper.PreviousID) == "" {
+			errs.add("password.pepper.previous_id is required when password.pepper.previous is set")
+		}
+		if c.Password.Pepper.PreviousID == c.Password.Pepper.CurrentID {
+			errs.add("password.pepper.previous_id must differ from password.pepper.current_id")
+		}
+		if len(c.Password.Pepper.Previous) < 16 {
+			errs.add("password.pepper.previous must be at least 16 bytes")
+		}
+	} else if strings.TrimSpace(c.Password.Pepper.PreviousID) != "" {
+		errs.add("password.pepper.previous is required when password.pepper.previous_id is set")
+	}
+
 	// Logging
 	if !oneOf(strings.ToLower(c.Logging.Level), "debug", "info", "warn", "error", "fatal") {
 		errs.add("logging.level %q invalid", c.Logging.Level)

@@ -45,6 +45,7 @@ type Config struct {
 	Storage     StorageConfig      `mapstructure:"storage"`
 	Mailer      MailerConfig       `mapstructure:"mailer"`
 	Backup      BackupConfig       `mapstructure:"backup"`
+	Cleanup     CleanupConfig      `mapstructure:"cleanup"`
 	Features    FeatureFlags       `mapstructure:"features"`
 	Audit       AuditConfig        `mapstructure:"audit"`
 	SuperAdmin  SuperAdminConfig   `mapstructure:"super_admin"`
@@ -95,6 +96,13 @@ type SecurityConfig struct {
 	XFrameOptions       string `mapstructure:"x_frame_options"`
 	XContentTypeOptions string `mapstructure:"x_content_type_options"`
 	ReferrerPolicy      string `mapstructure:"referrer_policy"`
+	// OriginCheck enables the CSRF origin-validation middleware (ADR §12).
+	// It rejects state-changing requests whose Origin/Referer is not on the CORS
+	// allowlist, providing the "validate the expected origin/site policy" layer on
+	// top of SameSite cookies. Defaults to enabled; set to false to disable.
+	OriginCheck          struct {
+		Enabled bool `mapstructure:"enabled"`
+	} `mapstructure:"origin_check"`
 }
 
 type DatabaseConfig struct {
@@ -349,6 +357,20 @@ type BackupConfig struct {
 	Compress      bool   `mapstructure:"compress"`
 }
 
+// CleanupConfig controls the background retention worker that purges expired
+// auth-related rows. Each grace period is added on top of the row's natural
+// expiry so recently-expired data can still be inspected during an incident.
+// Set enabled=false to stop the worker entirely.
+type CleanupConfig struct {
+	Enabled             bool          `mapstructure:"enabled"`
+	Interval            time.Duration `mapstructure:"interval"`
+	BatchSize           int           `mapstructure:"batch_size"`
+	SessionsGrace       time.Duration `mapstructure:"sessions_grace"`
+	RefreshTokensGrace  time.Duration `mapstructure:"refresh_tokens_grace"`
+	PasswordResetsGrace time.Duration `mapstructure:"password_resets_grace"`
+	MFAChallengesGrace  time.Duration `mapstructure:"mfa_challenges_grace"`
+}
+
 type FeatureFlags struct {
 	AIForecasting          bool `mapstructure:"ai_forecasting"`
 	WebSocketNotifications bool `mapstructure:"websocket_notifications"`
@@ -357,11 +379,24 @@ type FeatureFlags struct {
 }
 
 type AuditConfig struct {
-	Enabled          bool   `mapstructure:"enabled"`
-	Async            bool   `mapstructure:"async"`
-	PartitionBy      string `mapstructure:"partition_by"`
-	RetentionDays    int    `mapstructure:"retention_days"`
-	ArchiveAfterDays int    `mapstructure:"archive_after_days"`
+	Enabled          bool          `mapstructure:"enabled"`
+	Async            bool          `mapstructure:"async"`
+	PartitionBy      string        `mapstructure:"partition_by"`
+	RetentionDays    int           `mapstructure:"retention_days"`
+	ArchiveAfterDays int           `mapstructure:"archive_after_days"`
+	Loki             LokiSinkState `mapstructure:"loki"`
+}
+
+// LokiSinkState mirrors audit/platform Loki streaming settings. Defined here
+// (config layer) and reused by the audit sink. Env overrides use the dotted
+// path so AUDIT_LOKI_ENABLED, AUDIT_LOKI_URL, AUDIT_LOKI_BATCH_SIZE,
+// AUDIT_LOKI_FLUSH_INTERVAL and AUDIT_LOKI_TIMEOUT all work automatically.
+type LokiSinkState struct {
+	Enabled       bool          `mapstructure:"enabled"`
+	URL           string        `mapstructure:"url"`
+	BatchSize     int           `mapstructure:"batch_size"`
+	FlushInterval time.Duration `mapstructure:"flush_interval"`
+	Timeout       time.Duration `mapstructure:"timeout"`
 }
 
 type SuperAdminConfig struct {
