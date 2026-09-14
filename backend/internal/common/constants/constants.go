@@ -153,6 +153,19 @@ const (
 	HeaderPage            = "X-Page"
 	HeaderLimit           = "X-Limit"
 	HeaderLink            = "Link"
+	// HeaderMFAChallenge carries the single-use, short-lived challenge token a
+	// client must present to the MFA second-factor endpoint after a login whose
+	// account has MFA enabled. Set on the MFA_REQUIRED login response — the generic
+	// error body does not carry arbitrary metadata, so the challenge rides in a
+	// header.
+	HeaderMFAChallenge = "X-MFA-Challenge"
+	// HeaderPasswordChangeToken carries the single-use, short-lived token minted
+	// when a login's account must change its password (PASSWORD_CHANGE_REQUIRED)
+	// before a session is issued. The client presents it — with the current and new
+	// password — to POST /auth/password/force-change. Set on the
+	// PASSWORD_CHANGE_REQUIRED login response; the generic error body does not carry
+	// arbitrary metadata, so the token rides in a header, mirroring MFA_REQUIRED.
+	HeaderPasswordChangeToken = "X-Password-Change-Token"
 	// HeaderClientType lets a caller tell the auth endpoints whether the
 	// response is consumed by a browser (cookie-only refresh token, no JSON
 	// leak) or by a non-browser client (mobile/server-to-server, refresh
