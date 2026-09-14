@@ -44,14 +44,18 @@ var codeToStatus = map[Code]int{
 	CodeTokenReuseDetected: http.StatusUnauthorized,
 	CodeMFARequired:        http.StatusUnauthorized,
 	CodeMFAInvalid:         http.StatusUnauthorized,
+	CodePasswordChangeRequired: http.StatusUnauthorized,
 
 	// 403
-	CodeForbidden:         http.StatusForbidden,
-	CodeAccountLocked:     http.StatusForbidden,
-	CodeAccountInactive:   http.StatusForbidden,
-	CodeAccountSuspended:  http.StatusForbidden,
-	CodeBranchScopeDenied: http.StatusForbidden,
-	CodeTenantScopeDenied: http.StatusForbidden,
+	CodeForbidden:          http.StatusForbidden,
+	CodeAccountInactive:    http.StatusForbidden,
+	CodeAccountSuspended:   http.StatusForbidden,
+	CodeBranchScopeDenied:  http.StatusForbidden,
+	CodeTenantScopeDenied:  http.StatusForbidden,
+	CodeCrossOriginRequest: http.StatusForbidden,
+
+	// 429
+	CodeTooManySessions: http.StatusTooManyRequests,
 
 	// 404
 	CodeNotFound: http.StatusNotFound,
@@ -77,6 +81,7 @@ var codeToStatus = map[Code]int{
 
 	// 423
 	CodeResourceLocked: http.StatusLocked,
+	CodeAccountLocked:  http.StatusLocked,
 
 	// 429
 	CodeRateLimited:       http.StatusTooManyRequests,
