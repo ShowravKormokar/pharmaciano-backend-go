@@ -1,18 +1,24 @@
 package middleware
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"strconv"
+	"strings"
 	"time"
+
+	"backend/internal/common/constants"
+	appctx "backend/internal/common/context"
+	errs "backend/internal/errors"
+	"backend/internal/platform/redis"
+	"backend/pkg/response"
 
 	"github.com/gin-gonic/gin"
 	goredis "github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
-
-	"backend/internal/common/constants"
-	appctx "backend/internal/common/context"
-	"backend/internal/platform/redis"
-	"backend/pkg/response"
 )
 
 var errMalformedBucketResult = errors.New("middleware: malformed rate-limit script result")
@@ -86,6 +92,12 @@ func (m *Middleware) rateLimit(policy string, byIP bool) gin.HandlerFunc {
 	}
 
 	if !enabled || m.redis == nil {
+		if securityCriticalRatePolicy(policy) {
+			return func(c *gin.Context) {
+				m.logFor(c).Error("security rate limiter unavailable; failing closed", zap.String("policy", policy))
+				m.abortError(c, errs.New(errs.CodeServiceUnavailable, "authentication protection is temporarily unavailable"))
+			}
+		}
 		if m.log != nil {
 			m.log.Warn("rate limiter disabled for route family; requests will pass unthrottled",
 				zap.String("policy", policy),
@@ -105,6 +117,12 @@ func (m *Middleware) rateLimit(policy string, byIP bool) gin.HandlerFunc {
 
 		dec, err := m.evalBucket(c, key, rate, burst, ttlMs)
 		if err != nil {
+			if securityCriticalRatePolicy(policy) {
+				m.logFor(c).Error("security rate limiter unavailable; failing closed",
+					zap.String("policy", policy), zap.Error(err))
+				m.abortError(c, errs.New(errs.CodeServiceUnavailable, "authentication protection is temporarily unavailable"))
+				return
+			}
 			// Fail OPEN. A Redis outage must not lock every user out of the
 			// system; we log loudly (so alerting can fire) and let the request
 			// through. This is the one middleware that intentionally degrades
@@ -143,6 +161,15 @@ func (m *Middleware) rateLimit(policy string, byIP bool) gin.HandlerFunc {
 		}
 
 		c.Next()
+	}
+}
+
+func securityCriticalRatePolicy(policy string) bool {
+	switch policy {
+	case "login_per_ip", "login_per_email", "refresh", "reset", "auth_write":
+		return true
+	default:
+		return false
 	}
 }
 
@@ -212,4 +239,140 @@ func toInt64(v interface{}) int64 {
 	default:
 		return 0
 	}
+}
+
+// emailRateLimiterSecret is a per-process HMAC key used to fingerprint the
+// email subject of the account/email rate limiter (ADR §16 "Layered rate
+// limiting"). It is read lazily from the JWT secret (which is already
+// required to be long and secret at startup) and used only to produce a
+// 32-character hex digest; the raw email is never written to Redis, so a
+// Redis dump cannot be mined for the user list.
+//
+// We deliberately reuse the JWT secret rather than introducing a new
+// configuration knob so the bootstrap surface stays small; the value is only
+// read on the rate-limiter code path, not on token verification.
+func (m *Middleware) emailLimiterSubject(email string) string {
+	if m == nil || m.cfg == nil || m.cfg.JWT.Secret == "" {
+		return ""
+	}
+	normalized := strings.ToLower(strings.TrimSpace(email))
+	if normalized == "" {
+		return ""
+	}
+	mac := hmac.New(sha256.New, []byte(m.cfg.JWT.Secret))
+	_, _ = mac.Write([]byte(normalized))
+	return hex.EncodeToString(mac.Sum(nil))[:32]
+}
+
+// RateLimitByEmail is the pre-authentication account/email rate limiter
+// (ADR §16). It is distinct from RateLimitByIP because the threat model is
+// different:
+//
+//   - ByIP throttles a single connection — a botnet with N IPs defeats it.
+//   - ByEmail throttles a single account — a botnet has to first learn the
+//     address, and one typo costs the attacker the bucket.
+//
+// The subject is HMAC-SHA-256(secret, normalized_email) truncated to 32 hex
+// characters so the raw email never lands in Redis. The bucket is shared
+// across the whole process (Redis-backed), so distributed workers stay
+// consistent. The policy is taken from cfg.RateLimit.Policies[policy]; if
+// disabled, missing, or Redis is unavailable, the limiter fails CLOSED —
+// login/forgot/reset are security-critical and must never silently accept
+// unlimited attempts.
+func (m *Middleware) RateLimitByEmail(policy string) gin.HandlerFunc {
+	enabled := false
+	var (
+		limit  int
+		window time.Duration
+	)
+	if m.cfg != nil && m.cfg.RateLimit.Enabled {
+		if p, ok := m.cfg.RateLimit.Policies[policy]; ok && p.Limit > 0 && p.Window > 0 {
+			enabled = true
+			limit = p.Limit
+			window = p.Window
+		}
+	}
+
+	if !enabled || m.redis == nil {
+		if m.log != nil {
+			m.log.Error("email rate limiter unavailable; failing closed", zap.String("policy", policy))
+		}
+		return func(c *gin.Context) {
+			m.abortError(c, errs.New(errs.CodeServiceUnavailable, "authentication protection is temporarily unavailable"))
+		}
+	}
+
+	rate := float64(limit) / window.Seconds()
+	burst := limit
+	ttlMs := window.Milliseconds() * 2
+
+	return func(c *gin.Context) {
+		email := m.extractEmail(c)
+		if email == "" {
+			// No email in the body: the request will fail validation downstream
+			// anyway; skip the bucket and let the handler do its job.
+			c.Next()
+			return
+		}
+		subject := m.emailLimiterSubject(email)
+		if subject == "" {
+			// Config is missing the HMAC secret (already gated at startup, but
+			// the env might have been mis-rotated). Fail closed.
+			m.logFor(c).Error("email rate limiter has no HMAC secret; failing closed",
+				zap.String("policy", policy))
+			m.abortError(c, errs.New(errs.CodeServiceUnavailable, "authentication protection is temporarily unavailable"))
+			return
+		}
+		key := redis.RateLimitKey(policy, "e:"+subject, "")
+
+		dec, err := m.evalBucket(c, key, rate, burst, ttlMs)
+		if err != nil {
+			m.logFor(c).Error("email rate limiter unavailable; failing closed",
+				zap.String("policy", policy), zap.Error(err))
+			m.abortError(c, errs.New(errs.CodeServiceUnavailable, "authentication protection is temporarily unavailable"))
+			return
+		}
+
+		h := c.Writer.Header()
+		h.Set(constants.HeaderRateLimitLimit, strconv.Itoa(dec.limit))
+		h.Set(constants.HeaderRateLimitRemain, strconv.Itoa(dec.remaining))
+		h.Set(constants.HeaderRateLimitReset, strconv.FormatInt(dec.resetUnix, 10))
+
+		if !dec.allowed {
+			m.observeAccountEmailRateLimit(policy)
+			m.logFor(c).Warn("email rate limit exceeded",
+				zap.String("policy", policy),
+				zap.Int("retry_after_s", dec.retryAff),
+			)
+			rid := appctx.RequestID(c.Request.Context())
+			_ = response.TooManyRequests(c.Writer, rid, response.RateLimitInfo{
+				Limit:         dec.limit,
+				Remaining:     dec.remaining,
+				ResetUnix:     dec.resetUnix,
+				RetryAfterSec: dec.retryAff,
+			})
+			c.Abort()
+			return
+		}
+
+		c.Next()
+	}
+}
+
+// extractEmail pulls the "email" field out of a JSON body without forcing a
+// full BindJSON pass (the handler does that afterwards with full validation).
+// The body is read once, peek-parsed, and the reader is restored so downstream
+// handlers see the original stream.
+func (m *Middleware) extractEmail(c *gin.Context) string {
+	raw, err := readAndRestoreBody(c)
+	if err != nil || len(raw) == 0 {
+		return ""
+	}
+	var probe struct {
+		Email string `json:"email"`
+	}
+	if err := json.Unmarshal(raw, &probe); err != nil {
+		return ""
+	}
+	return strings.ToLower(strings.TrimSpace(probe.Email))
 }
