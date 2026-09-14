@@ -52,6 +52,8 @@ security:
   x_frame_options: DENY
   x_content_type_options: nosniff
   referrer_policy: strict-origin-when-cross-origin
+  origin_check:
+    enabled: true      # CSRF origin validation on state-changing requests
 
 database:
   host: localhost
@@ -163,11 +165,6 @@ idempotency:
   ttl: 24h
   key_max_length: 128
 
-casbin:
-  model_path: config/casbin_model.conf
-  autosave: true
-  autoload_interval: 30s
-
 logging:
   level: info
   format: json
@@ -262,10 +259,19 @@ features:
 
 audit:
   enabled: true
-  async: true
+  async: false            # PostgresAuditSink is synchronous; flip only when a worker exists
   partition_by: month
   retention_days: 365
   archive_after_days: 90
+
+cleanup:
+  enabled: true
+  interval: 1h
+  batch_size: 500
+  sessions_grace: 24h
+  refresh_tokens_grace: 24h
+  password_resets_grace: 24h
+  mfa_challenges_grace: 24h
 
 super_admin:
   email: superadmin@pharmaciano.local
