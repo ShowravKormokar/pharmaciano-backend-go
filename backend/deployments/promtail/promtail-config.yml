@@ -1,0 +1,66 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Pharmaciano ERP — Promtail Configuration
+# ──────────────────────────────────────────────────────────────────────────────
+# Scrapes Docker container logs (stdout/stderr) and ships them to Loki.
+# Labels: container, service, compose_project, compose_service.
+# ──────────────────────────────────────────────────────────────────────────────
+
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+    tenant_id: primary
+
+scrape_configs:
+  # ── Docker container logs ───────────────────────────────────────────────────
+  - job_name: docker
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: docker
+          __path__: /var/lib/docker/containers/*/*-json.log
+
+    pipeline_stages:
+      # Parse Docker JSON log line
+      - docker: {}
+
+      # Extract container name from the file path
+      - regex:
+          source: filename
+          expression: '/var/lib/docker/containers/(?P<container_id>[a-f0-9]+)/.*'
+
+      # Label based on container name
+      - labels:
+          container_id:
+
+      # Try to parse structured JSON from the log line (Go zap JSON output)
+      - json:
+          expressions:
+            level: level
+            msg: msg
+            caller: caller
+
+      # Map Go log levels to Loki levels
+      - labels:
+          level:
+
+      # Add service label from container metadata
+      - match:
+          selector: '{container_id=~".+"}'
+          stages:
+            - docker: {}
+
+  # ── System logs (journal) — optional ────────────────────────────────────────
+  - job_name: syslog
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: syslog
+          __path__: /var/log/syslog
