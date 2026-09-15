@@ -29,6 +29,7 @@ cors:
   allow_headers:
     - Authorization
     - Content-Type
+    - X-Client-Type
     - Idempotency-Key
     - X-Request-ID
     - X-Branch-ID
@@ -263,6 +264,12 @@ audit:
   partition_by: month
   retention_days: 365
   archive_after_days: 90
+  loki:
+    enabled: false
+    url: http://loki:3100/loki/api/v1/push
+    batch_size: 256
+    flush_interval: 500ms
+    timeout: 3s
 
 cleanup:
   enabled: true
