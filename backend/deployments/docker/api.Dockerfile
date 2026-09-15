@@ -31,6 +31,12 @@ COPY --from=builder /app/config ./config
 COPY --from=builder /app/migrations ./migrations
 COPY --from=builder /app/seed ./seed
 
+# Interactive API reference (Scalar UI + bundled spec) served by the API at /api-docs.
+# Copied to a fixed absolute path so the process can find it regardless of its
+# working dir; the API resolves it via the PHARMACIANO_DOCS_DIR env var.
+COPY --from=builder /app/api/scalar /app/api/scalar
+ENV PHARMACIANO_DOCS_DIR=/app/api/scalar
+
 # Expose API port
 EXPOSE 8080
 

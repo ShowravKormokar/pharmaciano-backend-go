@@ -1,3 +1,7 @@
+# Dev overrides — more ports, verbose logging, volume mounts
+# Usage: docker compose -f docker-compose.yml -f docker-compose.override.yml up
+# Or simply: docker compose up  (override is auto-loaded)
+
 services:
   api:
     ports:
@@ -5,6 +9,7 @@ services:
     environment:
       APP_ENV: docker
       LOG_LEVEL: debug
+      AUDIT_LOKI_ENABLED: "true"
     volumes:
       - ../../config:/root/config:ro
 
@@ -22,3 +27,48 @@ services:
   redis:
     ports:
       - "6379:6379"
+
+  # ── Observability UIs exposed for dev ────────────────────────────────────────
+  grafana:
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+
+  prometheus:
+    ports:
+      - "9090:9090"
+
+  alertmanager:
+    ports:
+      - "9093:9093"
+
+  loki:
+    ports:
+      - "3100:3100"
+
+  # ── Dev tools (auto-started without --profile dev in local compose) ─────────
+  adminer:
+    image: adminer:latest
+    container_name: pharmaciano-adminer
+    restart: unless-stopped
+    ports:
+      - "8081:8080"
+    depends_on:
+      - postgres
+    networks:
+      - pharmaciano-net
+
+  asynqmon:
+    image: hibiken/asynqmon:latest
+    container_name: pharmaciano-asynqmon
+    restart: unless-stopped
+    ports:
+      - "8082:8080"
+    environment:
+      REDIS_ADDR: redis:6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      REDIS_DB: 1
+    depends_on:
+      - redis
+    networks:
+      - pharmaciano-net
