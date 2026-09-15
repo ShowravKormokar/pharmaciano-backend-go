@@ -1,13 +1,14 @@
 # config file version
 apiVersion: 1
 
-# list of datasources to insert/update depending on what's available
+# ── Datasources ───────────────────────────────────────────────────────────────
 datasources:
+  # ── Prometheus (primary metrics) ────────────────────────────────────────────
   - name: Prometheus
     type: prometheus
     access: proxy
     orgId: 1
-    url: http://prometheus:9090   # service name inside Docker compose network
+    url: http://prometheus:9090
     basicAuth: false
     isDefault: true
     version: 1
@@ -15,3 +16,23 @@ datasources:
     jsonData:
       timeInterval: "15s"
       httpMethod: "POST"
+
+  # ── Loki (audit logs + application logs) ────────────────────────────────────
+  - name: Loki
+    type: loki
+    access: proxy
+    orgId: 1
+    url: http://loki:3100
+    basicAuth: false
+    isDefault: false
+    version: 1
+    editable: true
+    jsonData:
+      maxLines: 1000
+      derivedFields:
+        # Link from Loki log line to Grafana Tempo trace (if tracing is enabled)
+        - datasourceUid: ""
+          matcherRegex: '"request_id":"(\w+)"'
+          name: Request ID
+          url: "$${__value.raw}"
+          matcherType: regex

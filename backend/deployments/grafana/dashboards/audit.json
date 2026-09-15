@@ -1,0 +1,145 @@
+{
+  "uid": "pharmaciano-audit",
+  "title": "Audit Trail",
+  "tags": ["pharmaciano", "audit", "compliance"],
+  "timezone": "browser",
+  "editable": true,
+  "refresh": "30s",
+  "time": { "from": "now-24h", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "name": "DS_LOKI",
+        "type": "datasource",
+        "query": "loki",
+        "current": { "text": "Loki", "value": "Loki" }
+      },
+      {
+        "name": "module",
+        "type": "query",
+        "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+        "query": "label_values({job=\"pharmaciano-audit\"}, module)",
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "current": { "text": "All", "value": "$__all" }
+      },
+      {
+        "name": "action",
+        "type": "query",
+        "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+        "query": "label_values({job=\"pharmaciano-audit\"}, action)",
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "current": { "text": "All", "value": "$__all" }
+      },
+      {
+        "name": "outcome",
+        "type": "custom",
+        "query": "success,failure",
+        "includeAll": true,
+        "multi": true,
+        "current": { "text": "All", "value": "$__all" }
+      },
+      {
+        "name": "user_id",
+        "type": "textbox",
+        "label": "User ID"
+      },
+      {
+        "name": "search",
+        "type": "textbox",
+        "label": "Free Text Search"
+      }
+    ]
+  },
+  "panels": [
+    {
+      "title": "Audit Events / min",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 0 },
+      "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "stacking": { "mode": "normal" }
+          },
+          "unit": "short"
+        }
+      },
+      "targets": [
+        {
+          "expr": "{job=\"pharmaciano-audit\", module=~\"$module\", action=~\"$action\", outcome=~\"$outcome\"} | json",
+          "queryType": "range",
+          "renderer": "json"
+        }
+      ],
+      "options": {
+        "tooltip": { "mode": "multi" }
+      }
+    },
+    {
+      "title": "Audit Events by Module",
+      "type": "piechart",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 8 },
+      "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+      "targets": [
+        {
+          "expr": "sum(count_over_time({job=\"pharmaciano-audit\", module=~\"$module\"} | json [1h])) by (module)",
+          "legendFormat": "{{ module }}"
+        }
+      ]
+    },
+    {
+      "title": "Success vs Failure",
+      "type": "piechart",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 8 },
+      "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+      "targets": [
+        {
+          "expr": "sum(count_over_time({job=\"pharmaciano-audit\", outcome=~\"$outcome\"} | json [1h])) by (outcome)",
+          "legendFormat": "{{ outcome }}"
+        }
+      ]
+    },
+    {
+      "title": "Top Actions (1h)",
+      "type": "bargauge",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 8 },
+      "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+      "fieldConfig": {
+        "defaults": { "unit": "short" }
+      },
+      "targets": [
+        {
+          "expr": "topk(10, sum(count_over_time({job=\"pharmaciano-audit\"} | json [1h])) by (action))",
+          "legendFormat": "{{ action }}"
+        }
+      ]
+    },
+    {
+      "title": "Audit Log Stream",
+      "type": "logs",
+      "gridPos": { "h": 14, "w": 24, "x": 0, "y": 16 },
+      "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+      "targets": [
+        {
+          "expr": "{job=\"pharmaciano-audit\", module=~\"$module\", action=~\"$action\", outcome=~\"$outcome\"} | json | user_id =~ \"${user_id:regex}\" | $search",
+          "queryType": "range"
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "showLabels": true,
+        "showCommonLabels": false,
+        "wrapLogMessage": true,
+        "prettifyLogMessage": false,
+        "enableLogDetails": true,
+        "sortOrder": "Descending",
+        "dedupStrategy": "none"
+      }
+    }
+  ]
+}
