@@ -1,73 +1,510 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Pharmaciano ERP — Production Alert Rules
+# ──────────────────────────────────────────────────────────────────────────────
+# Covers: API availability, latency, error-rate, DB pool, Redis, auth security,
+#         background jobs, AI cost, business metrics, infrastructure, and Loki.
+# ──────────────────────────────────────────────────────────────────────────────
+
 groups:
-  - name: pharmaciano_alerts
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # 1. API — Availability & Performance
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  - name: api_availability
     interval: 30s
     rules:
-      # API down
       - alert: APIDown
         expr: up{job="pharmaciano-api"} == 0
         for: 1m
         labels:
           severity: critical
+          team: backend
         annotations:
-          summary: "Pharmaciano API is down"
-          description: "The API service has been unreachable for more than 1 minute."
+          summary: "API instance down"
+          description: "pharmaciano-api has been unreachable for >1m."
+          runbook_url: "https://wiki.pharmaciano.com/runbooks/api-down"
 
-      # High 5xx error rate
-      - alert: High5xxErrors
-        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.1
+      - alert: WorkerDown
+        expr: up{job="pharmaciano-worker"} == 0
+        for: 2m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "Worker instance down"
+          description: "pharmaciano-worker has been unreachable for >2m."
+
+  - name: api_errors
+    interval: 30s
+    rules:
+      - alert: High5xxRate
+        expr: >
+          sum(rate(http_requests_total{status=~"5.."}[5m])) by (route)
+          / sum(rate(http_requests_total[5m])) by (route)
+          > 0.05
         for: 5m
         labels:
           severity: warning
+          team: backend
         annotations:
-          summary: "High 5xx error rate"
-          description: "Error rate is above 0.1 req/s for 5 minutes."
+          summary: "5xx error rate > 5% on {{ $labels.route }}"
+          description: "5xx proportion is {{ $value | humanizePercentage }}."
 
-      # High latency (p95 > 1s)
-      - alert: HighLatency
-        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, route)) > 1.0
+      - alert: Elevated5xxTotal
+        expr: sum(increase(http_requests_total{status=~"5.."}[5m])) > 50
         for: 5m
         labels:
           severity: warning
+          team: backend
         annotations:
-          summary: "High API latency (p95 > 1s)"
-          description: "p95 latency for {{ $labels.route }} is {{ $value }}s."
+          summary: "More than 50 5xx errors in 5 min"
+          description: "{{ $value }} 5xx responses in the last 5 minutes."
 
-      # Database connection pool exhausted
-      - alert: DBConnectionPoolExhausted
+  - name: api_latency
+    interval: 30s
+    rules:
+      - alert: HighLatencyP95
+        expr: >
+          histogram_quantile(0.95,
+            sum(rate(http_request_duration_seconds_bucket[5m])) by (le, route)
+          ) > 1.0
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "p95 latency > 1s on {{ $labels.route }}"
+          description: "Current p95: {{ $value | humanizeDuration }}."
+
+      - alert: CriticalLatencyP99
+        expr: >
+          histogram_quantile(0.99,
+            sum(rate(http_request_duration_seconds_bucket[5m])) by (le, route)
+          ) > 5.0
+        for: 5m
+        labels:
+          severity: critical
+          team: backend
+        annotations:
+          summary: "p99 latency > 5s on {{ $labels.route }}"
+          description: "Current p99: {{ $value | humanizeDuration }}."
+
+      - alert: HighInFlightRequests
+        expr: http_in_flight_requests > 100
+        for: 2m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "In-flight requests above 100"
+          description: "{{ $value }} requests currently in-flight."
+
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # 2. Auth & Security
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  - name: auth_security
+    interval: 30s
+    rules:
+      - alert: HighLoginFailureRate
+        expr: >
+          sum(rate(auth_login_attempts_total{outcome!="success"}[5m]))
+          / sum(rate(auth_login_attempts_total[5m])) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+          team: security
+        annotations:
+          summary: "Login failure rate > 50%"
+          description: "{{ $value | humanizePercentage }} of logins are failing."
+
+      - alert: AccountLockoutsSpike
+        expr: sum(increase(auth_account_lockouts_total[1h])) > 20
+        for: 5m
+        labels:
+          severity: warning
+          team: security
+        annotations:
+          summary: "Spike in account lockouts"
+          description: "{{ $value }} lockouts in the last hour."
+
+      - alert: RefreshTokenReuseDetected
+        expr: increase(auth_refresh_reuse_detected_total[5m]) > 0
+        for: 0m
+        labels:
+          severity: critical
+          team: security
+        annotations:
+          summary: "Refresh token reuse detected!"
+          description: "{{ $value }} reuse events — possible token theft."
+
+      - alert: HighRateLimiting
+        expr: sum(increase(rate_limited_total[5m])) > 100
+        for: 5m
+        labels:
+          severity: warning
+          team: security
+        annotations:
+          summary: "Rate limiter firing heavily"
+          description: "{{ $value }} requests rate-limited in 5 min."
+
+      - alert: SecurityDenialsDetected
+        expr: sum(increase(security_denials_total[5m])) > 10
+        for: 5m
+        labels:
+          severity: warning
+          team: security
+        annotations:
+          summary: "Security denials detected"
+          description: "{{ $value }} security denials in 5 min."
+
+      - alert: MFAChallengesFailing
+        expr: >
+          sum(rate(auth_mfa_challenges_total{outcome!="success"}[5m]))
+          / sum(rate(auth_mfa_challenges_total[5m])) > 0.3
+        for: 5m
+        labels:
+          severity: warning
+          team: security
+        annotations:
+          summary: "MFA challenge failure rate > 30%"
+          description: "{{ $value | humanizePercentage }} of MFA challenges failing."
+
+      - alert: StepUpAuthRequired
+        expr: sum(increase(auth_step_up_required_total[5m])) > 20
+        for: 5m
+        labels:
+          severity: info
+          team: security
+        annotations:
+          summary: "Elevated step-up authentication requests"
+          description: "{{ $value }} step-up auth challenges in 5 min."
+
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # 3. Database
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  - name: database
+    interval: 30s
+    rules:
+      - alert: DBPoolExhausted
         expr: db_pool_acquired_connections / db_pool_max_connections > 0.9
         for: 2m
         labels:
           severity: warning
+          team: backend
         annotations:
-          summary: "DB connection pool near saturation"
-          description: "Acquired connections are above 90% of max."
+          summary: "DB connection pool > 90% saturated"
+          description: "Acquired {{ $value | humanizePercentage }} of max connections."
 
-      # Low stock alerts firing
+      - alert: DBPoolFull
+        expr: db_pool_acquired_connections == db_pool_max_connections
+        for: 1m
+        labels:
+          severity: critical
+          team: backend
+        annotations:
+          summary: "DB connection pool fully exhausted"
+          description: "All connections acquired — requests will queue."
+
+      - alert: DBQueryLatencyHigh
+        expr: >
+          histogram_quantile(0.95,
+            sum(rate(db_query_duration_seconds_bucket[5m])) by (le, op)
+          ) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "DB query p95 latency > 500ms on {{ $labels.op }}"
+          description: "Current p95: {{ $value | humanizeDuration }}."
+
+      - alert: DBQueryErrorRate
+        expr: >
+          sum(rate(db_queries_total{outcome="error"}[5m])) by (op)
+          / sum(rate(db_queries_total[5m])) by (op) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "DB error rate > 5% for {{ $labels.op }}"
+          description: "{{ $value | humanizePercentage }} of queries failing."
+
+      - alert: PostgresDown
+        expr: up{job="postgres-exporter"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: backend
+        annotations:
+          summary: "Postgres exporter down"
+          description: "Cannot scrape postgres-exporter — check sidecar."
+
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # 4. Redis
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  - name: redis
+    interval: 30s
+    rules:
+      - alert: RedisDown
+        expr: redis_up == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: backend
+        annotations:
+          summary: "Redis is down"
+          description: "Redis instance unreachable."
+
+      - alert: RedisHighMemory
+        expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.85
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "Redis memory > 85% of max"
+          description: "{{ $value | humanizePercentage }} memory used."
+
+      - alert: RedisHighEviction
+        expr: rate(redis_evicted_keys_total[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "Redis key eviction rate high"
+          description: "{{ $value }} evictions/sec — memory pressure."
+
+      - alert: RedisLatencyHigh
+        expr: >
+          histogram_quantile(0.95,
+            sum(rate(redis_op_duration_seconds_bucket[5m])) by (le, op)
+          ) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "Redis p95 latency > 50ms on {{ $labels.op }}"
+          description: "Current p95: {{ $value | humanizeDuration }}."
+
+      - alert: RedisConnectionErrors
+        expr: sum(rate(redis_ops_total{outcome="error"}[5m])) > 5
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "Redis connection errors"
+          description: "{{ $value }} errors/sec."
+
+      - alert: SessionCacheHighMissRate
+        expr: >
+          sum(rate(session_cache_hits_total[5m]))
+          / (sum(rate(session_cache_hits_total[5m])) + sum(rate(session_cache_store_total[5m]))) < 0.5
+        for: 10m
+        labels:
+          severity: info
+          team: backend
+        annotations:
+          summary: "Session cache hit rate < 50%"
+          description: "Cache may be cold or undersized."
+
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # 5. Background Jobs & AI
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  - name: background_jobs
+    interval: 30s
+    rules:
+      - alert: JobFailureRateHigh
+        expr: >
+          sum(rate(jobs_failed_total[5m])) by (task)
+          / sum(rate(jobs_processed_total[5m])) by (task) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "Job failure rate > 10% for {{ $labels.task }}"
+          description: "{{ $value | humanizePercentage }} of jobs failing."
+
+      - alert: JobQueueBacklog
+        expr: sum(job_queue_size) > 1000
+        for: 10m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "Job queue backlog > 1000"
+          description: "{{ $value }} jobs queued."
+
+      - alert: JobLatencyHigh
+        expr: >
+          histogram_quantile(0.95,
+            sum(rate(job_duration_seconds_bucket[5m])) by (le, task)
+          ) > 300
+        for: 10m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "Job p95 duration > 5 min for {{ $labels.task }}"
+          description: "Current p95: {{ $value | humanizeDuration }}."
+
+      - alert: AICostCapApproaching
+        expr: sum(increase(ai_cost_usd_total[1h])) > 8
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "AI hourly cost > $8"
+          description: "Approaching daily cost cap. Current hourly: ${{ $value }}."
+
+      - alert: AICostCapExceeded
+        expr: sum(increase(ai_cost_usd_total[24h])) > 20
+        for: 5m
+        labels:
+          severity: critical
+          team: backend
+        annotations:
+          summary: "AI daily cost cap exceeded"
+          description: "24h AI spend: ${{ $value }}."
+
+      - alert: AICircuitBreakerOpen
+        expr: ai_circuit_breaker_state == 1
+        for: 1m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "AI circuit breaker is OPEN"
+          description: "AI calls are failing; breaker tripped."
+
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # 6. Business Metrics
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  - name: business
+    interval: 60s
+    rules:
       - alert: LowStockAlerts
         expr: inventory_low_stock_alerts_total > 5
         for: 5m
         labels:
           severity: warning
+          team: ops
         annotations:
           summary: "Low stock alerts triggered"
-          description: "There are {{ $value }} low stock alerts."
+          description: "{{ $value }} low-stock alerts."
 
-      # Expiry alerts
       - alert: ExpiryAlerts
         expr: inventory_expiry_alerts_total > 3
         for: 5m
         labels:
           severity: warning
+          team: ops
         annotations:
           summary: "Expiry alerts triggered"
-          description: "There are {{ $value }} expiry alerts."
+          description: "{{ $value }} expiry alerts."
 
-      # Redis down
-      - alert: RedisDown
-        expr: redis_up{job="pharmaciano-api"} == 0
-        for: 1m
+      - alert: ZeroSalesHourly
+        expr: sum(increase(sales_completed_total[1h])) == 0
+        for: 2h
+        labels:
+          severity: info
+          team: ops
+        annotations:
+          summary: "No sales in the last 2 hours"
+          description: "Expected for off-hours, but verify if unusual."
+
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # 7. Infrastructure (Node Exporter)
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  - name: infrastructure
+    interval: 30s
+    rules:
+      - alert: HostHighCPU
+        expr: 100 - (avg(rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 85
+        for: 10m
+        labels:
+          severity: warning
+          team: infra
+        annotations:
+          summary: "Host CPU > 85%"
+          description: "{{ $value | humanize }}% CPU usage."
+
+      - alert: HostHighMemory
+        expr: (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * 100 > 85
+        for: 10m
+        labels:
+          severity: warning
+          team: infra
+        annotations:
+          summary: "Host memory > 85%"
+          description: "{{ $value | humanize }}% memory used."
+
+      - alert: HostDiskSpaceLow
+        expr: (1 - node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 > 85
+        for: 10m
+        labels:
+          severity: warning
+          team: infra
+        annotations:
+          summary: "Disk space > 85% used"
+          description: "{{ $value | humanize }}% disk used on /."
+
+      - alert: HostDiskSpaceCritical
+        expr: (1 - node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 > 95
+        for: 5m
         labels:
           severity: critical
+          team: infra
         annotations:
-          summary: "Redis is down"
-          description: "Redis service is unreachable."
+          summary: "Disk space > 95% — CRITICAL"
+          description: "{{ $value | humanize }}% disk used on /. Risk of data loss."
+
+      - alert: NodeExporterDown
+        expr: up{job="node-exporter"} == 0
+        for: 2m
+        labels:
+          severity: warning
+          team: infra
+        annotations:
+          summary: "Node exporter down"
+          description: "Cannot scrape node-exporter."
+
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # 8. Observability Stack Health
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  - name: observability
+    interval: 30s
+    rules:
+      - alert: PrometheusTargetDown
+        expr: up == 0
+        for: 2m
+        labels:
+          severity: warning
+          team: infra
+        annotations:
+          summary: "Prometheus target {{ $labels.job }} is down"
+          description: "Target {{ $labels.instance }} unreachable."
+
+      - alert: LokiDown
+        expr: up{job="loki"} == 0
+        for: 2m
+        labels:
+          severity: warning
+          team: infra
+        annotations:
+          summary: "Loki is down"
+          description: "Audit log streaming may be affected."
+
+      - alert: PrometheusStorageFilling
+        expr: prometheus_tsdb_storage_blocks_bytes / (1024 * 1024 * 1024) > 50
+        for: 10m
+        labels:
+          severity: warning
+          team: infra
+        annotations:
+          summary: "Prometheus TSDB > 50 GB"
+          description: "Consider tuning retention or adding remote_write."
