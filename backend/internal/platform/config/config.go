@@ -299,6 +299,9 @@ func bindEnvVars(v *viper.Viper) {
 		"mailer.from_email": "MAILER_FROM_EMAIL",
 		"mailer.from_name":  "MAILER_FROM_NAME",
 
+		"audit.loki.enabled": "AUDIT_LOKI_ENABLED",
+		"audit.loki.url":     "AUDIT_LOKI_URL",
+
 		"storage.fsync_on_write": "STORAGE_FSYNC_ON_WRITE",
 
 		"pagination.cursor_signing_key": "CURSOR_SIGNING_KEY",
