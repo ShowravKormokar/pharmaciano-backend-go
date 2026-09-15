@@ -20,6 +20,7 @@ import "github.com/gin-gonic/gin"
 //	               (503 on /readyz) instead of a container restart loop.
 //	GET /healthz — alias of liveness, for platforms that probe the conventional
 //	               path.
+//	GET /health  — documented liveness endpoint used by the API reference.
 //	GET /readyz  — readiness: runs every registered checker (briefly cached) and
 //	               returns 200 only when all pass, else 503.
 //	GET /metrics — Prometheus exposition, optionally Bearer-guarded. Mounted only
@@ -31,6 +32,7 @@ func registerOps(engine *gin.Engine, d Deps) {
 
 		engine.GET("/livez", live)
 		engine.GET("/healthz", live)
+		engine.GET("/health", live)
 		engine.GET("/readyz", ready)
 	}
 

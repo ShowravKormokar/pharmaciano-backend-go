@@ -53,6 +53,10 @@ func New(d Deps) *gin.Engine {
 
 	// Versioned application API.
 	registerV1(engine, d)
+	registerV2(engine, d)
+
+	// Self-hosted OpenAPI reference + bundled spec (public to view, see docs.go).
+	registerDocs(engine, d)
 
 	// Uniform 404 / 405 envelopes so clients never see Gin's plain-text default.
 	engine.NoRoute(func(c *gin.Context) {
