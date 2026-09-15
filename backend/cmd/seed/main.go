@@ -455,7 +455,7 @@ func seedSuperAdmin(ctx context.Context, pool *pgxpool.Pool, cfg *config.Config,
 		INSERT INTO users (
 			organization_id, email, username, employee_code, phone, password_hash, status, stage,
 			must_change_password, failed_attempts, mfa_enabled, joining_date, employment_type
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, TRUE, 0, FALSE, $9, $10)
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, FALSE, 0, FALSE, $9, $10)
 		RETURNING id`, orgID, strings.ToLower(admin.Email), username, admin.EmployeeCode, admin.Phone, passwordHash,
 		valueOrDefault(admin.Status, "active"), valueOrDefault(admin.Stage, "verified"), admin.JoiningDate, admin.EmploymentType).Scan(&userID); err != nil {
 		return fmt.Errorf("insert user: %w", err)
