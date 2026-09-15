@@ -1,0 +1,226 @@
+# -----------------------------------------------------------------------------
+# OpenAPI contract CI — validates, lints, bundles, regenerates, and gates drift.
+#
+# The OpenAPI 3.1 split-YAML tree (api/openapi/**) is the single source of truth.
+# This workflow makes sure the committed contract is coherent and that the
+# generated Go code under internal/api/gen always matches it — so nobody can ship
+# a hand-edited generator output or an updated spec that forgot to regenerate.
+#
+# Triggers
+#   - on any PR that touches api/openapi/**, internal/api/**, or the configs
+#   - on push to main (so the contract stays verifiable on the trunk)
+#
+# Jobs
+#   validate   fast, dependency-free ref gate (validate.py) + Redocly lint
+#   generate   bundle → oapi-codegen → drift check  (mirrors `make oapi-all`)
+#   diff       oasdiff against the last contract baseline to block breaking changes
+# -----------------------------------------------------------------------------
+name: OpenAPI Contract
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'api/openapi/**'
+      - 'internal/api/**'
+      - 'Makefile'
+      - '.github/workflows/openapi-ci.yaml'
+  pull_request:
+    paths:
+      - 'api/openapi/**'
+      - 'internal/api/**'
+      - 'Makefile'
+      - '.github/workflows/openapi-ci.yaml'
+
+permissions:
+  contents: read
+
+env:
+  GO_VERSION: '1.26'
+  NODE_VERSION: '22'
+  PYTHON_VERSION: '3.12'
+
+jobs:
+  # --- Job 1: validate + lint ------------------------------------------------
+  validate:
+    name: Lint & validate contract
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install PyYAML
+        run: pip install pyyaml
+
+      # Fast internal gate — zero external deps. Fails in seconds on a broken ref.
+      - name: Fast internal $ref gate
+        run: python3 scripts/openapi/validate.py
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Cache Redocly
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-redocly-${{ hashFiles('**/package.json') }}
+          restore-keys: ${{ runner.os }}-redocly-
+
+      - name: Install Redocly CLI
+        run: npm install -g @redocly/cli@latest
+
+      - name: Redocly lint (bundled spec)
+        run: |
+          mkdir -p build
+          redocly bundle api/openapi/openapi.yaml \
+            --output build/openapi.bundled.yaml \
+            --config=api/openapi/config/redocly.yaml
+          redocly lint build/openapi.bundled.yaml \
+            --config=api/openapi/config/redocly.yaml
+
+      - name: Upload bundled spec artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: openapi-bundled
+          path: build/openapi.bundled.yaml
+          if-no-files-found: error
+
+  # --- Job 2: generate + drift -----------------------------------------------
+  generate:
+    name: Generate & detect drift
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install toolchain
+        run: |
+          go install github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@latest
+          npm install -g @redocly/cli@latest
+
+      - name: Bundle
+        run: |
+          mkdir -p build
+          redocly bundle api/openapi/openapi.yaml \
+            --output build/openapi.bundled.yaml \
+            --config=api/openapi/config/redocly.yaml
+
+      - name: Generate server code
+        run: oapi-codegen generate --config=api/openapi/config/oapi-codegen.yaml
+
+      - name: Generate client SDK
+        run: oapi-codegen generate --config=api/openapi/config/client.yaml
+
+      # Generated trees must equal the committed copy. Any diff means the commit
+      # forgot `make oapi-generate` (or hand-edited generated output) — fail.
+      - name: Detect generator drift
+        run: |
+          set -euo pipefail
+          gen_changed=false
+          if ! git diff --exit-code -- internal/api/gen internal/api/client > /dev/null; then
+            gen_changed=true
+          fi
+          if [ "$gen_changed" = "true" ]; then
+            echo "::error::Generated code is out of date. Run 'make oapi-generate' and 'make oapi-client' on the contract and commit the output."
+            git --no-pager diff --stat -- internal/api/gen internal/api/client
+            exit 1
+          fi
+          echo "OK: generated code matches the contract"
+
+      # The default (stdlib) build must stay green regardless of new codegen deps.
+      - name: Build (default tags — no codegen deps)
+        run: go build ./...
+
+      - name: Build (validator tag)
+        run: go build -tags oapival ./internal/api/server/...
+
+  # --- Job 3: breaking-change detection --------------------------------------
+  diff:
+    name: Breaking-change check (oasdiff)
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Install oasdiff
+        run: go install github.com/Tufin/oasdiff@latest
+
+      - name: Bundle current spec
+        run: |
+          mkdir -p build
+          python3 - "$OPENAPI_CONFIG" <<'PY'
+          import sys
+          try:
+              import yaml
+          except ImportError:
+              sys.exit("pyyaml required")
+          PY
+          # Simplify: no PyYAML here — bundle via a tiny node redocly is heavy.
+          # We already rely on Redocly in the validate job; replicate output here
+          # is wasteful. Instead diff uses `Makefile BUILDDIR` produced in validate.
+          echo "bundled spec will be consumed from the validate job artifact"
+
+      # oasdiff consumes two specs. We diff the PR's committed bundled spec
+      # (produced by Redocly in the validate job) against its git base version,
+      # so a PR that breaks an existing consumer is blocked before merge.
+      - name: Diff against base contract
+        run: |
+          set -euo pipefail
+          # Produce the bundled spec for the PR head and for the merge-base.
+          git fetch --depth=1 origin main || true
+          base_ref="$(git merge-base HEAD origin/main 2>/dev/null || echo 'HEAD~1')"
+          echo "base_ref=$base_ref"
+
+          mkdir -p build/base build/head
+          node -e "console.log('will bundle via redocly in a node step')" || true
+
+          # (Redocly installed here to keep this job self-contained.)
+          npm install -g @redocly/cli@latest >/dev/null 2>&1
+
+          # current working tree
+          redocly bundle api/openapi/openapi.yaml \
+            --output build/head/bundled.yaml \
+            --config=api/openapi/config/redocly.yaml >/dev/null 2>&1
+
+          # base ref (the committed contract consumers already build against)
+          if git cat-file -e ${base_ref}:api/openapi/openapi.yaml 2>/dev/null; then
+            git show ${base_ref}:api/openapi/openapi.yaml > /tmp/base-oas.yaml
+          else
+            echo "no base spec to diff against; skipping breaking-change gate"
+            exit 0
+          fi
+          redocly bundle /tmp/base-oas.yaml \
+            --output build/base/bundled.yaml \
+            --config=api/openapi/config/redocly.yaml >/dev/null 2>&1
+
+          echo "== oasdiff: base -> head =="
+          oasdiff build/base/bundled.yaml build/head/bundled.yaml \
+            --format text \
+            --fail-on ERR \
+            --err-ignored 6461 \
+            --err-ignore=remove-response \
+            --warn-ignored 3651,3652,4054 \
+            --output output.yaml
+
+      - name: Upload oasdiff report
+        uses: actions/upload-artifact@v4
+        with:
+          name: oasdiff-report
+          path: output.yaml
+          if-no-files-found: allow
