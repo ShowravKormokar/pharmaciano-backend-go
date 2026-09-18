@@ -1,0 +1,248 @@
+# ---------------------------------------------------------------------------
+# /branches/* — organization branches. Mirrors internal/modules/branch/routes.go.
+# ---------------------------------------------------------------------------
+
+/branches:
+  post:
+    operationId: branches.create
+    summary: Create a branch
+    description: |
+      Creates a new branch within the current organization. The branch `code` must be unique
+      within the org (409 ALREADY_EXISTS on conflict). Requires branches:create. New branches
+      are created in the provided status (default ACTIVE) and assigned the first posting ledger.
+    tags: [branches]
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/IdempotencyKey'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/branch.yaml#/CreateBranchRequest'
+          examples:
+            basic:
+              value:
+                code: BR-DHK-01
+                name: Dhaka Central
+                type: retail
+                address: 12 Green Road
+                city: Dhaka
+                zone: Dhaka North
+                open_time: '08:00'
+                close_time: '22:00'
+    responses:
+      '201':
+        description: Branch created.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/common.yaml#/CreatedEnvelope'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '409':
+        $ref: '../components/responses/error.yaml#/Conflict'
+      '422':
+        $ref: '../components/responses/error.yaml#/UnprocessableEntity'
+  get:
+    operationId: branches.list
+    summary: List branches
+    description: |
+      Paginated, searchable list of branches. Supports offset pagination, free-text search,
+      status filter, sorting, and `include_deleted`. Requires branches:view. Healthy branches
+      are returned in office-open order by default.
+    tags: [branches]
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/Page'
+      - $ref: '../components/parameters/pagination.yaml#/Limit'
+      - $ref: '../components/parameters/pagination.yaml#/Sort'
+      - $ref: '../components/parameters/pagination.yaml#/Q'
+      - $ref: '../components/parameters/pagination.yaml#/Status'
+      - $ref: '../components/parameters/pagination.yaml#/IncludeDeleted'
+    responses:
+      '200':
+        description: Paginated branch list.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [success, data, pagination]
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                data:
+                  type: array
+                  items:
+                    $ref: '../components/schemas/branch.yaml#/BranchListItem'
+                pagination:
+                  $ref: '../components/schemas/common.yaml#/PaginationMeta'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+
+/branches/{id}:
+  get:
+    operationId: branches.get
+    summary: Get a branch
+    description: |
+      Returns a single branch with full attributes. Requires branches:view and (for branch-limited
+      callers) access to the target branch.
+    tags: [branches]
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - name: id
+        in: path
+        required: true
+        description: Branch UUID.
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: Branch profile.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [success, data]
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                data:
+                  $ref: '../components/schemas/branch.yaml#/Branch'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+  patch:
+    operationId: branches.update
+    summary: Update a branch (partial)
+    description: |
+      Partial update — only provided fields change. Requires branches:update. Changing status
+      (e.g. deactivating) has lifecycle implications that are enforced server-side.
+    tags: [branches]
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/IdempotencyKey'
+      - name: id
+        in: path
+        required: true
+        description: Branch UUID.
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/branch.yaml#/UpdateBranchRequest'
+    responses:
+      '200':
+        description: Updated branch profile.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/branch.yaml#/Branch'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+      '422':
+        $ref: '../components/responses/error.yaml#/UnprocessableEntity'
+  put:
+    operationId: branches.replace
+    summary: Replace a branch (full)
+    description: |
+      Full replace — all mutable fields in the request are written to the row (fields omitted are
+      reset to defaults/null). Requires branches:update. Prefer PATCH unless you need a full
+      canonical apply.
+    tags: [branches]
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/IdempotencyKey'
+      - name: id
+        in: path
+        required: true
+        description: Branch UUID.
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/branch.yaml#/ReplaceBranchRequest'
+    responses:
+      '200':
+        description: Replaced branch profile.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/branch.yaml#/Branch'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+      '422':
+        $ref: '../components/responses/error.yaml#/UnprocessableEntity'
+  delete:
+    operationId: branches.delete
+    summary: Delete a branch
+    description: |
+      Soft-deletes the branch (is_deleted=true, status=DELETED). Branches with posted stock or
+      ledger activity cannot be deleted outright — they are archived (see error causes). Requires
+      branches:delete. Idempotent.
+    tags: [branches]
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/IdempotencyKey'
+      - name: id
+        in: path
+        required: true
+        description: Branch UUID.
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '204':
+        description: Branch deleted/archived.
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+      '409':
+        $ref: '../components/responses/error.yaml#/Conflict'

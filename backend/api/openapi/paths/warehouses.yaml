@@ -1,0 +1,260 @@
+# ---------------------------------------------------------------------------
+# /warehouses/* + /branches/{id}/warehouses — inventory storage locations.
+# Mirrors internal/modules/warehouse/routes.go.
+# ---------------------------------------------------------------------------
+
+/warehouses:
+  post:
+    operationId: warehouses.create
+    summary: Create a warehouse
+    security:
+      - bearerAuth: []
+    description: |
+      Creates a warehouse under a branch. The warehouse `code` must be unique within the org
+      scope (409 on conflict). Requires warehouses:create.
+    tags: [warehouses]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/IdempotencyKey'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/warehouse.yaml#/CreateWarehouseRequest'
+          examples:
+            basic:
+              value:
+                branch_id: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                code: WH-MAIN-01
+                name: Main Dispensary Stock
+                location: Aisle A
+                capacity: 5000
+                is_main: true
+    responses:
+      '201':
+        description: Warehouse created.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/common.yaml#/CreatedEnvelope'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '409':
+        $ref: '../components/responses/error.yaml#/Conflict'
+      '422':
+        $ref: '../components/responses/error.yaml#/UnprocessableEntity'
+  get:
+    operationId: warehouses.list
+    summary: List warehouses
+    security:
+      - bearerAuth: []
+    description: |
+      Paginated, searchable list of warehouses across the caller's accessible branches. Supports
+      offset pagination, free-text search, status filter and sorting. Requires warehouses:view.
+    tags: [warehouses]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/Page'
+      - $ref: '../components/parameters/pagination.yaml#/Limit'
+      - $ref: '../components/parameters/pagination.yaml#/Sort'
+      - $ref: '../components/parameters/pagination.yaml#/Q'
+      - $ref: '../components/parameters/pagination.yaml#/Status'
+      - $ref: '../components/parameters/pagination.yaml#/IncludeDeleted'
+    responses:
+      '200':
+        description: Paginated warehouse list.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [success, data, pagination]
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                data:
+                  type: array
+                  items:
+                    $ref: '../components/schemas/warehouse.yaml#/WarehouseListItem'
+                pagination:
+                  $ref: '../components/schemas/common.yaml#/PaginationMeta'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+
+/warehouses/{id}:
+  get:
+    operationId: warehouses.get
+    summary: Get a warehouse
+    security:
+      - bearerAuth: []
+    description: |
+      Returns a single warehouse with full attributes. Requires warehouses:view and branch-scope
+      access to the owning branch.
+    tags: [warehouses]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - name: id
+        in: path
+        required: true
+        description: Warehouse UUID.
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: Warehouse profile.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [success, data]
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                data:
+                  $ref: '../components/schemas/warehouse.yaml#/Warehouse'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+  patch:
+    operationId: warehouses.update
+    summary: Update a warehouse (partial)
+    security:
+      - bearerAuth: []
+    description: |
+      Partial update — only provided fields change. Requires warehouses:update and branch access
+      to the owning branch. Moving a main-capacity warehouse between branches is handled by the
+      service invariant checker.
+    tags: [warehouses]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/IdempotencyKey'
+      - name: id
+        in: path
+        required: true
+        description: Warehouse UUID.
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/warehouse.yaml#/UpdateWarehouseRequest'
+    responses:
+      '200':
+        description: Updated warehouse profile.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [success, data]
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                data:
+                  $ref: '../components/schemas/warehouse.yaml#/Warehouse'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+      '422':
+        $ref: '../components/responses/error.yaml#/UnprocessableEntity'
+  delete:
+    operationId: warehouses.delete
+    summary: Delete a warehouse
+    security:
+      - bearerAuth: []
+    description: |
+      Soft-deletes the warehouse. Warehouses with non-zero stock cannot be deleted (see 409) —
+      transfer stock first. Requires warehouses:delete. Idempotent.
+    tags: [warehouses]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/IdempotencyKey'
+      - name: id
+        in: path
+        required: true
+        description: Warehouse UUID.
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '204':
+        description: Warehouse deleted/archived.
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+      '409':
+        $ref: '../components/responses/error.yaml#/Conflict'
+
+# ── Warehouses scoped to a single branch ───────────────────────────────
+/branches/{id}/warehouses:
+  get:
+    operationId: warehouses.listByBranch
+    summary: List warehouses for a branch
+    security:
+      - bearerAuth: []
+    description: |
+      Lists warehouses belonging to a single branch. Same pagination/search semantics as
+      `/warehouses`, scoped to the branch. Requires warehouses:view and access to that branch.
+    tags: [warehouses]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/Page'
+      - $ref: '../components/parameters/pagination.yaml#/Limit'
+      - $ref: '../components/parameters/pagination.yaml#/Sort'
+      - $ref: '../components/parameters/pagination.yaml#/Q'
+      - $ref: '../components/parameters/pagination.yaml#/Status'
+      - $ref: '../components/parameters/pagination.yaml#/IncludeDeleted'
+      - name: id
+        in: path
+        required: true
+        description: Branch UUID.
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: Paginated warehouse list for the branch.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [success, data, pagination]
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                data:
+                  type: array
+                  items:
+                    $ref: '../components/schemas/warehouse.yaml#/WarehouseListItem'
+                pagination:
+                  $ref: '../components/schemas/common.yaml#/PaginationMeta'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'

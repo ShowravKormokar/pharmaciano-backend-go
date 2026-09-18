@@ -1,0 +1,170 @@
+# ---------------------------------------------------------------------------
+# Reusable error responses. Every non-2xx body is a common.yaml#/ErrorEnvelope.
+# The code→HTTP-status mapping below MUST stay in lock-step with
+# internal/errors/mapper.go (codeToStatus) so docs and reality agree.
+# ---------------------------------------------------------------------------
+
+XRequestID:
+  description: Correlates a response to its request; mirrors meta.request_id.
+  schema:
+    type: string
+    format: uuid
+    example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+
+BadRequest:
+  description: |
+    The request was malformed: invalid JSON, a failed validation rule, an unparsable
+    UUID, or invalid query params. `error.code` distinguishes: VALIDATION_ERROR,
+    INVALID_UUID, INVALID_CURSOR, INVALID_QUERY.
+  headers:
+    X-Request-ID:
+      $ref: '#/XRequestID'
+  content:
+    application/json:
+      schema:
+        $ref: '../schemas/common.yaml#/ErrorEnvelope'
+      examples:
+        validation:
+          $ref: '../examples/error.yaml#/Validation'
+
+Unauthorized:
+  description: |
+    Missing/invalid credentials. Codes: UNAUTHENTICATED, INVALID_CREDENTIALS, TOKEN_EXPIRED,
+    TOKEN_INVALID, TOKEN_REUSE_DETECTED. Two special non-fatal 401 codes (MFA_REQUIRED,
+    PASSWORD_CHANGE_REQUIRED) carry a single-use token in a header for the next stage — see
+    the bearerAuth description. Neither issues a session.
+  headers:
+    WWW-Authenticate:
+      description: Challenge indicating the scheme and error type.
+      schema:
+        type: string
+        example: Bearer realm="pharmaciano", error="invalid_token"
+    X-MFA-Challenge:
+      description: Present only when error.code is MFA_REQUIRED. Redeem at POST /auth/mfa/verify.
+      schema:
+        type: string
+    X-Password-Change-Token:
+      description: Present only when error.code is PASSWORD_CHANGE_REQUIRED. Redeem at POST /auth/password/force-change.
+      schema:
+        type: string
+    X-Request-ID:
+      $ref: '#/XRequestID'
+  content:
+    application/json:
+      schema:
+        $ref: '../schemas/common.yaml#/ErrorEnvelope'
+      examples:
+        invalid-credentials:
+          $ref: '../examples/error.yaml#/InvalidCredentials'
+
+Forbidden:
+  description: |
+    The caller is not permitted to act on the target. Codes: FORBIDDEN, ACCOUNT_INACTIVE,
+    ACCOUNT_SUSPENDED, BRANCH_SCOPE_DENIED, TENANT_SCOPE_DENIED, CROSS_ORIGIN_REQUEST.
+  headers:
+    X-Request-ID:
+      $ref: '#/XRequestID'
+  content:
+    application/json:
+      schema:
+        $ref: '../schemas/common.yaml#/ErrorEnvelope'
+      examples:
+        forbidden:
+          $ref: '../examples/error.yaml#/Forbidden'
+
+NotFound:
+  description: The referenced resource does not exist (code NOT_FOUND).
+  headers:
+    X-Request-ID:
+      $ref: '#/XRequestID'
+  content:
+    application/json:
+      schema:
+        $ref: '../schemas/common.yaml#/ErrorEnvelope'
+      examples:
+        not-found:
+          $ref: '../examples/error.yaml#/NotFound'
+
+Conflict:
+  description: |
+    The request conflicts with current state. Codes: ALREADY_EXISTS, CONFLICT,
+    IDEMPOTENCY_KEY_CONFLICT, STATE_TRANSITION_DENIED.
+  headers:
+    X-Request-ID:
+      $ref: '#/XRequestID'
+  content:
+    application/json:
+      schema:
+        $ref: '../schemas/common.yaml#/ErrorEnvelope'
+      examples:
+        already-exists:
+          $ref: '../examples/error.yaml#/AlreadyExists'
+        idempotency:
+          $ref: '../examples/error.yaml#/IdempotencyConflict'
+
+UnprocessableEntity:
+  description: |
+    Well-formed but violates a business rule (HTTP 422). Codes include BUSINESS_RULE_VIOLATION,
+    INSUFFICIENT_STOCK, BATCH_EXPIRED, PRICE_INVALID, LEDGER_UNBALANCED, APPROVAL_REQUIRED.
+  headers:
+    X-Request-ID:
+      $ref: '#/XRequestID'
+  content:
+    application/json:
+      schema:
+        $ref: '../schemas/common.yaml#/ErrorEnvelope'
+      examples:
+        business-rule:
+          $ref: '../examples/error.yaml#/BusinessRule'
+
+Locked:
+  description: |
+    The resource is locked (HTTP 423). Codes: RESOURCE_LOCKED, ACCOUNT_LOCKED.
+  headers:
+    Retry-After:
+      $ref: '../headers/pagination.yaml#/Retry-After'
+    X-Request-ID:
+      $ref: '#/XRequestID'
+  content:
+    application/json:
+      schema:
+        $ref: '../schemas/common.yaml#/ErrorEnvelope'
+      examples:
+        locked:
+          $ref: '../examples/error.yaml#/AccountLocked'
+
+TooManyRequests:
+  description: |
+    Rate limit exceeded (HTTP 429). Codes: RATE_LIMITED, TOO_MANY_SESSIONS, AI_COST_CAP_EXCEEDED.
+    Respect Retry-After before retrying.
+  headers:
+    Retry-After:
+      $ref: '../headers/pagination.yaml#/Retry-After'
+    X-RateLimit-Limit:
+      $ref: '../headers/pagination.yaml#/RateLimit-Limit'
+    X-RateLimit-Remaining:
+      $ref: '../headers/pagination.yaml#/RateLimit-Remaining'
+    X-RateLimit-Reset:
+      $ref: '../headers/pagination.yaml#/RateLimit-Reset'
+    X-Request-ID:
+      $ref: '#/XRequestID'
+  content:
+    application/json:
+      schema:
+        $ref: '../schemas/common.yaml#/ErrorEnvelope'
+      examples:
+        rate-limited:
+          $ref: '../examples/error.yaml#/RateLimited'
+
+InternalError:
+  description: |
+    An unexpected server error (HTTP 500+). The body is deliberately generic (INTERNAL_ERROR) —
+    the real cause is only ever in the server logs, never on the wire. Also covers 501..504
+    (DATABASE_ERROR, UPSTREAM_ERROR, SERVICE_UNAVAILABLE, TIMEOUT, etc.) per the mapper.
+  headers:
+    X-Request-ID:
+      $ref: '#/XRequestID'
+  content:
+    application/json:
+      schema:
+        $ref: '../schemas/common.yaml#/ErrorEnvelope'

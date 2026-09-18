@@ -1,0 +1,520 @@
+# ---------------------------------------------------------------------------
+# /users/* — user identity, CRUD, status lifecycle, role & branch assignments.
+# Mirrors internal/modules/user/routes.go. All under /api/v1.
+# ---------------------------------------------------------------------------
+
+/users:
+  post:
+    operationId: users.create
+    summary: Create a user
+    description: |
+      Creates a user within the current organization. Required: email, first_name, last_name,
+      and a role_id (the initial role is what grants the user their permissions). The user is
+      created in PENDING stage and receives an invitation. The caller needs users:create.
+    tags: [users]
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/IdempotencyKey'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/user.yaml#/CreateUserRequest'
+          examples:
+            basic:
+              value:
+                email: pharmacist@example.com
+                first_name: Samiha
+                last_name: Rahman
+                role_id: 1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed
+    responses:
+      '201':
+        description: User created (PENDING until the invitation completes).
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/common.yaml#/CreatedEnvelope'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '409':
+        $ref: '../components/responses/error.yaml#/Conflict'
+      '422':
+        $ref: '../components/responses/error.yaml#/UnprocessableEntity'
+  get:
+    operationId: users.list
+    summary: List users
+    description: |
+      Paginated, searchable list of organization users. Supports offset pagination, free-text
+      search, status filter and sorting. Results are flattened list items — use `GET /users/{id}`
+      for the full profile. Requires users:view.
+    tags: [users]
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/Page'
+      - $ref: '../components/parameters/pagination.yaml#/Limit'
+      - $ref: '../components/parameters/pagination.yaml#/Sort'
+      - $ref: '../components/parameters/pagination.yaml#/Q'
+      - $ref: '../components/parameters/pagination.yaml#/Status'
+      - $ref: '../components/parameters/pagination.yaml#/IncludeDeleted'
+    responses:
+      '200':
+        description: Paginated user list.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [success, data, pagination]
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                data:
+                  type: array
+                  items:
+                    $ref: '../components/schemas/user.yaml#/UserListItem'
+                pagination:
+                  $ref: '../components/schemas/common.yaml#/PaginationMeta'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+
+/users/me:
+  get:
+    operationId: users.me
+    summary: Current user's profile
+    description: |
+      Returns the full profile of the authenticated user (equivalent of `auth.me` but with the
+      user-profile shape). Requires only a valid session — no specific permission.
+    tags: [users]
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+    responses:
+      '200':
+        description: Current user profile.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/user.yaml#/UserIdentity'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+
+/users/{id}:
+  get:
+    operationId: users.get
+    summary: Get a user
+    description: |
+      Returns the full profile for a single user, including role and branch assignments. Requires
+      users:view. Enforces branch scope if the caller is branch-limited.
+    tags: [users]
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - name: id
+        in: path
+        required: true
+        description: User UUID.
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: Full user profile.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/user.yaml#/UserIdentity'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+  patch:
+    operationId: users.update
+    summary: Update a user
+    description: |
+      Partial update of profile fields. All fields optional; only provided fields are changed.
+      Requires users:update. Cannot mutate a user's own protected fields (enforced server-side).
+    tags: [users]
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/IdempotencyKey'
+      - name: id
+        in: path
+        required: true
+        description: User UUID.
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/user.yaml#/UpdateUserRequest'
+    responses:
+      '200':
+        description: Updated user profile.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/user.yaml#/UserIdentity'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+      '422':
+        $ref: '../components/responses/error.yaml#/UnprocessableEntity'
+  delete:
+    operationId: users.delete
+    summary: Delete a user
+    description: |
+      Soft-deletes the user (is_deleted=true, status=DELETED). Existing sessions are revoked. All
+      foreign-key constraints (roles, branches) are detached or archived per retention policy.
+      Requires users:delete. Idempotent — deleting an already-deleted user returns 204.
+    tags: [users]
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/IdempotencyKey'
+      - name: id
+        in: path
+        required: true
+        description: User UUID.
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '204':
+        description: User deleted.
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+
+/users/{id}/status:
+  patch:
+    operationId: users.changeStatus
+    summary: Change a user's status
+    description: |
+      Transitions the user lifecycle status and, optionally, records a reason. Valid transitions
+      are enforced server-side (e.g. cannot ACTIVATE a DELETED user). Requires users:update.
+      Audited. Suspending a user revokes their active sessions immediately.
+    tags: [users]
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/IdempotencyKey'
+      - name: id
+        in: path
+        required: true
+        description: User UUID.
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/user.yaml#/ChangeStatusRequest'
+          examples:
+            activate:
+              summary: Activate the user.
+              value:
+                status: ACTIVE
+            suspend:
+              summary: Suspend with a reason.
+              value:
+                status: SUSPENDED
+                reason: Repeated policy violations
+    responses:
+      '200':
+        description: Status updated.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/user.yaml#/UserIdentity'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+      '422':
+        $ref: '../components/responses/error.yaml#/UnprocessableEntity'
+
+# ── Role assignments (data owned by rbac, surfaced under /users) ───────
+/users/{id}/roles:
+  get:
+    operationId: users.listRoles
+    summary: List a user's role assignments
+    description: |
+      Returns the role assignments for the user, including branch-scoped and expiring roles.
+      Requires users:view and branch-scope access to the user.
+    tags: [users]
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - name: id
+        in: path
+        required: true
+        description: User UUID.
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: Role assignment list.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [success, data]
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                data:
+                  type: array
+                  items:
+                    $ref: '../components/schemas/user.yaml#/UserRoleItem'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+  post:
+    operationId: users.assignRole
+    summary: Assign a role to a user
+    description: |
+      Grants a role. A role may be org-wide (no branch) or branch-scoped (with branch_id); the
+      principal's own scope must be a superset of the granted scope. Assigning an org-wide role
+      revokes the user's branch-scoped roles (a user holds one canonical role). Requires users:assign.
+    tags: [users]
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/IdempotencyKey'
+      - name: id
+        in: path
+        required: true
+        description: User UUID.
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/rbac.yaml#/AssignRoleRequest'
+    responses:
+      '200':
+        description: Role assigned.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/user.yaml#/UserRoleItem'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+      '422':
+        $ref: '../components/responses/error.yaml#/UnprocessableEntity'
+
+/users/{id}/roles/{role_id}:
+  delete:
+    operationId: users.revokeRole
+    summary: Revoke a role assignment
+    description: |
+      Removes the role from the user. If it was the user's canonical role, they become role-less
+      (no permissions) until re-assigned. Cannot revoke a system-invariant role in some orgs (see
+      error causes). Requires users:revoke.
+    tags: [users]
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/IdempotencyKey'
+      - name: id
+        in: path
+        required: true
+        description: User UUID.
+        schema:
+          type: string
+          format: uuid
+      - name: role_id
+        in: path
+        required: true
+        description: Role UUID to revoke.
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '204':
+        description: Role revoked.
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+
+# ── Branch assignments ─────────────────────────────────────────────────
+/users/{id}/branches:
+  get:
+    operationId: users.listBranches
+    summary: List a user's branch assignments
+    description: |
+      Returns the branches the user is scoped to (explicitly assigned). A user with an org-wide
+      role may have no explicit branch entries while still accessing every branch. Requires
+      users:view.
+    tags: [users]
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - name: id
+        in: path
+        required: true
+        description: User UUID.
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: Branch assignment list.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [success, data]
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                data:
+                  type: array
+                  items:
+                    $ref: '../components/schemas/user.yaml#/BranchAssignmentItem'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+  post:
+    operationId: users.assignBranch
+    summary: Assign a branch to a user
+    description: |
+      Scopes the user to a branch (optionally expiring). The principal's scope must be a
+      superset of the assigned branch. Requires users:assign.
+    tags: [users]
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/IdempotencyKey'
+      - name: id
+        in: path
+        required: true
+        description: User UUID.
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/user.yaml#/BranchAssignmentRequest'
+    responses:
+      '200':
+        description: Branch assigned.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/user.yaml#/BranchAssignmentItem'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+      '422':
+        $ref: '../components/responses/error.yaml#/UnprocessableEntity'
+
+/users/{id}/branches/{branch_id}:
+  delete:
+    operationId: users.revokeBranch
+    summary: Revoke a branch assignment
+    description: |
+      Removes the branch scope from the user. If the branch was required by the user's active
+      role, the role/branch binding is loosened accordingly (may trigger permission re-resolution).
+      Requires users:revoke.
+    tags: [users]
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/IdempotencyKey'
+      - name: id
+        in: path
+        required: true
+        description: User UUID.
+        schema:
+          type: string
+          format: uuid
+      - name: branch_id
+        in: path
+        required: true
+        description: Branch UUID to revoke.
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '204':
+        description: Branch assignment revoked.
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'

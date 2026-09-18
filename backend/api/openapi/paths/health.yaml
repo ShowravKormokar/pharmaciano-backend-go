@@ -1,0 +1,108 @@
+# ---------------------------------------------------------------------------
+# Operational probes — mounted at the ROOT (no /api/v1 version prefix).
+# No auth, never rate-limited, never logged in full.
+#
+# Each op declares its own servers[] to override the global /api/v1 and /api/v2
+# bases so Scalar Try-it hits the real, direct root URL (e.g. http://localhost:8080/livez).
+# security: [] overrides the global bearerAuth so these stay public.
+# ---------------------------------------------------------------------------
+/livez:
+  get:
+    operationId: ops.livez
+    summary: Liveness (process up)
+    description: |
+      Returns 200 with `{"status":"ok"}` once the process can serve.
+      Used by load balancers, orchestrators and uptime checks.
+      Deliberately **unauthenticated**, unbounded by rate limits,
+      and logged as a single-line hit (no payload).
+      Direct path: `GET http://localhost:8080/livez` (no /api/v1 prefix).
+    tags: [health]
+    security: []
+    servers:
+      - url: http://localhost:8080
+        description: root (no version prefix — operational probes)
+    responses:
+      '200':
+        description: Service is alive.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [ok]
+                  example: ok
+                time:
+                  type: string
+                  format: date-time
+                  description: Server clock, for skew diagnostics.
+      '503':
+        $ref: '../components/responses/error.yaml#/InternalError'
+
+/healthz:
+  get:
+    operationId: ops.healthz
+    summary: Health check (dependencies ok)
+    description: |
+      Returns 200 when the process AND its dependencies (database, cache)
+      are healthy. 503 means one or more subsystems are degraded.
+      Direct path: `GET http://localhost:8080/healthz` (no /api/v1 prefix).
+    tags: [health]
+    security: []
+    servers:
+      - url: http://localhost:8080
+        description: root (no version prefix — operational probes)
+    responses:
+      '200':
+        description: Service and dependencies healthy.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [ok]
+                  example: ok
+                time:
+                  type: string
+                  format: date-time
+                  description: Server clock, for skew diagnostics.
+      '503':
+        $ref: '../components/responses/error.yaml#/InternalError'
+
+/readyz:
+  get:
+    operationId: ops.readyz
+    summary: Readiness (ready to accept traffic)
+    description: |
+      Returns 200 when the service is ready to accept traffic (dependencies
+      connected, migrations applied). Used by Kubernetes readiness probes.
+      Direct path: `GET http://localhost:8080/readyz` (no /api/v1 prefix).
+    tags: [health]
+    security: []
+    servers:
+      - url: http://localhost:8080
+        description: root (no version prefix — operational probes)
+    responses:
+      '200':
+        description: Service is ready.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [ok]
+                  example: ok
+                time:
+                  type: string
+                  format: date-time
+                  description: Server clock, for skew diagnostics.
+      '503':
+        $ref: '../components/responses/error.yaml#/InternalError'

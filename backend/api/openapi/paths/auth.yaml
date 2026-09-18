@@ -1,0 +1,522 @@
+# ---------------------------------------------------------------------------
+# /auth/* — authentication, session lifecycle, MFA, and password flows.
+# Verbs + paths + security chains mirror internal/modules/auth/routes.go.
+# Each top-level key is a full path; use this file via $ref from openapi.yaml
+# paths: [ { $ref: paths/auth.yaml } ] (which inlines the paths).
+# ---------------------------------------------------------------------------
+
+/auth/login:
+  post:
+    operationId: auth.login
+    summary: Authenticate with email and password
+    description: |
+      Authenticates against organization-scoped credentials. The response contains access and
+      refresh tokens. On successful second-factor the server issues a complete session; on
+      MFA_REQUIRED the response body carries a single-use `X-MFA-Challenge` header instead
+      of tokens — POST that header's value to `/auth/mfa/verify` with the OTP.
+    tags: [auth]
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/auth.yaml#/LoginRequest'
+          examples:
+            basic:
+              value:
+                email: user@example.com
+                password: s3cRet!
+                device_name: Chrome on Windows
+    responses:
+      '200':
+        description: Authenticated. If MFA is enabled and pending, tokens are returned only after second-factor completion; otherwise they are returned here.
+        headers:
+          X-MFA-Challenge:
+            description: Present only when MFA is pending. Single-use challenge token for the next stage.
+            schema:
+              type: string
+          Set-Cookie:
+            schema:
+              type: string
+              description: |
+                HttpOnly refresh cookie: `pharmaciano_refresh=<token>; SameSite=None; Secure; Path=/api/v1/auth/refresh; Max-Age=...`.
+                Not readable by JavaScript.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/auth.yaml#/TokenResponse'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '422':
+        $ref: '../components/responses/error.yaml#/UnprocessableEntity'
+      '429':
+        $ref: '../components/responses/error.yaml#/TooManyRequests'
+
+/auth/refresh:
+  post:
+    operationId: auth.refresh
+    summary: Refresh an access token
+    description: |
+      Exchanges a valid refresh token for a new access token + rotated refresh token. The refresh
+      token rides in the `pharmaciano_refresh` httpOnly cookie set during login; for non-browser
+      clients the same value is also the `refresh_token` field in the response body. Each refresh
+      token is single-use (family tracking); reuse of a revoked token triggers a 401
+      TOKEN_REUSE_DETECTED and invalidates the entire family.
+    tags: [auth]
+    requestBody:
+      required: false
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/auth.yaml#/RefreshRequest'
+          examples:
+            cookie:
+              description: Refresh via the httpOnly cookie (browser). Empty body.
+              value: {}
+            body:
+              description: Non-browser clients pass the refresh token in the body.
+              value:
+                refresh_token: <opaque-refresh-token>
+    responses:
+      '200':
+        description: New token pair issued.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/auth.yaml#/TokenResponse'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+
+/auth/password/forgot:
+  post:
+    operationId: auth.passwordForgot
+    summary: Forgot password — send a reset link
+    description: |
+      Takes an email address and sends a reset link (if the account exists). Always returns 202
+      to prevent enumeration. Rate limited per client IP to prevent abuse.
+    tags: [auth]
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/auth.yaml#/PasswordForgotRequest'
+          examples:
+            basic:
+              value:
+                email: user@example.com
+    responses:
+      '202':
+        description: Reset email queued (sent if the email is known).
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: if the email exists, a reset link has been sent
+      '429':
+        $ref: '../components/responses/error.yaml#/TooManyRequests'
+
+/auth/password/reset:
+  post:
+    operationId: auth.passwordReset
+    summary: Reset password with a token
+    description: |
+      Consumes a single-use reset token (from the forgot-password email) and sets the new password.
+      The token is HMAC-signed, time-limited (10 min) and single-use. Password history is enforced.
+    tags: [auth]
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/auth.yaml#/PasswordResetRequest'
+          examples:
+            basic:
+              value:
+                token: <reset-token-from-email>
+                new_password: NewP@ssw0rd!
+    responses:
+      '200':
+        description: Password updated.
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: password updated successfully
+      '422':
+        $ref: '../components/responses/error.yaml#/UnprocessableEntity'
+
+/auth/password/force-change:
+  post:
+    operationId: auth.passwordForceChange
+    summary: Force-change password (policy-required)
+    description: |
+      Completes a policy-required password change (PASSWORD_CHANGE_REQUIRED flow). The caller
+      presents the one-time token from the `X-Password-Change-Token` header (received in a prior
+      401 PASSWORD_CHANGE_REQUIRED response) alongside both the old and new passwords. All three
+      must be supplied; password history is enforced. On success the account is set to ACTIVE and
+      a full session is issued.
+    tags: [auth]
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/auth.yaml#/PasswordForceChangeRequest'
+    responses:
+      '200':
+        description: Password updated and session issued.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/auth.yaml#/TokenResponse'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '422':
+        $ref: '../components/responses/error.yaml#/UnprocessableEntity'
+
+# ── MFA verification (public — requires X-MFA-Challenge header) ─────────
+/auth/mfa/verify:
+  post:
+    operationId: auth.mfaVerify
+    summary: Verify TOTP code during login (MFA)
+    description: |
+      Completes a login that halted at `MFA_REQUIRED`. The caller must present the single-use
+      `X-MFA-Challenge` header value (received from the 401 MFA_REQUIRED response) along with
+      the 6-digit TOTP code. On success a full session is issued.
+    tags: [auth]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/auth.yaml#/MFAVerifyRequest'
+          examples:
+            basic:
+              value:
+                mfa_challenge: <challenge-from-401-header>
+                code: '123456'
+    responses:
+      '200':
+        description: Second factor accepted; full session issued.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/auth.yaml#/TokenResponse'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+
+/auth/mfa/recovery:
+  post:
+    operationId: auth.mfaRecovery
+    summary: Recover MFA with a recovery code
+    description: |
+      Same as `/mfa/verify` but accepts a recovery code instead of the current TOTP. Each recovery
+      code is single-use and is immediately consumed on success. Accounts with no remaining
+      recovery codes should regenerate via `POST /auth/mfa/setup`.
+    tags: [auth]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/auth.yaml#/MFARecoveryRequest'
+          examples:
+            basic:
+              value:
+                mfa_challenge: <challenge-from-401-header>
+                recovery_code: <single-use-recovery-code>
+    responses:
+      '200':
+        description: Recovery code accepted; full session issued.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/auth.yaml#/TokenResponse'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+
+# ── Protected: session introspection + logout ────────────────────────────
+/auth/logout:
+  post:
+    operationId: auth.logout
+    summary: Terminate the current session
+    description: |
+      Terminates the current session (the one identified by the caller's token). Refresh token
+      is consumed and the httpOnly cookie is cleared (Path=/, Max-Age=0). Other sessions on
+      the same device are unaffected.
+    tags: [auth]
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/IdempotencyKey'
+    requestBody:
+      required: false
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/auth.yaml#/LogoutRequest'
+          examples:
+            current-only:
+              description: Terminate this session only (default).
+              value: {}
+            all-sessions:
+              description: Terminate every session across all devices.
+              value:
+                all: true
+    responses:
+      '204':
+        description: Session terminated.
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+
+/auth/logout-all:
+  post:
+    operationId: auth.logoutAll
+    summary: Terminate all sessions across all devices
+    description: |
+      Bulk-revocation endpoint. Clears every active session for the caller's account (local and
+      remote). Silently succeeds if no sessions remain. Rate limited per session.
+    tags: [auth]
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/IdempotencyKey'
+    responses:
+      '204':
+        description: All sessions terminated (cookie cleared).
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+
+/auth/password/change:
+  post:
+    operationId: auth.passwordChange
+    summary: Change password (authenticated)
+    description: |
+      Allows an authenticated user to change their password by providing the current and new
+      passwords. Rate limited (write-limit), audited. Password history is enforced.
+    tags: [auth]
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/IdempotencyKey'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/auth.yaml#/PasswordChangeRequest'
+          examples:
+            basic:
+              value:
+                current_password: OldP@ssw0rd!
+                new_password: NewP@ssw0rd!
+    responses:
+      '200':
+        description: Password updated.
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: password updated successfully
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '422':
+        $ref: '../components/responses/error.yaml#/UnprocessableEntity'
+
+/auth/me:
+  get:
+    operationId: auth.me
+    summary: Current session profile (me)
+    description: |
+      Returns the active session's identity: user ID, org ID, optional branch ID, session ID,
+      active role, permission list, stage and status. The one-call "who am I?" endpoint that
+      most callers hit first to drive navigation, badges and guards.
+    tags: [auth]
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+    responses:
+      '200':
+        description: Active session profile.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/auth.yaml#/MeResponse'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+
+/auth/me/permissions:
+  get:
+    operationId: auth.mePermissions
+    summary: Current user's permissions
+    description: |
+      Flat list of all resolved permissions for the current session's active role. Reads from
+      the cached role→permissions mapping (revalidates on role change, permission set change or
+      session expiry). Drives the client-side permission guard layer.
+    tags: [auth]
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+    responses:
+      '200':
+        description: Flat permission list.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/auth.yaml#/MePermissionsResponse'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+
+/auth/sessions:
+  get:
+    operationId: auth.listSessions
+    summary: List own sessions
+    description: |
+      Returns all active sessions for the current user (across devices). Each item shows session
+      ID, device info, IP, timestamps and a current-session flag. Clients use this to power a
+      "Logged in devices" panel and to allow individual session revocation.
+    tags: [auth]
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+    responses:
+      '200':
+        description: Session list.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [success, data]
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                data:
+                  type: array
+                  items:
+                    $ref: '../components/schemas/auth.yaml#/SessionItem'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+
+/auth/sessions/{id}:
+  delete:
+    operationId: auth.revokeSession
+    summary: Revoke a specific session by ID
+    description: |
+      Revokes a single session (by UUID). The current session cannot revoke itself — use
+      `POST /auth/logout` instead. Requires the same RBAC ownership check enforced on other
+      cross-session operations.
+    tags: [auth]
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/IdempotencyKey'
+      - name: id
+        in: path
+        required: true
+        description: Session UUID.
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '204':
+        description: Session revoked.
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+
+# ── MFA management (protected) ─────────────────────────────────────────
+/auth/mfa/setup:
+  post:
+    operationId: auth.mfaSetup
+    summary: Set up TOTP MFA
+    description: |
+      Generates a TOTP secret (stored encrypted) and returns a provisioning URI for authenticator
+      apps plus a set of recovery codes (plaintext, shown once). Verifies the initial TOTP code
+      before committing. Once setup completes `mfa_enabled=true` in the session and all future
+      logins halt at MFA_REQUIRED until the second factor completes.
+    tags: [auth]
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/IdempotencyKey'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [code]
+            properties:
+              code:
+                type: string
+                description: Initial TOTP code from the authenticator app.
+                example: '123456'
+    responses:
+      '200':
+        description: MFA enabled; recovery codes returned once.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/auth.yaml#/MFASetupResponse'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '422':
+        $ref: '../components/responses/error.yaml#/UnprocessableEntity'
+
+/auth/mfa/disable:
+  post:
+    operationId: auth.mfaDisable
+    summary: Disable TOTP MFA
+    description: |
+      Removes the TOTP secret and disables second-factor requirement. Requires a valid current
+      TOTP code as confirmation. Audit-logged; the next login will issue a session without the
+      MFA_REQUIRED gate.
+    tags: [auth]
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/IdempotencyKey'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/auth.yaml#/MFADisableRequest'
+          examples:
+            basic:
+              value:
+                code: '123456'
+    responses:
+      '204':
+        description: MFA disabled.
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '422':
+        $ref: '../components/responses/error.yaml#/UnprocessableEntity'

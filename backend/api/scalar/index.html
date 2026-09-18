@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pharmaciano ERP — API Reference</title>
+  <meta name="description"
+    content="Interactive API reference for Pharmaciano ERP v1. Login once — access & refresh tokens are set automatically." />
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💊</text></svg>" />
+  <style>
+    :root {
+      --scalar-color-1: #111827;
+      --scalar-color-2: #374151;
+      --scalar-color-3: #6b7280;
+      --scalar-color-bind: #7c3aed;
+    }
+  </style>
+</head>
+
+<body>
+  <script id="api-reference" data-url="openapi.yaml" data-configuration='{
+      "theme": "default",
+      "layout": "modern",
+      "hideModels": false,
+      "hideDownloadButton": false,
+      "showSidebar": true,
+      "servers": [
+        { "url": "http://localhost:8080", "description": "Docker / local Starter" },
+        { "url": "http://localhost:8080/api/v1", "description": "Docker / local v1" },
+        { "url": "http://localhost:8080/api/v2", "description": "Docker / local v2" }
+      ],
+      "preferredSecurityScheme": "bearerAuth",
+      "authentication": {
+        "preferredSecurityScheme": "bearerAuth",
+        "tokenStoreKey": "pharmaciano_bearer"
+      },
+      "persistAuthorization": true,
+      "withCredentials": true,
+      "showRequestValidation": true,
+      "searchHotkey": "k"
+    }'></script>
+
+  <div style="max-width:1200px;margin:14px auto 0;padding:0 18px;font:14px/1.5 system-ui,sans-serif;color:#374151">
+    <strong>One login is enough.</strong> Send <code>POST /auth/login</code> once — the
+    <code>access_token</code> is captured and attached to every protected endpoint automatically, and the refresh
+    cookie is sent so sessions renew themselves. No manual pasting.
+    <p style="margin:6px 0">If a seed account returns <code>401 PASSWORD_CHANGE_REQUIRED</code>, call
+      <code>POST /auth/password/force-change</code> once — that response's token is captured the same way.
+    </p>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script>
+
+  <script>
+    // ───────────────────────────────────────────────────────────────────────────
+    //  Auto-auth for Scalar Try-it.
+    //  * Captures access_token from ANY API response (login, force-change, refresh)
+    //  * Injects `Authorization: Bearer <token>` into every API request
+    //  * On 401, auto-refreshes via the HttpOnly cookie (credentials: include) and
+    //    transparently retries the original request once
+    //  * Persists the token to Scalar's token store so the UI shows it as attached
+    // ───────────────────────────────────────────────────────────────────────────
+    (function () {
+      var API = 'http://localhost:8080';
+      var LS_KEY = 'pharmaciano_bearer';
+      var SCHEME = 'bearerAuth';
+      var token = null;
+
+      function readStore() { try { return localStorage.getItem(LS_KEY); } catch (e) { return null; } }
+      function saveToken(t) {
+        token = (t && String(t)) || null;
+        try {
+          localStorage.setItem(LS_KEY, JSON.stringify({
+            value: token,
+            active: true
+          }));
+        } catch (e) { /* ignore quota / storage errors */ }
+        // Attempt Scalar's internal shape too (object keyed by scheme name).
+        try {
+          var inner = {}; inner[SCHEME] = { value: token, active: true };
+          localStorage.setItem(LS_KEY + ':scalar', JSON.stringify(inner));
+        } catch (e) { }
+      }
+
+      // Restore a previously persisted token on load.
+      try {
+        var raw = readStore();
+        if (raw) {
+          var parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === 'object' && parsed.value) token = parsed.value;
+        }
+      } catch (e) { }
+
+      function clearToken() {
+        token = null;
+        try { localStorage.removeItem(LS_KEY); } catch (e) { }
+      }
+
+      // Attach Authorization header to an outgoing request's Headers if missing.
+      function ensureAuth(init) {
+        if (!token) return init;
+        var headers = init && init.headers;
+        if (!headers) {
+          headers = new Headers();
+          headers.set('Authorization', 'Bearer ' + token);
+          return Object.assign({}, init, { headers: headers });
+        }
+        if (headers instanceof Headers) {
+          if (!headers.has('Authorization')) headers.set('Authorization', 'Bearer ' + token);
+        } else if (Array.isArray(headers)) {
+          var found = headers.some(function (p) { return String(p[0]).toLowerCase() === 'authorization'; });
+          if (!found) headers.push(['Authorization', 'Bearer ' + token]);
+        } else { // plain object
+          var h = Object.assign({}, headers);
+          if (!h.Authorization && !h.authorization) h.Authorization = 'Bearer ' + token;
+          return Object.assign({}, init, { headers: h });
+        }
+        return init;
+      }
+
+      var origFetch = window.fetch;
+      window.fetch = function (input, init) {
+        var url = typeof input === 'string' ? input : (input && input.url) || '';
+        var isAPI = url.indexOf(API) === 0;
+        var opts = isAPI ? ensureAuth(init) : init;
+
+        return origFetch.call(this, input, opts).then(function (res) {
+          // 1. Capture a fresh token from any successful response carrying one.
+          if (res && res.ok) {
+            res.clone().json().then(function (body) {
+              if (body && body.success && body.data && body.data.access_token) {
+                saveToken(body.data.access_token);
+              }
+            }).catch(function () { /* not JSON — ignore */ });
+          }
+          return res;
+        }).then(function (res) {
+          // 2. On 401, refresh from the cookie and retry once.
+          if (res && res.status === 401 && isAPI) {
+            return origFetch.call(this, API + '/api/v1/auth/refresh', {
+              method: 'POST',
+              credentials: 'include'
+            }).then(function (r) {
+              if (!r.ok) { clearToken(); return res; }
+              return r.json().then(function (body) {
+                if (!body || !body.success || !body.data || !body.data.access_token) {
+                  clearToken(); return res;
+                }
+                saveToken(body.data.access_token);
+                return origFetch.call(this, input, ensureAuth(init)).catch(function () { return res; });
+              });
+            });
+          }
+          return res;
+        });
+      };
+    })();
+  </script>
+</body>
+
+</html>

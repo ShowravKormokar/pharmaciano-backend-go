@@ -1,0 +1,300 @@
+# ---------------------------------------------------------------------------
+# User module schemas — POST/GET/PATCH/DELETE /users, /users/{id}/roles,
+# /users/{id}/branches. Mirrors internal/modules/user/dto.go.
+# ---------------------------------------------------------------------------
+
+UserIdentity:
+  # Mirrors internal/modules/user/model.go Detail{User, Profile} — the actual
+  # body of GET /users/me and GET /users/{id}. The user row serializes flat with
+  # the (always-present) identity profile nested under "profile".
+  type: object
+  required: [id, email, status, stage, created_at]
+  properties:
+    id:
+      type: string
+      format: uuid
+    organization_id:
+      type: string
+      format: uuid
+    branch_id:
+      type: [string, 'null']
+      format: uuid
+    employee_code:
+      type: [string, 'null']
+      maxLength: 40
+    email:
+      type: string
+      format: email
+      maxLength: 255
+    username:
+      type: [string, 'null']
+      minLength: 3
+      maxLength: 50
+    phone:
+      type: [string, 'null']
+      maxLength: 30
+    status:
+      $ref: './auth.yaml#/UserStatus'
+    stage:
+      $ref: './auth.yaml#/UserStage'
+    must_change_password:
+      type: boolean
+    mfa_enabled:
+      type: boolean
+    last_login_at:
+      type: [string, 'null']
+      format: date-time
+    joining_date:
+      type: [string, 'null']
+      format: date
+    employment_type:
+      type: [string, 'null']
+      enum: [full_time, part_time, contract, intern]
+    created_at:
+      type: string
+      format: date-time
+    updated_at:
+      type: string
+      format: date-time
+    profile:
+      type: [object, 'null']
+      description: The user's identity block (first/last/display name).
+      required: [id, user_id, first_name, last_name, created_at, updated_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        first_name:
+          type: string
+          maxLength: 80
+        last_name:
+          type: string
+          maxLength: 80
+        middle_name:
+          type: [string, 'null']
+          maxLength: 80
+        display_name:
+          type: [string, 'null']
+          maxLength: 160
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+CreateProfileInput:
+  type: object
+  required: [first_name, last_name]
+  properties:
+    first_name:
+      type: string
+      minLength: 1
+      maxLength: 80
+    last_name:
+      type: string
+      minLength: 1
+      maxLength: 80
+    middle_name:
+      type: [string, 'null']
+      maxLength: 80
+    display_name:
+      type: [string, 'null']
+      maxLength: 160
+    date_of_birth:
+      type: [string, 'null']
+      format: date
+    gender:
+      type: [string, 'null']
+      enum: [male, female, other]
+    avatar_url:
+      type: [string, 'null']
+      format: uri
+      maxLength: 500
+
+CreateUserRequest:
+  type: object
+  required: [email, password, profile]
+  properties:
+    email:
+      type: string
+      format: email
+      maxLength: 255
+    username:
+      type: [string, 'null']
+      minLength: 3
+      maxLength: 50
+    phone:
+      type: [string, 'null']
+      maxLength: 30
+    password:
+      type: string
+      minLength: 8
+      maxLength: 128
+      description: Initial password, Argon2id-hashed by the service. Never stored or echoed in plaintext.
+    branch_id:
+      type: [string, 'null']
+      format: uuid
+    employee_code:
+      type: [string, 'null']
+      maxLength: 40
+    status:
+      $ref: './auth.yaml#/UserStatus'
+    stage:
+      $ref: './auth.yaml#/UserStage'
+    must_change_password:
+      type: [boolean, 'null']
+      default: true
+      description: Defaults true so an admin-set initial password is always rotated.
+    joining_date:
+      type: [string, 'null']
+      format: date
+    employment_type:
+      type: [string, 'null']
+      enum: [full_time, part_time, contract, intern]
+    profile:
+      $ref: '#/CreateProfileInput'
+
+UpdateUserRequest:
+  type: object
+  description: Every field optional; absent/null leaves it unchanged. email/status/password are deliberately absent.
+  properties:
+    username:
+      type: [string, 'null']
+      minLength: 3
+      maxLength: 50
+    phone:
+      type: [string, 'null']
+      maxLength: 30
+    branch_id:
+      type: [string, 'null']
+      format: uuid
+    employee_code:
+      type: [string, 'null']
+      maxLength: 40
+    joining_date:
+      type: [string, 'null']
+      format: date
+    employment_type:
+      type: [string, 'null']
+      enum: [full_time, part_time, contract, intern]
+    first_name:
+      type: [string, 'null']
+      minLength: 1
+      maxLength: 80
+    last_name:
+      type: [string, 'null']
+      minLength: 1
+      maxLength: 80
+    middle_name:
+      type: [string, 'null']
+      maxLength: 80
+    display_name:
+      type: [string, 'null']
+      maxLength: 160
+    date_of_birth:
+      type: [string, 'null']
+      format: date
+    gender:
+      type: [string, 'null']
+      enum: [male, female, other]
+    avatar_url:
+      type: [string, 'null']
+      format: uri
+      maxLength: 500
+
+ChangeStatusRequest:
+  type: object
+  required: [status]
+  properties:
+    status:
+      $ref: './auth.yaml#/UserStatus'
+    reason:
+      type: [string, 'null']
+      maxLength: 300
+      description: Optional audit note for the status change.
+
+UserListItem:
+  type: object
+  required: [id, email, full_name, status, stage, created_at]
+  properties:
+    id:
+      type: string
+      format: uuid
+    email:
+      type: string
+      format: email
+    username:
+      type: [string, 'null']
+    full_name:
+      type: string
+    status:
+      $ref: './auth.yaml#/UserStatus'
+    stage:
+      $ref: './auth.yaml#/UserStage'
+    branch_id:
+      type: [string, 'null']
+      format: uuid
+    employee_code:
+      type: [string, 'null']
+    last_login_at:
+      type: [string, 'null']
+      format: date-time
+    created_at:
+      type: string
+      format: date-time
+
+# Role assignment sub-resources ------------------------------------------
+UserRoleItem:
+  type: object
+  required: [role_id, name, priority, is_system, assigned_at]
+  properties:
+    role_id:
+      type: string
+      format: uuid
+    name:
+      type: string
+    priority:
+      type: integer
+    is_system:
+      type: boolean
+    branch_id:
+      type: [string, 'null']
+      format: uuid
+    assigned_at:
+      type: string
+      format: date-time
+    expires_at:
+      type: [string, 'null']
+      format: date-time
+
+BranchAssignmentRequest:
+  type: object
+  required: [branch_id]
+  properties:
+    branch_id:
+      type: string
+      format: uuid
+    expires_at:
+      type: [string, 'null']
+      format: date-time
+
+BranchAssignmentItem:
+  type: object
+  required: [branch_id, granted_at]
+  properties:
+    branch_id:
+      type: string
+      format: uuid
+    granted_by:
+      type: [string, 'null']
+      format: uuid
+    granted_at:
+      type: string
+      format: date-time
+    expires_at:
+      type: [string, 'null']
+      format: date-time

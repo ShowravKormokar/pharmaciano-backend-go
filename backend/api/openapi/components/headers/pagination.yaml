@@ -1,0 +1,95 @@
+# ---------------------------------------------------------------------------
+# Reusable response headers. Shared across every operation.
+# ---------------------------------------------------------------------------
+
+Retry-After:
+  description: |
+    Seconds to wait before retrying. Present on 403 (Locked) and 429 (rate limited).
+    Integer seconds, HTTP-date, or a bare duration in seconds.
+  schema:
+    type: string
+    example: '120'
+
+ReqId:
+  description: Mirrors meta.request_id — correlates the response to its request.
+  schema:
+    type: string
+    format: uuid
+    example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+
+RateLimit-Limit:
+  description: Max requests allowed in the current window.
+  schema:
+    type: integer
+    example: 100
+
+RateLimit-Remaining:
+  description: Requests remaining in the current window.
+  schema:
+    type: integer
+    example: 99
+
+RateLimit-Reset:
+  description: Epoch seconds when the window resets.
+  schema:
+    type: integer
+    example: 1694700000
+
+RateLimit-Policy:
+  description: Human-readable policy (RedisKey, client IP, or email) that was enforced.
+  schema:
+    type: string
+    example: RedisKey:global:200r/m
+
+# Pagination headers (offset + cursor forms) -------------------------------
+XTotalCount:
+  description: Total number of rows matching the query (offset pagination). zero-padded.
+  schema:
+    type: integer
+    example: 137
+
+XPage:
+  description: Page number returned (offset pagination).
+  schema:
+    type: integer
+    example: 3
+
+XPageSize:
+  description: Page size returned (offset pagination).
+  schema:
+    type: integer
+    example: 20
+
+XNextCursor:
+  description: Opaque cursor for the next page (cursor pagination). Absent on the last page.
+  schema:
+    type: string
+    example: eyJ0IjoiMjAyNi0wOS0xMVRUMTA6NDU6NDdaIiwibiI6OH0=
+
+XPrevCursor:
+  description: Opaque cursor for the previous page (cursor pagination). Absent on the first page.
+  schema:
+    type: string
+
+Link:
+  description: RFC 5988 pagination links (`<url>; rel="next"`, `prev`, `first`, `last`).
+  schema:
+    type: string
+    example: <https://api.example.com/api/v1/products?cursor=...>; rel="next"
+
+# Deprecation ---------------------------------------------------------------
+Deprecation:
+  description: |
+    Present on deprecated endpoints while they remain served (RFC 8594 date). Sunset gives the
+    removal date. When fully removed the server responds 410 Gone with code ENDPOINT_REMOVED.
+  schema:
+    type: string
+    format: date
+    example: '2026-03-01'
+
+Sunset:
+  description: Date after which the deprecated endpoint may be removed (RFC 8594 date-time).
+  schema:
+    type: string
+    format: date-time
+    example: '2026-12-31T00:00:00Z'

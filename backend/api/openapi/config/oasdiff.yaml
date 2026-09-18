@@ -1,0 +1,44 @@
+# ---------------------------------------------------------------------------
+# oasdiff — detect breaking API changes between two spec versions.
+#
+#   oasdiff breaking \
+#       --format json \
+#       --fail-on ERR \
+#       --fail-on-diff <before> <after>
+#
+# before = the last RELEASED bundled spec (tagged/artifact), after = the new one.
+# Any change classified ERR (breaking) fails the pipeline; WARN is surfaced but
+# non-fatal so additive, compatible changes flow. oasdiff runs in CI on the
+# bundled specs; local dev can snapshot with `make oapi-snapshot`.
+# ---------------------------------------------------------------------------
+
+# Which change severity fails the build. ERR = genuinely breaking (removed
+# required field, changed type, removed operation, narrowed enum, …).
+# Leave WARN/USAGE out of fail-on so compatible evolutions are permitted.
+fail-on: ERR
+# fail-on-diff: <RELEASE_SPEC>   # relative to repo root; CI injects the git tag artifact
+
+# Fail on any change to the documented breaking list even if otherwise compatible
+# (e.g. a field marked must_not change). Conservative but catches drift.
+include:
+  - request-readonly
+  - response-writeonly
+
+# Compare against all SPEC_DIFF "WARN" directions we accept as backward-compatible
+# so the report is readable rather than noisy. Pure additions and new optional
+# fields are B-compatible; only removal/narrowing trips the gate above.
+
+# Pagination is additive; a new required *query parameter* still breaks clients.
+# We treat adding an OPTIONAL query/header param as WARN, adding a required one as ERR.
+warning/general:
+  - add-optional-query-param
+  - add-optional-header-param
+  - add-description
+  - add-tag
+
+# Response body shape must be backward-compatible because clients parse it.
+# Fail loudly on removed properties or a changed required set.
+error/general:
+  - removed-property
+  - required-request-property
+  - required-response-property

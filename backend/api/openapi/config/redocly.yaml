@@ -1,0 +1,43 @@
+# ---------------------------------------------------------------------------
+# Redocly CLI — lint + bundle config.
+#
+#   redocly lint   --config  api/openapi/config/redocly.yaml api/openapi/openapi.yaml
+#   redocly bundle --config  api/openapi/config/redocly.yaml \
+#                    -o build/openapi.bundled.yaml api/openapi/openapi.yaml
+#
+# The BUNDLED output is the single source consumed by oapi-codegen, Scalar and
+# kin-openapi runtime validation. Keep the lint rules strict — the CI gate fails
+# the build on any rule violation.
+# ---------------------------------------------------------------------------
+
+extends:
+  - recommended
+
+rules:
+  # Consumers rely on consistent responses; a schema-less 2xx is almost always a bug.
+  no-invalid-parameter-examples: error
+  operation-2xx-response: off          # 204 (delete/logout) is intentional and valid
+  operation-4xx-response: warn
+  path-parameters-defined: error
+  spec: error
+  tags-alphabetical: off
+
+  # Naming discipline for hundreds of endpoints.
+  operation-id-naming: warn
+  path-http-verbs: error
+
+  # Do NOT over-restrict the component directory layout; the many small schema files
+  # under components/** are intentional and validated by our own $ref check.
+  no-unused-components:
+    severity: warn
+
+  # Our error envelopes are deliberately sparse; require a message everywhere but
+  # don't force description on every field.
+  typed-enum: warn
+
+  # Keep the license/terms headers on the root only; per-domain files are pulled
+  # in via the root bundle and must NOT re-declare `info`.
+  no-empty-servers: off
+
+ignore:
+  # Test / fixture files (none currently)

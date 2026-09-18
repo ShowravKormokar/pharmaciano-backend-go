@@ -1,0 +1,17 @@
+bearerAuth:
+  type: http
+  scheme: bearer
+  bearerFormat: JWT
+  description: |
+    Authenticates with the caller's short-lived access token.
+
+    Send: `Authorization: Bearer <access-token>`
+
+    On 401 the response MAY carry a `WWW-Authenticate: Bearer realm="pharmaciano", error="..."` challenge.
+    Two special 401 codes drive second-stage flows:
+
+    - `MFA_REQUIRED` — the single-use challenge rides in `X-MFA-Challenge`. Redeem at `POST /auth/mfa/verify`.
+    - `PASSWORD_CHANGE_REQUIRED` — the single-use token rides in `X-Password-Change-Token`. Redeem at
+      `POST /auth/password/force-change`.
+
+    Neither case issues a session until the second stage completes.

@@ -1,0 +1,172 @@
+# ---------------------------------------------------------------------------
+# RBAC module schemas — /roles, /permissions, and the user↔role assignments
+# surfaced under /users. Mirrors internal/modules/rbac/dto.go.
+# ---------------------------------------------------------------------------
+
+# Roles -----------------------------------------------------------------
+CreateRoleRequest:
+  type: object
+  required: [name]
+  properties:
+    name:
+      type: string
+      minLength: 2
+      maxLength: 80
+      description: Unique within the org (409 on conflict).
+    description:
+      type: [string, 'null']
+      maxLength: 500
+    priority:
+      type: [integer, 'null']
+      minimum: 0
+      maximum: 1000
+      description: Higher wins when choosing the canonical role a user holds.
+    is_active:
+      type: [boolean, 'null']
+      default: true
+
+UpdateRoleRequest:
+  type: object
+  description: Every field optional. System roles are rejected earlier.
+  properties:
+    name:
+      type: [string, 'null']
+      minLength: 2
+      maxLength: 80
+    description:
+      type: [string, 'null']
+      maxLength: 500
+    is_active:
+      type: [boolean, 'null']
+    priority:
+      type: [integer, 'null']
+      minimum: 0
+      maximum: 1000
+
+RoleWithPermissions:
+  type: object
+  required: [id, name, is_active, is_system, is_global, priority, permissions]
+  properties:
+    id:
+      type: string
+      format: uuid
+    name:
+      type: string
+    description:
+      type: [string, 'null']
+    is_active:
+      type: boolean
+    is_system:
+      type: boolean
+      description: System roles are immutable.
+    is_global:
+      type: boolean
+      description: Global = shared system role (organization_id null); render read-only.
+    priority:
+      type: integer
+    created_at:
+      type: string
+      format: date-time
+    permissions:
+      type: array
+      items:
+        $ref: '#/Permission'
+
+RoleListItem:
+  type: object
+  required: [id, name, is_active, is_system, is_global, priority]
+  properties:
+    id:
+      type: string
+      format: uuid
+    name:
+      type: string
+    description:
+      type: [string, 'null']
+    is_active:
+      type: boolean
+    is_system:
+      type: boolean
+    is_global:
+      type: boolean
+    priority:
+      type: integer
+
+SetRolePermissionsRequest:
+  type: object
+  properties:
+    permission_ids:
+      type: array
+      maxItems: 500
+      items:
+        type: string
+        format: uuid
+  description: Replaces the role's entire grant set (empty list revokes all). Idempotent.
+
+# Permissions -----------------------------------------------------------
+CreatePermissionRequest:
+  type: object
+  required: [module, action]
+  description: SUPER_ADMIN-only escape hatch for registering a capability not in the seed. Non-system.
+  properties:
+    module:
+      type: string
+      minLength: 2
+      maxLength: 60
+      example: sales_returns
+    action:
+      type: string
+      minLength: 2
+      maxLength: 40
+      example: refund
+    description:
+      type: [string, 'null']
+      maxLength: 255
+
+Permission:
+  type: object
+  required: [id, module, action, is_system]
+  properties:
+    id:
+      type: string
+      format: uuid
+    module:
+      type: string
+    action:
+      type: string
+    description:
+      type: [string, 'null']
+    is_system:
+      type: boolean
+
+PermissionListItem:
+  type: object
+  required: [id, module, action, is_system]
+  properties:
+    id:
+      type: string
+      format: uuid
+    module:
+      type: string
+    action:
+      type: string
+    description:
+      type: [string, 'null']
+    is_system:
+      type: boolean
+
+# User↔role assignments (data owned by rbac, surfaced under /users) ------
+AssignRoleRequest:
+  type: object
+  required: [role_id]
+  properties:
+    role_id:
+      type: string
+      format: uuid
+    branch_id:
+      type: [string, 'null']
+      format: uuid
+    expires_at:
+      type: [string, 'null']
+      format: date-time
+      description: Must be in the future when provided.

@@ -1,0 +1,141 @@
+# ---------------------------------------------------------------------------
+# Reusable error examples, referenced by components/responses/error.yaml and
+# surfaced in the interactive docs. All are real MASTER-of-truth error bodies.
+# ---------------------------------------------------------------------------
+
+Validation:
+  summary: A field failed its validation rule.
+  value:
+    success: false
+    error:
+      code: VALIDATION_ERROR
+      message: request validation failed
+      details:
+        - field: email
+          rule: email
+          message: must be a valid email address
+          value: not-an-email
+    meta:
+      request_id: f47ac10b-58cc-4372-a567-0e02b2c3d479
+      timestamp: '2026-09-14T16:00:00Z'
+
+InvalidCredentials:
+  summary: Login failed because the email/password pair did not match.
+  value:
+    success: false
+    error:
+      code: INVALID_CREDENTIALS
+      message: invalid email or password
+    meta:
+      request_id: f47ac10b-58cc-4372-a567-0e02b2c3d479
+      timestamp: '2026-09-14T16:00:00Z'
+
+Unauthenticated:
+  summary: A required bearer token was missing or invalid.
+  value:
+    success: false
+    error:
+      code: UNAUTHENTICATED
+      message: authentication required
+    meta:
+      request_id: f47ac10b-58cc-4372-a567-0e02b2c3d479
+      timestamp: '2026-09-14T16:00:00Z'
+
+MFARequired:
+  summary: Credentials valid but a second factor is required before a session is issued.
+  value:
+    success: false
+    error:
+      code: MFA_REQUIRED
+      message: multi-factor authentication required
+    meta:
+      request_id: f47ac10b-58cc-4372-a567-0e02b2c3d479
+      timestamp: '2026-09-14T16:00:00Z'
+
+Forbidden:
+  summary: The caller lacks the required RBAC permission on the target.
+  value:
+    success: false
+    error:
+      code: FORBIDDEN
+      message: you do not have permission to perform this action
+    meta:
+      request_id: f47ac10b-58cc-4372-a567-0e02b2c3d479
+      timestamp: '2026-09-14T16:00:00Z'
+
+BranchScopeDenied:
+  summary: The caller's branch scope does not include the target branch.
+  value:
+    success: false
+    error:
+      code: BRANCH_SCOPE_DENIED
+      message: you do not have access to this branch
+    meta:
+      request_id: f47ac10b-58cc-4372-a567-0e02b2c3d479
+      timestamp: '2026-09-14T16:00:00Z'
+
+NotFound:
+  summary: The resource does not exist.
+  value:
+    success: false
+    error:
+      code: NOT_FOUND
+      message: resource not found
+    meta:
+      request_id: f47ac10b-58cc-4372-a567-0e02b2c3d479
+      timestamp: '2026-09-14T16:00:00Z'
+
+AlreadyExists:
+  summary: A unique code/name was already taken (e.g. duplicate branch code).
+  value:
+    success: false
+    error:
+      code: ALREADY_EXISTS
+      message: a resource with this code already exists
+    meta:
+      request_id: f47ac10b-58cc-4372-a567-0e02b2c3d479
+      timestamp: '2026-09-14T16:00:00Z'
+
+IdempotencyConflict:
+  summary: The same Idempotency-Key was reused with a different body.
+  value:
+    success: false
+    error:
+      code: IDEMPOTENCY_KEY_CONFLICT
+      message: the same Idempotency-Key was used with a different request body
+    meta:
+      request_id: f47ac10b-58cc-4372-a567-0e02b2c3d479
+      timestamp: '2026-09-14T16:00:00Z'
+
+BusinessRule:
+  summary: A business rule was violated (HTTP 422).
+  value:
+    success: false
+    error:
+      code: BUSINESS_RULE_VIOLATION
+      message: this operation violates an active business rule
+    meta:
+      request_id: f47ac10b-58cc-4372-a567-0e02b2c3d479
+      timestamp: '2026-09-14T16:00:00Z'
+
+RateLimited:
+  summary: Too many requests; back off until the Retry-After header expires.
+  value:
+    success: false
+    error:
+      code: RATE_LIMITED
+      message: rate limit exceeded
+    meta:
+      request_id: f47ac10b-58cc-4372-a567-0e02b2c3d479
+      timestamp: '2026-09-14T16:00:00Z'
+
+AccountLocked:
+  summary: The account is temporarily locked after repeated failures.
+  value:
+    success: false
+    error:
+      code: ACCOUNT_LOCKED
+      message: account is temporarily locked
+    meta:
+      request_id: f47ac10b-58cc-4372-a567-0e02b2c3d479
+      timestamp: '2026-09-14T16:00:00Z'

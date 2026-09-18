@@ -1,0 +1,140 @@
+# ---------------------------------------------------------------------------
+# Organization module schemas — GET /organizations/current, GET /organizations/{id},
+# GET /organizations/{id}/summary, PATCH /organizations/{id}.
+# Mirrors internal/modules/organization/dto.go.
+# ---------------------------------------------------------------------------
+
+UpdateOrganizationRequest:
+  type: object
+  description: |
+    Every field optional (pointer); nil = leave unchanged. Identity (id, slug) and lifecycle/billing
+    (is_active, subscription_plan) are deliberately not updatable here.
+  properties:
+    name:
+      type: [string, 'null']
+      minLength: 2
+      maxLength: 200
+    trade_license_no:
+      type: [string, 'null']
+      maxLength: 80
+    drug_license_no:
+      type: [string, 'null']
+      maxLength: 80
+    vat_registration_no:
+      type: [string, 'null']
+      maxLength: 80
+    tin:
+      type: [string, 'null']
+      maxLength: 80
+    contact_phone:
+      type: [string, 'null']
+      maxLength: 30
+    contact_email:
+      type: [string, 'null']
+      format: email
+      maxLength: 255
+    website:
+      type: [string, 'null']
+      format: uri
+      maxLength: 255
+    logo_url:
+      type: [string, 'null']
+      format: uri
+      maxLength: 500
+    address_line1:
+      type: [string, 'null']
+      maxLength: 255
+    address_line2:
+      type: [string, 'null']
+      maxLength: 255
+    city:
+      type: [string, 'null']
+      maxLength: 100
+    state:
+      type: [string, 'null']
+      maxLength: 100
+    postal_code:
+      type: [string, 'null']
+      maxLength: 20
+    country:
+      type: [string, 'null']
+      maxLength: 100
+    currency:
+      type: [string, 'null']
+      pattern: '^[A-Z]{3}$'
+    timezone:
+      type: [string, 'null']
+      description: IANA timezone id.
+      example: Asia/Dhaka
+
+Organization:
+  type: object
+  required: [id, slug, name]
+  properties:
+    id:
+      type: string
+      format: uuid
+    slug:
+      type: string
+    name:
+      type: string
+    trade_license_no:
+      type: [string, 'null']
+    drug_license_no:
+      type: [string, 'null']
+    vat_registration_no:
+      type: [string, 'null']
+    tin:
+      type: [string, 'null']
+    contact_phone:
+      type: [string, 'null']
+    contact_email:
+      type: [string, 'null']
+    website:
+      type: [string, 'null']
+    logo_url:
+      type: [string, 'null']
+    address_line1:
+      type: [string, 'null']
+    address_line2:
+      type: [string, 'null']
+    city:
+      type: [string, 'null']
+    state:
+      type: [string, 'null']
+    postal_code:
+      type: [string, 'null']
+    country:
+      type: [string, 'null']
+    currency:
+      type: string
+    timezone:
+      type: string
+    subscription_plan:
+      type: string
+      enum: [free, pro, enterprise]
+    is_active:
+      type: boolean
+    created_at:
+      type: string
+      format: date-time
+
+OrganizationSummary:
+  type: object
+  required: [organization_id, name, subscription_plan, is_active, branch_count, user_count]
+  properties:
+    organization_id:
+      type: string
+      format: uuid
+    name:
+      type: string
+    subscription_plan:
+      type: string
+    is_active:
+      type: boolean
+    branch_count:
+      type: integer
+      format: int64
+    user_count:
+      type: integer
+      format: int64

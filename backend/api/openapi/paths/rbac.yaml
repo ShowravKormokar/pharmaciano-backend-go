@@ -1,0 +1,423 @@
+# ---------------------------------------------------------------------------
+# /roles/* and /permissions/* — RBAC grants. Mirrors internal/modules/rbac/routes.go.
+# ---------------------------------------------------------------------------
+
+# Roles ─────────────────────────────────────────────────────────────────
+/roles:
+  post:
+    operationId: roles.create
+    summary: Create a role
+    security:
+      - bearerAuth: []
+    description: |
+      Creates a custom (non-system) role. Role `name` must be unique within the org (409 on
+      conflict). System roles are immutable and cannot be created here. Requires roles:create.
+    tags: [rbac]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/IdempotencyKey'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/rbac.yaml#/CreateRoleRequest'
+          examples:
+            basic:
+              value:
+                name: pharmacy_manager
+                description: Manages a single branch operation
+                priority: 50
+                is_active: true
+    responses:
+      '201':
+        description: Role created.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/common.yaml#/CreatedEnvelope'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '409':
+        $ref: '../components/responses/error.yaml#/Conflict'
+      '422':
+        $ref: '../components/responses/error.yaml#/UnprocessableEntity'
+  get:
+    operationId: roles.list
+    summary: List roles
+    security:
+      - bearerAuth: []
+    description: |
+      Paginated, searchable list of roles. Supports offset pagination, free-text search, status
+      filter and sorting. Global (system) roles are included with `is_global: true`. Requires
+      roles:view.
+    tags: [rbac]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/Page'
+      - $ref: '../components/parameters/pagination.yaml#/Limit'
+      - $ref: '../components/parameters/pagination.yaml#/Sort'
+      - $ref: '../components/parameters/pagination.yaml#/Q'
+      - $ref: '../components/parameters/pagination.yaml#/Status'
+      - $ref: '../components/parameters/pagination.yaml#/IncludeDeleted'
+    responses:
+      '200':
+        description: Paginated role list.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [success, data, pagination]
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                data:
+                  type: array
+                  items:
+                    $ref: '../components/schemas/rbac.yaml#/RoleListItem'
+                pagination:
+                  $ref: '../components/schemas/common.yaml#/PaginationMeta'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+
+/roles/{id}:
+  get:
+    operationId: roles.get
+    summary: Get a role with its permissions
+    security:
+      - bearerAuth: []
+    description: |
+      Returns a single role including its full permission set. Requires roles:view.
+    tags: [rbac]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - name: id
+        in: path
+        required: true
+        description: Role UUID.
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: Role with permissions.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [success, data]
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                data:
+                  $ref: '../components/schemas/rbac.yaml#/RoleWithPermissions'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+  patch:
+    operationId: roles.update
+    summary: Update a role (partial)
+    security:
+      - bearerAuth: []
+    description: |
+      Partial update of a non-system role's name, description, priority and active flag. System
+      roles are rejected (403 or 422 per server config). Requires roles:update.
+    tags: [rbac]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/IdempotencyKey'
+      - name: id
+        in: path
+        required: true
+        description: Role UUID.
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/rbac.yaml#/UpdateRoleRequest'
+    responses:
+      '200':
+        description: Updated role.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/rbac.yaml#/RoleWithPermissions'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+      '422':
+        $ref: '../components/responses/error.yaml#/UnprocessableEntity'
+  delete:
+    operationId: roles.delete
+    summary: Delete a role
+    security:
+      - bearerAuth: []
+    description: |
+      Hard-deletes a non-system role. If any user currently holds it, deletion is refused (see
+      409/422) until those assignments are moved. Requires roles:delete. Idempotent.
+    tags: [rbac]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/IdempotencyKey'
+      - name: id
+        in: path
+        required: true
+        description: Role UUID.
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '204':
+        description: Role deleted.
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+      '409':
+        $ref: '../components/responses/error.yaml#/Conflict'
+
+# Role ↔ permissions ────────────────────────────────────────────────────
+/roles/{id}/permissions:
+  get:
+    operationId: roles.listPermissions
+    summary: List a role's permissions
+    security:
+      - bearerAuth: []
+    description: |
+      Returns the permission set currently granted to the role. Requires roles:view. (Equivalent
+      to the permissions array inside a GET /roles/{id}, lightly flattened.)
+    tags: [rbac]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - name: id
+        in: path
+        required: true
+        description: Role UUID.
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: Permission list for the role.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [success, data]
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                data:
+                  type: array
+                  items:
+                    $ref: '../components/schemas/rbac.yaml#/Permission'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+  put:
+    operationId: roles.setPermissions
+    summary: Replace a role's permission set
+    security:
+      - bearerAuth: []
+    description: |
+      Replaces the role's entire grant set (idempotent — the same body applied twice yields the
+      same result). An empty `permission_ids` revokes everything. Only non-system permissions can
+      be added. Role→permission propagation to cached sessions happens asynchronously and is
+      observable via the RevalidateCache header/timing. Requires roles:update.
+    tags: [rbac]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/IdempotencyKey'
+      - name: id
+        in: path
+        required: true
+        description: Role UUID.
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/rbac.yaml#/SetRolePermissionsRequest'
+          examples:
+            grant:
+              description: Grant three permissions.
+              value:
+                permission_ids:
+                  - 1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed
+                  - 2b9d6bcd-bbfd-4b2d-9b5d-bc8efccd5cee
+            revoke-all:
+              description: Revoke everything.
+              value:
+                permission_ids: []
+    responses:
+      '200':
+        description: Permission set replaced.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/rbac.yaml#/RoleWithPermissions'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+      '422':
+        $ref: '../components/responses/error.yaml#/UnprocessableEntity'
+
+# Permissions ───────────────────────────────────────────────────────────
+/permissions:
+  post:
+    operationId: permissions.create
+    summary: Create a permission (SUPER_ADMIN escape hatch)
+    security:
+      - bearerAuth: []
+    description: |
+      Registers a non-system permission (module + action) not present in the seed. Intended for
+      internal provisioning; most orgs never call this. Requires permissions:create and is
+      restricted to SUPER_ADMIN principals.
+    tags: [rbac]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/IdempotencyKey'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/rbac.yaml#/CreatePermissionRequest'
+          examples:
+            basic:
+              value:
+                module: sales_returns
+                action: refund
+                description: Approve a sales-return refund
+    responses:
+      '201':
+        description: Permission created.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/common.yaml#/CreatedEnvelope'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '409':
+        $ref: '../components/responses/error.yaml#/Conflict'
+  get:
+    operationId: permissions.list
+    summary: List permissions (optionally by module)
+    security:
+      - bearerAuth: []
+    description: |
+      Paginated, searchable list of all registered permissions. Supports a `module` filter
+      (e.g. `sales`) to render permission-picker UIs grouped by module. Requires permissions:view.
+    tags: [rbac]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/Page'
+      - $ref: '../components/parameters/pagination.yaml#/Limit'
+      - $ref: '../components/parameters/pagination.yaml#/Sort'
+      - $ref: '../components/parameters/pagination.yaml#/Q'
+      - $ref: '../components/parameters/pagination.yaml#/Status'
+      - name: module
+        in: query
+        description: Filter by module name (exact).
+        schema:
+          type: string
+          example: sales
+    responses:
+      '200':
+        description: Paginated permission list.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [success, data, pagination]
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                data:
+                  type: array
+                  items:
+                    $ref: '../components/schemas/rbac.yaml#/PermissionListItem'
+                pagination:
+                  $ref: '../components/schemas/common.yaml#/PaginationMeta'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+
+/permissions/{id}:
+  get:
+    operationId: permissions.get
+    summary: Get a permission
+    security:
+      - bearerAuth: []
+    description: |
+      Returns a single permission by ID. Requires permissions:view.
+    tags: [rbac]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - name: id
+        in: path
+        required: true
+        description: Permission UUID.
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: Permission profile.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [success, data]
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                data:
+                  $ref: '../components/schemas/rbac.yaml#/Permission'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'

@@ -1,0 +1,31 @@
+# Reusable path parameters.
+ID:
+  name: id
+  in: path
+  required: true
+  description: |
+    The primary UUID of the resource. Route-position names are the SINGLE SOURCE constraint across the
+    whole router: every subtree reuses the segment name `id` (Gin's radix router panics if one path position
+    is registered with two different wildcard names). A malformed UUID yields `400 VALIDATION_ERROR`, never 404.
+  schema:
+    type: string
+    format: uuid
+    example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+RoleID:
+  name: role_id
+  in: path
+  required: true
+  description: UUID of a role, used at deeper positions like /users/{id}/roles/{role_id}.
+  schema:
+    type: string
+    format: uuid
+    example: 9c1f4c0a-6c58-4b20-a567-0e02b2c3d480
+BranchID:
+  name: branch_id
+  in: path
+  required: true
+  description: UUID of a branch, used at deeper positions like /users/{id}/branches/{branch_id}.
+  schema:
+    type: string
+    format: uuid
+    example: 1d2e3f4a-6c58-4b20-a567-0e02b2c3d481

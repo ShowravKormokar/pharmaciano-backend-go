@@ -1,0 +1,263 @@
+# ---------------------------------------------------------------------------
+# Auth module schemas — POST /auth/*, GET /auth/me, sessions, MFA, passwords.
+# Each key mirrors one DTO in internal/modules/auth/dto.go; constraints come
+# from the validate:"..." tags so the contract and the code cannot drift apart.
+# ---------------------------------------------------------------------------
+
+# Shared bits -----------------------------------------------------------
+
+# Organization-id and principal fields appear on several responses.
+PrincipalRefs:
+  type: object
+  properties:
+    user_id:
+      type: string
+      format: uuid
+    organization_id:
+      type: string
+      format: uuid
+    branch_id:
+      type: [string, 'null']
+      format: uuid
+      description: Null when the principal is not branch-bound.
+    session_id:
+      type: string
+      format: uuid
+
+# Login -----------------------------------------------------------------
+LoginRequest:
+  type: object
+  required: [email, password]
+  properties:
+    email:
+      type: string
+      format: email
+      maxLength: 255
+      example: cashier@pharmaciano.local
+    password:
+      type: string
+      maxLength: 128
+      description: Bounded, not policy-validated (older accounts predate the policy).
+      example: "••••••••••"
+    device_name:
+      type: [string, 'null']
+      maxLength: 120
+      description: Optional user-friendly label for the session, shown in the session list.
+      example: Alfa's iPhone
+
+RefreshRequest:
+  type: object
+  properties:
+    refresh_token:
+      type: [string, 'null']
+      description: Usually read from the HttpOnly cookie; body is the non-browser fallback.
+      example: eyJhbGciOiJIUzI1NiIs...
+
+TokenResponse:
+  type: object
+  required: [access_token, token_type, expires_in]
+  properties:
+    access_token:
+      type: string
+      description: Short-lived HS256 JWT, used as the Bearer credential.
+      example: eyJhbGciOiJIUzI1NiIs...
+    refresh_token:
+      type: string
+      description: |
+        Opaque refresh token. Only echoed for non-browser clients (X-Client-Type not "browser");
+        for browser clients it rides only in the HttpOnly cookie and is omitted from the body.
+      example: eyJhbGciOiJIUzI1NiIs...
+    token_type:
+      type: string
+      enum: [Bearer]
+    expires_in:
+      type: integer
+      format: int64
+      description: Access-token lifetime in seconds (surfaced so a client can schedule a refresh).
+      example: 900
+
+LogoutRequest:
+  type: object
+  properties:
+    all:
+      type: boolean
+      default: false
+      description: True revokes every session of the user ("log out everywhere").
+
+# Session listing --------------------------------------------------------
+SessionItem:
+  type: object
+  required: [id, last_seen_at, created_at, expires_at, current]
+  properties:
+    id:
+      type: string
+      format: uuid
+    device_name:
+      type: [string, 'null']
+    browser:
+      type: [string, 'null']
+    os:
+      type: [string, 'null']
+    device_type:
+      type: [string, 'null']
+    ip:
+      type: [string, 'null']
+    location:
+      type: [string, 'null']
+    last_seen_at:
+      type: string
+      format: date-time
+    created_at:
+      type: string
+      format: date-time
+    expires_at:
+      type: string
+      format: date-time
+    current:
+      type: boolean
+      description: True when this is the session the request itself is authenticated with.
+
+# Stage/status enums (single source from internal/common/enums).
+UserStage:
+  type: string
+  enum: [unverified, pending, verified]
+UserStatus:
+  type: string
+  enum: [active, deactivated, inactive, suspended, resigned, terminated]
+
+# /auth/me ---------------------------------------------------------------
+MeResponse:
+  allOf:
+    - $ref: '#/PrincipalRefs'
+    - type: object
+      required: [role, permissions, stage, status]
+      properties:
+        role:
+          type: string
+          example: CASHIER
+        permissions:
+          type: array
+          items: { type: string }
+        stage:
+          $ref: '#/UserStage'
+        status:
+          $ref: '#/UserStatus'
+
+MePermissionsResponse:
+  type: object
+  required: [permissions]
+  properties:
+    permissions:
+      type: array
+      items:
+        type: string
+      description: The caller's effective "module:action" set in the current organization.
+      example: [sales:create, inventory:view]
+
+# MFA --------------------------------------------------------------------
+MFASetupResponse:
+  type: object
+  required: [secret, provisioning_uri, recovery_codes]
+  properties:
+    secret:
+      type: string
+      description: TOTP seed, returned exactly once; never recoverable afterward.
+    provisioning_uri:
+      type: string
+      format: uri
+      description: otpauth:// URI for the authenticator app.
+    recovery_codes:
+      type: array
+      items:
+        type: string
+      description: One-time recovery codes, shown exactly once.
+
+MFAVerifyRequest:
+  type: object
+  required: [mfa_challenge, code]
+  properties:
+    mfa_challenge:
+      type: string
+      maxLength: 512
+      description: The single-use challenge issued by login (MFA_REQUIRED header X-MFA-Challenge).
+    code:
+      type: string
+      maxLength: 12
+      description: Current TOTP code (normalized by the service).
+
+MFARecoveryRequest:
+  type: object
+  required: [mfa_challenge, recovery_code]
+  properties:
+    mfa_challenge:
+      type: string
+      maxLength: 512
+    recovery_code:
+      type: string
+      minLength: 6
+      maxLength: 32
+
+MFADisableRequest:
+  type: object
+  required: [code]
+  properties:
+    code:
+      type: string
+      maxLength: 12
+      description: A valid current TOTP code, proving control of the second factor before disabling.
+
+# Passwords --------------------------------------------------------------
+PasswordChangeRequest:
+  type: object
+  required: [current_password, new_password]
+  properties:
+    current_password:
+      type: string
+      maxLength: 128
+    new_password:
+      type: string
+      minLength: 8
+      maxLength: 128
+      description: Must differ from the current password; carries the creation policy.
+
+PasswordForgotRequest:
+  type: object
+  required: [email]
+  properties:
+    email:
+      type: string
+      format: email
+      maxLength: 255
+  description: Always reports success to avoid user enumeration.
+
+PasswordResetRequest:
+  type: object
+  required: [token, new_password]
+  properties:
+    token:
+      type: string
+      minLength: 1
+      maxLength: 512
+      description: Opaque reset token delivered out of band.
+    new_password:
+      type: string
+      minLength: 8
+      maxLength: 128
+
+PasswordForceChangeRequest:
+  type: object
+  required: [token, current_password, new_password]
+  properties:
+    token:
+      type: string
+      minLength: 1
+      maxLength: 512
+      description: The single-use change token from the X-Password-Change-Token header.
+    current_password:
+      type: string
+      maxLength: 128
+      description: Proves knowledge of the pre-change password.
+    new_password:
+      type: string
+      minLength: 8
+      maxLength: 128

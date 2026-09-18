@@ -1,0 +1,24 @@
+# ---------------------------------------------------------------------------
+# oapi-codegen for an optional generated Go SDK *client*.
+#
+# The API server build uses config/oapi-codegen.yaml (gin-server + strict-server +
+# models). This client config is for teams/FE that want a typed Go client too.
+# Generate with: make oapi-client
+# Output: internal/api/client/v1/client.gen.go (generated — never hand-edit)
+#
+# SDKs in other languages (openapi-generator / Fern / Stainless) consume the
+# bundled spec directly, not this file.
+# ---------------------------------------------------------------------------
+
+package: v1
+output: internal/api/client/v1/client.gen.go
+
+generate:
+  models: true
+  client: true
+  gin-server: false
+  strict-server: false
+  embedded-spec: true
+
+output-options:
+  skip-fmt: false

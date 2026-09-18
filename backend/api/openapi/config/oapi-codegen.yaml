@@ -1,0 +1,58 @@
+# ---------------------------------------------------------------------------
+# oapi-codegen v2 configuration.
+#
+# Consumes the Redocly-BUNDLED single spec (build/openapi.bundled.yaml) and
+# emits typed Go models + a Gin strict-server interface into
+# internal/api/gen/v1. That directory is GENERATED — never edit by hand.
+#
+# Regenerate with: make oapi-generate
+#   or  oapi-codegen -config api/openapi/config/oapi-codegen.yaml build/openapi.bundled.yaml
+# ---------------------------------------------------------------------------
+
+package: v1
+
+# Output file for ALL generated code in one pass (models + interfaces + types).
+# Editing anything this emits violates the "generated == contract" invariant;
+# schema/operation changes belong in api/openapi/**/*.yaml, never here.
+output: internal/api/gen/v1/api.gen.go
+
+generate:
+  # Emit Go structs for every component schema (and inline request/response bodies).
+  models: true
+
+  # Embed a json-serialized copy of the bundled spec for runtime validation/self-describe.
+  embedded-spec: true
+
+  # Gin server interfaces: ServerInterface (operation methods) + RegisterHandlersWithOptions.
+  gin-server: true
+
+  # Strict typed handlers: StrictServerInterface + WrapStrictHandler, which parse/bind
+  # requests into typed params and encode typed responses. Pair with strict-server.go.
+  strict-server: true
+
+  # We author clients in other stacks (TypeScript/Go/Postman). Set client: false here to
+  # keep the surface to what the API server needs; enable client: true in a separate config
+  # if you want a generated Go SDK under internal/api/client.
+  client: false
+
+compatibility:
+  # Keep generated Go names stable whether a schema is referenced through $ref or inlined.
+  # Without this, opvi / oneOf unions get prefixed names tied to the operation id, which
+  # churns on rename. We add `x-go-type-name` where a stable name is important instead.
+  components-schemas: true
+
+output-options:
+  # Exclude these generated names. Grep the bundled spec for the real names after a first
+  # generate, then tighten. (Left as documentation — uncomment after a dry run.)
+  # exclude-tags: []
+
+  # Rename generated identifiers that collide with common stdlib / Gin names.
+  # name-normalizer: LU | SC | SN | US
+
+  # Only strip the element-name prefix if we ever split embeds; mostly we rely on absolute
+  # component names above.
+  skip-fmt: false
+  skip-prune: false
+
+  user-templates:
+    # (Optional) If you need csrf/extra helpers. Keep empty unless you have one.

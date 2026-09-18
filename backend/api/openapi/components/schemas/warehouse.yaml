@@ -1,0 +1,98 @@
+# ---------------------------------------------------------------------------
+# Warehouse module schemas — POST/GET/PATCH/DELETE /warehouses, GET /branches/{id}/warehouses.
+# Mirrors internal/modules/warehouse/dto.go.
+# ---------------------------------------------------------------------------
+
+CreateWarehouseRequest:
+  type: object
+  required: [branch_id, code, name]
+  properties:
+    branch_id:
+      type: string
+      format: uuid
+      description: Must belong to the caller's organization.
+    code:
+      type: string
+      minLength: 1
+      maxLength: 40
+      description: Unique per branch. Not updatable.
+    name:
+      type: string
+      minLength: 2
+      maxLength: 200
+    location:
+      type: [string, 'null']
+      maxLength: 255
+    capacity:
+      type: [integer, 'null']
+      minimum: 0
+    is_active:
+      type: [boolean, 'null']
+    is_main:
+      type: [boolean, 'null']
+
+UpdateWarehouseRequest:
+  type: object
+  description: Every field optional. code and branch_id not updatable.
+  properties:
+    name:
+      type: [string, 'null']
+      minLength: 2
+      maxLength: 200
+    location:
+      type: [string, 'null']
+      maxLength: 255
+    capacity:
+      type: [integer, 'null']
+      minimum: 0
+    is_active:
+      type: [boolean, 'null']
+    is_main:
+      type: [boolean, 'null']
+
+Warehouse:
+  type: object
+  required: [id, branch_id, code, name, is_active, is_main]
+  properties:
+    id:
+      type: string
+      format: uuid
+    branch_id:
+      type: string
+      format: uuid
+    code:
+      type: string
+    name:
+      type: string
+    location:
+      type: [string, 'null']
+    capacity:
+      type: [integer, 'null']
+    is_active:
+      type: boolean
+    is_main:
+      type: boolean
+    created_at:
+      type: string
+      format: date-time
+
+WarehouseListItem:
+  type: object
+  required: [id, branch_id, code, name, is_active, is_main]
+  properties:
+    id:
+      type: string
+      format: uuid
+    branch_id:
+      type: string
+      format: uuid
+    code:
+      type: string
+    name:
+      type: string
+    is_active:
+      type: boolean
+    is_main:
+      type: boolean
+    capacity:
+      type: [integer, 'null']

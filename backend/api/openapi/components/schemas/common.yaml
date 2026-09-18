@@ -1,0 +1,171 @@
+# ---------------------------------------------------------------------------
+# Common, framework-agnostic schemas.
+# These mirror the real wire format produced by pkg/response.Envelope and the
+# error catalogue in internal/errors. Every endpoint reuses them.
+# ---------------------------------------------------------------------------
+
+# Meta is the inline metadata every response carries (pkg/response.Meta).
+Meta:
+  type: object
+  required: [request_id, timestamp]
+  properties:
+    request_id:
+      type: string
+      format: uuid
+      description: Correlates a response to its request; echoed in the X-Request-ID header.
+      example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+    timestamp:
+      type: string
+      format: date-time
+      description: Server time the response was produced, RFC 3339 UTC.
+      example: 2026-09-14T16:00:00Z
+    version:
+      type: string
+      description: API version tag of the responding surface, e.g. "v1".
+      example: v1
+
+# FieldError is one field-level validation failure (validators.FieldError shape).
+FieldError:
+  type: object
+  required: [field, rule]
+  properties:
+    field:
+      type: string
+      description: JSON path of the offending field, dot-separated for nested fields.
+      example: email
+    rule:
+      type: string
+      description: The validation rule that failed (go-playground/validator tag).
+      example: email
+    message:
+      type: string
+      description: Human-readable explanation of the failure.
+      example: must be a valid email address
+    value:
+      description: The rejected value (omitted when it would be unsafe to echo).
+      example: not-an-email
+
+# ErrorBody is the shape of the envelope's "error" member.
+ErrorBody:
+  type: object
+  required: [code, message]
+  properties:
+    code:
+      type: string
+      description: Stable machine-readable error code. See docs/api/API.md catalogue.
+      example: VALIDATION_ERROR
+    message:
+      type: string
+      description: Short, human-readable summary. Never branch client logic on this free text.
+      example: request validation failed
+    details:
+      type: array
+      description: Field-level failures, present only for validation-style errors.
+      items:
+        $ref: '#/FieldError'
+
+# ErrorEnvelope is the body of every non-2xx response:
+#   { "success": false, "error": {...}, "meta": {...} }
+ErrorEnvelope:
+  type: object
+  required: [success, error, meta]
+  properties:
+    success:
+      type: boolean
+      const: false
+    error:
+      $ref: '#/ErrorBody'
+    meta:
+      $ref: '#/Meta'
+  description: Uniform error envelope. Success is always false; the payload lives under error.
+
+# PaginationMeta is the "pagination" block of a list envelope (pkg/pagination.Meta).
+PaginationMeta:
+  type: object
+  required: [limit]
+  properties:
+    page:
+      type: integer
+      description: Current page, 1-based (offset pagination).
+      example: 1
+    limit:
+      type: integer
+      description: Page size actually applied, clamped into [1,100].
+      example: 20
+    total:
+      type: integer
+      format: int64
+      description: Total number of records matching the query.
+      example: 142
+    total_pages:
+      type: integer
+      description: Total pages (offset pagination only).
+      example: 8
+    next_cursor:
+      type: string
+      description: Opaque, HMAC-signed cursor for the next page (cursor pagination only).
+      example: eyJ0IjoiMjAyNi0wOS0xMVRUMTA6...
+    prev_cursor:
+      type: string
+      description: Opaque, HMAC-signed cursor for the previous page (cursor pagination only).
+    has_more:
+      type: boolean
+      description: Whether another page exists.
+      example: true
+
+# SuccessEnvelope wraps a single object payload: { success:true, data:{...}, meta:{...} }.
+SuccessEnvelope:
+  type: object
+  required: [success, data, meta]
+  properties:
+    success:
+      type: boolean
+      const: true
+    data: {}
+    meta:
+      $ref: '#/Meta'
+
+# CreatedEnvelope wraps a single object returned by a 201 create.
+CreatedEnvelope:
+  type: object
+  required: [success, data, meta]
+  properties:
+    success:
+      type: boolean
+      const: true
+    data: {}
+    meta:
+      $ref: '#/Meta'
+
+# ListEnvelope wraps an array payload plus pagination:
+#   { success:true, data:[...], pagination:{...}, meta:{...} }
+ListEnvelope:
+  type: object
+  required: [success, data, pagination, meta]
+  properties:
+    success:
+      type: boolean
+      const: true
+    data:
+      type: array
+      description: Page of items; item schema is operation-specific.
+      items: {}
+    pagination:
+      $ref: '#/PaginationMeta'
+    meta:
+      $ref: '#/Meta'
+
+# StatusResponse is the public liveness payload at GET /api/v1/status.
+StatusResponse:
+  type: object
+  required: [status]
+  properties:
+    status:
+      type: string
+      enum: [ok]
+    app:
+      type: string
+      example: pharmaciano-erp
+    version:
+      type: string
+      example: v1

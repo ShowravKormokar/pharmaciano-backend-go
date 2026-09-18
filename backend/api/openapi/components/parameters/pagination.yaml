@@ -1,0 +1,108 @@
+# Reusable query parameters for list endpoints (mirrors pkg/pagination).
+# Used across every list endpoint in the system.
+
+Page:
+  name: page
+  in: query
+  description: Page number, 1-based (offset pagination). Default 1.
+  schema:
+    type: integer
+    minimum: 1
+    default: 1
+    example: 1
+
+Limit:
+  name: limit
+  in: query
+  description: Page size, clamped into [1,100]. Default 20.
+  schema:
+    type: integer
+    minimum: 1
+    maximum: 100
+    default: 20
+    example: 20
+
+Sort:
+  name: sort
+  in: query
+  description: |
+    Comma-separated sort keys. Prefix with `-` for descending. At most 5 fields.
+    Example: `-created_at,name`. Which fields are allowed is endpoint-specific.
+  schema:
+    type: string
+    example: -created_at,name
+
+Cursor:
+  name: cursor
+  in: query
+  description: Opaque HMAC-signed cursor returned as `X-Next-Cursor` for cursor pagination.
+  schema:
+    type: string
+    example: eyJ0IjoiMjAyNi0wOS0xMVRUMTA6...
+
+Q:
+  name: q
+  in: query
+  description: Free-text search. Matched fields are endpoint-specific.
+  schema:
+    type: string
+    example: Dhaka
+
+Status:
+  name: status
+  in: query
+  description: Optional lifecycle status filter. Values depend on the resource.
+  schema:
+    type: string
+
+BranchID:
+  name: branch_id
+  in: query
+  description: Optional branch-scope filter for multi-branch tenants.
+  schema:
+    type: string
+    format: uuid
+    example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+
+IncludeDeleted:
+  name: include_deleted
+  in: query
+  description: Set true to include soft-deleted rows (default false).
+  schema:
+    type: boolean
+    default: false
+
+# ── Request headers shared across all operations ────────────────────────
+RequestId:
+  name: X-Request-ID
+  in: header
+  description: Caller-supplied correlation id. If omitted the server mints one and returns it.
+  required: false
+  schema:
+    type: string
+    format: uuid
+
+IdempotencyKey:
+  name: Idempotency-Key
+  in: header
+  description: |
+    Optional idempotency key for safe retry of mutating requests (POST/PATCH/PUT/DELETE).
+    The server stores the request+response keyed by this header for the configured TTL; a second
+    request with the same key and body returns the cached response. A second request with a
+    *different* body yields `409 IDEMPOTENCY_KEY_CONFLICT`.
+  required: false
+  schema:
+    type: string
+    maxLength: 128
+
+BranchScope:
+  name: X-Branch-ID
+  in: header
+  description: |
+    Sets the caller's active branch for this request (multi-branch tenants).
+    Ignored when the principal already carries a branch scope from their token; otherwise
+    the tenant middleware may accept this header or deny with BRANCH_SCOPE_DENIED.
+  required: false
+  schema:
+    type: string
+    format: uuid

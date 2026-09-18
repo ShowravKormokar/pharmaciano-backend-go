@@ -1,0 +1,225 @@
+# ---------------------------------------------------------------------------
+# Branch module schemas — POST/GET/PATCH/PUT/DELETE /branches.
+# Mirrors internal/modules/branch/dto.go. open_time/close_time are HH:MM strings.
+# ---------------------------------------------------------------------------
+
+CreateBranchRequest:
+  type: object
+  required: [code, name]
+  properties:
+    code:
+      type: string
+      minLength: 1
+      maxLength: 40
+      description: Unique per organization. Not updatable after creation.
+    name:
+      type: string
+      minLength: 2
+      maxLength: 200
+    is_active:
+      type: [boolean, 'null']
+    is_default:
+      type: [boolean, 'null']
+    address:
+      type: [string, 'null']
+      maxLength: 500
+    city:
+      type: [string, 'null']
+      maxLength: 100
+    state:
+      type: [string, 'null']
+      maxLength: 100
+    postal_code:
+      type: [string, 'null']
+      maxLength: 20
+    country:
+      type: [string, 'null']
+      maxLength: 100
+    email:
+      type: [string, 'null']
+      format: email
+      maxLength: 255
+    phone:
+      type: [string, 'null']
+      maxLength: 30
+    latitude:
+      type: [number, 'null']
+      minimum: -90
+      maximum: 90
+    longitude:
+      type: [number, 'null']
+      minimum: -180
+      maximum: 180
+    open_time:
+      type: [string, 'null']
+      pattern: '^(?:[01]\d|2[0-3]):[0-5]\d$'
+      description: Branch opening time, 24-hour HH:MM.
+      example: '09:00'
+    close_time:
+      type: [string, 'null']
+      pattern: '^(?:[01]\d|2[0-3]):[0-5]\d$'
+      description: Branch closing time, 24-hour HH:MM.
+      example: '21:00'
+
+UpdateBranchRequest:
+  type: object
+  description: Every field optional; nil = leave unchanged. code not updatable.
+  properties:
+    name:
+      type: [string, 'null']
+      minLength: 2
+      maxLength: 200
+    is_active:
+      type: [boolean, 'null']
+    is_default:
+      type: [boolean, 'null']
+    address:
+      type: [string, 'null']
+      maxLength: 500
+    city:
+      type: [string, 'null']
+      maxLength: 100
+    state:
+      type: [string, 'null']
+      maxLength: 100
+    postal_code:
+      type: [string, 'null']
+      maxLength: 20
+    country:
+      type: [string, 'null']
+      maxLength: 100
+    email:
+      type: [string, 'null']
+      format: email
+      maxLength: 255
+    phone:
+      type: [string, 'null']
+      maxLength: 30
+    latitude:
+      type: [number, 'null']
+      minimum: -90
+      maximum: 90
+    longitude:
+      type: [number, 'null']
+      minimum: -180
+      maximum: 180
+    open_time:
+      type: [string, 'null']
+      pattern: '^(?:[01]\d|2[0-3]):[0-5]\d$'
+    close_time:
+      type: [string, 'null']
+      pattern: '^(?:[01]\d|2[0-3]):[0-5]\d$'
+
+ReplaceBranchRequest:
+  type: object
+  required: [name, is_active, is_default]
+  description: Full representation; omitted optional fields are set to NULL (true replace). code immutable.
+  properties:
+    name:
+      type: string
+      minLength: 2
+      maxLength: 200
+    is_active:
+      type: boolean
+    is_default:
+      type: boolean
+    address:
+      type: [string, 'null']
+      maxLength: 500
+    city:
+      type: [string, 'null']
+      maxLength: 100
+    state:
+      type: [string, 'null']
+      maxLength: 100
+    postal_code:
+      type: [string, 'null']
+      maxLength: 20
+    country:
+      type: [string, 'null']
+      maxLength: 100
+    email:
+      type: [string, 'null']
+      format: email
+      maxLength: 255
+    phone:
+      type: [string, 'null']
+      maxLength: 30
+    latitude:
+      type: [number, 'null']
+      minimum: -90
+      maximum: 90
+    longitude:
+      type: [number, 'null']
+      minimum: -180
+      maximum: 180
+    open_time:
+      type: [string, 'null']
+      pattern: '^(?:[01]\d|2[0-3]):[0-5]\d$'
+    close_time:
+      type: [string, 'null']
+      pattern: '^(?:[01]\d|2[0-3]):[0-5]\d$'
+
+Branch:
+  type: object
+  required: [id, code, name, organization_id, is_active, is_default, created_at]
+  properties:
+    id:
+      type: string
+      format: uuid
+    code:
+      type: string
+    name:
+      type: string
+    organization_id:
+      type: string
+      format: uuid
+    is_active:
+      type: boolean
+    is_default:
+      type: boolean
+    address:
+      type: [string, 'null']
+    city:
+      type: [string, 'null']
+    state:
+      type: [string, 'null']
+    postal_code:
+      type: [string, 'null']
+    country:
+      type: [string, 'null']
+    email:
+      type: [string, 'null']
+    phone:
+      type: [string, 'null']
+    latitude:
+      type: [number, 'null']
+    longitude:
+      type: [number, 'null']
+    open_time:
+      type: [string, 'null']
+    close_time:
+      type: [string, 'null']
+    created_at:
+      type: string
+      format: date-time
+
+BranchListItem:
+  type: object
+  required: [id, code, name, is_active, is_default]
+  properties:
+    id:
+      type: string
+      format: uuid
+    code:
+      type: string
+    name:
+      type: string
+    is_active:
+      type: boolean
+    is_default:
+      type: boolean
+    city:
+      type: [string, 'null']
+    phone:
+      type: [string, 'null']

@@ -1,0 +1,169 @@
+# ---------------------------------------------------------------------------
+# /organizations/* — tenant identity and settings. Mirrors internal/modules/organization/routes.go.
+# A principal is only ever adressing their OWN organization (or the canonical global system
+# org for SUPER_ADMIN). Organization-wide reads are org-scoped.
+# ---------------------------------------------------------------------------
+
+/organizations/current:
+  get:
+    operationId: organizations.current
+    summary: Get the caller's organization
+    security:
+      - bearerAuth: []
+    description: |
+      Returns the organization that the authenticated session belongs to, with billing and
+      tenant settings. Only the org itself (or a SUPER_ADMIN) may read this; cross-org reads
+      of other tenants are an error. Result shape is the full Organization (not the summary).
+    tags: [organizations]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+    responses:
+      '200':
+        description: Caller's organization.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [success, data]
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                data:
+                  $ref: '../components/schemas/organization.yaml#/Organization'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+
+/organizations/{id}:
+  get:
+    operationId: organizations.get
+    summary: Get an organization
+    security:
+      - bearerAuth: []
+    description: |
+      Returns a single organization by ID. Org-scope enforced: a non-system principal may only
+      GET its own org; SUPER_ADMIN may read any. Requires the caller's own org read to map to
+      orgs.organization:view where covered.
+    tags: [organizations]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - name: id
+        in: path
+        required: true
+        description: Organization UUID.
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: Organization profile.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [success, data]
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                data:
+                  $ref: '../components/schemas/organization.yaml#/Organization'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+  patch:
+    operationId: organizations.update
+    summary: Update an organization (partial)
+    security:
+      - bearerAuth: []
+    description: |
+      Partial update of tenant-level settings (name, timezone, currency, contact, feature flags…).
+      All fields optional; only provided fields change. Some fields are immutable once set (see
+      per-field note in the schema). Org-scope enforced (own org only unless SUPER_ADMIN).
+    tags: [organizations]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/IdempotencyKey'
+      - name: id
+        in: path
+        required: true
+        description: Organization UUID.
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/organization.yaml#/UpdateOrganizationRequest'
+    responses:
+      '200':
+        description: Updated organization profile.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [success, data]
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                data:
+                  $ref: '../components/schemas/organization.yaml#/Organization'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+      '422':
+        $ref: '../components/responses/error.yaml#/UnprocessableEntity'
+
+/organizations/{id}/summary:
+  get:
+    operationId: organizations.summary
+    summary: Get an organization summary
+    security:
+      - bearerAuth: []
+    description: |
+      Lightweight summary of an organization — id, name, subscription plan, active flag and
+      aggregate counts (branches, users). Used for tenant headers, dashboards and provisioning
+      checks. Does not expose billing details.
+    tags: [organizations]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - name: id
+        in: path
+        required: true
+        description: Organization UUID.
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: Organization summary.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [success, data]
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                data:
+                  $ref: '../components/schemas/organization.yaml#/OrganizationSummary'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
