@@ -28,6 +28,8 @@ backend/
 │   │   │   ├── jwt.go                       # generate/parse (HS256 or RS256), claims struct
 │   │   │   ├── password.go                  # Argon2id hash/verify wrapper
 │   │   │   ├── limiter.go                   # per-email + per-IP + per-device Redis counters
+│   │   │   ├── module.go                    # Module + New constructor wiring handler/service
+│   │   │   ├── session_cache.go             # in-memory session cache backed by Redis
 │   │   │   └── auth_test.go
 │   │   │
 │   │   ├── user/
@@ -47,8 +49,9 @@ backend/
 │   │   │   ├── repository.go                # role/permission CRUD, role-permission map
 │   │   │   ├── service.go                   # dynamic role creation, permission assignment, casbin policy sync
 │   │   │   ├── handler.go
-│   │   │   ├── routes.go                    # /roles, /permissions, /roles/:id/permissions
 │   │   │   ├── casbin.go                    # enforcer init, gorm-adapter wiring, policy loader
+│   │   │   ├── authorizer.go                # Authorizer port: enforces Casbin policies per request
+│   │   │   ├── module.go                    # Module + New constructor wiring handler/service
 │   │   │   ├── seed.go                      # module-local seed helper (default permissions catalog)
 │   │   │   └── rbac_test.go
 │   │   │
@@ -259,7 +262,7 @@ backend/
 │   │   │   ├── pgx.go                       # native PGX pool for hot paths (POS, analytics)
 │   │   │   ├── transaction.go               # WithTx helper, saved-point / nested tx
 │   │   │   ├── hooks.go                     # slow-query, tenant-scope, soft-delete guards
-│   │   │   └── migrate.go                   # embed & apply migrations at startup (optional)
+│   │   │   ├── migrate.go                   # embed & apply migrations at startup (optional)
 │   │   ├── redis/
 │   │   │   ├── client.go                    # go-redis client, health check
 │   │   │   ├── keys.go                      # centralized key constants
@@ -269,7 +272,11 @@ backend/
 │   │   │   └── zap.go                       # Zap production/dev init, request-scoped logger
 │   │   ├── telemetry/
 │   │   │   ├── metrics.go                   # Prometheus registry, common metrics
+│   │   │   ├── metrics_test.go               # metrics unit tests
 │   │   │   ├── tracing.go                   # OpenTelemetry init, exporter wiring
+│   │   │   ├── instrument.go                # Gin middleware + DB pool stat helpers
+│   │   │   ├── attributes.go                # OpenTelemetry attribute helpers
+│   │   │   ├── context.go                   # trace context propagation helpers
 │   │   │   └── health.go                    # /health, /ready endpoints
 │   │   ├── mailer/
 │   │   │   └── mailer.go                    # future-channel placeholder (interface only)
@@ -278,10 +285,17 @@ backend/
 │   │   ├── validator/
 │   │   │   ├── validator.go                 # go-playground/validator init
 │   │   │   └── custom_rules.go              # phone, NID, batch-no, strength format
+│   │   ├── audit/
+│   │   │   ├── sink.go                      # AuditSink port (interface)
+│   │   │   └── loki_sink.go                 # best-effort Loki audit stream
+│   │   ├── retention/
+│   │   │   ├── worker.go                    # periodic cleanup of expired sessions/tokens
+│   │   │   └── worker_test.go               # retention worker unit tests
 │   │   └── uuid/
 │   │       └── uuid.go                      # generation helpers, parse guards
 │   │
 │   ├── middleware/
+│   │   ├── deps.go                          # Middleware container + dependency injection
 │   │   ├── auth.go                          # JWT + session validation, sets user in context
 │   │   ├── rbac.go                          # Casbin enforce per route
 │   │   ├── tenant.go                        # inject org_id + branch_id scope into context
@@ -293,12 +307,16 @@ backend/
 │   │   ├── cors.go                          # CORS allowlist
 │   │   ├── idempotency.go                   # Idempotency-Key handling for POST
 │   │   ├── logger.go                        # structured access log
+│   │   ├── observability.go                 # tracing span + metrics + in-flight gauge
+│   │   ├── origin_check.go                  # origin/referrer allow-list check
+│   │   ├── origin_check_test.go              # origin check unit tests
 │   │   └── timeout.go                       # per-route context timeout
 │   │
 │   ├── router/
 │   │   ├── router.go                        # top-level RegisterRoutes, version groups
 │   │   ├── v1.go                            # /api/v1 group wiring
 │   │   ├── v2.go                            # reserved for future
+│   │   ├── docs.go                          # self-hosted OpenAPI reference + bundled spec
 │   │   └── health.go                        # /health, /metrics, /ready
 │   │
 │   ├── jobs/                                # Background worker layer (Asynq)
@@ -306,6 +324,7 @@ backend/
 │   │   ├── client.go                        # enqueue helpers
 │   │   ├── scheduler.go                     # cron entries (expiry alerts, backups, forecasts)
 │   │   ├── task_types.go                    # task-type constants + payload structs
+│   │   ├── middleware.go                    # retry policy, dead-letter, logging
 │   │   ├── handlers/
 │   │   │   ├── audit_task.go                # persist audit log entries
 │   │   │   ├── notification_task.go         # fan-out notifications
@@ -323,12 +342,23 @@ backend/
 │   │   └── mapper.go                        # AppError → HTTP status mapping
 │   │
 │   └── common/
+│       ├── model_base.go                    # shared soft-delete/timestamps base model
 │       ├── context/
 │       │   └── context.go                   # typed context keys (user_id, org_id, branch_id, request_id)
 │       ├── constants/
 │       │   └── constants.go                 # user statuses, purchase states, sale statuses, roles
-│       └── enums/
-│           └── enums.go                     # PaymentType, PurchaseState, SaleState, UserStatus, UserStage
+│       ├── enums/
+│       │   └── enums.go                     # PaymentType, PurchaseState, SaleState, UserStatus, UserStage
+│       └── httpx/
+│           └── httpx.go                     # HTTP helpers (JSON envelope, error mapping)
+│
+│   └── api/                                 # OpenAPI-generated API surface
+│       ├── gen/
+│       │   └── v1/
+│       │       └── doc.go                   # swaggo-generated API doc
+│       └── server/
+│           ├── strict.go                    # strict-server generated handlers
+│           └── validator.go                 # generated request validator
 │
 ├── pkg/                                     # Reusable, safe to extract to public repo later
 │   ├── pagination/
@@ -339,7 +369,14 @@ backend/
 │   │   └── error_response.go
 │   ├── crypto/
 │   │   ├── aes.go                           # field-level encryption (NID, bank account)
-│   │   └── hash.go                          # HMAC helpers
+│   │   ├── hash.go                          # HMAC helpers
+│   │   ├── hash_iface.go                    # Hasher interface definition
+│   │   ├── password.go                      # Argon2id password hasher
+│   │   ├── password_test.go                 # password hasher unit tests
+│   │   ├── pepper.go                        # server-side pepper wrapper
+│   │   ├── pepper_test.go                   # pepper wrapper unit tests
+│   │   ├── totp.go                          # TOTP MFA (RFC 6238)
+│   │   └── totp_test.go                     # TOTP unit tests
 │   ├── times/
 │   │   └── times.go                         # timezone, date range, ISO parsing
 │   ├── strings/
@@ -375,7 +412,18 @@ backend/
 │   ├── 000013_ai_forecast.up.sql
 │   ├── 000013_ai_forecast.down.sql
 │   ├── 000014_indexes_and_views.up.sql
-│   └── 000014_indexes_and_views.down.sql
+│   ├── 000014_indexes_and_views.down.sql
+│   ├── 000015_authz_version.up.sql
+│   ├── 000015_authz_version.down.sql
+│   ├── 000016_rbac_session_generations.up.sql
+│   ├── 000016_rbac_session_generations.down.sql
+│   ├── 000017_user_branch_assignments.up.sql
+│   ├── 000017_user_branch_assignments.down.sql
+│   ├── 000018_mfa.up.sql
+│   ├── 000018_mfa.down.sql
+│   ├── 000019_password_history.up.sql
+│   ├── 000019_password_history.down.sql
+│   └── embed.go                             # embedded migrations for the migrate binary
 │
 ├── seed/                                    # Declarative seed data (loaded by cmd/seed)
 │   ├── permissions.yaml                     # module + action catalog
@@ -404,14 +452,25 @@ backend/
 │   ├── prometheus/
 │   │   ├── prometheus.yml
 │   │   └── alerts.yml
-│   └── grafana/
-│       ├── dashboards/
-│       │   ├── api.json
-│       │   ├── db.json
-│       │   └── business.json
-│       └── provisioning/
-│           ├── datasources.yml
-│           └── dashboards.yml
+│   ├── grafana/
+│   │   ├── dashboards/
+│   │   │   ├── api.json
+│   │   │   ├── audit.json
+│   │   │   ├── auth-security.json
+│   │   │   ├── background.json
+│   │   │   ├── business.json
+│   │   │   ├── db.json
+│   │   │   ├── infrastructure.json
+│   │   │   └── redis.json
+│   │   └── provisioning/
+│   │       ├── datasources.yml
+│   │       └── dashboards.yml
+│   ├── loki/
+│   │   └── loki-config.yml                  # Loki server config
+│   ├── promtail/
+│   │   └── promtail-config.yml              # Loki log shipper config
+│   └── observability/
+│       └── README.md                         # observability stack guide
 │
 ├── docs/
 │   ├── adr/                                 # Architecture Decision Records
@@ -422,7 +481,9 @@ backend/
 │   │   ├── 0005-asynq-background-jobs.md
 │   │   ├── 0006-audit-log-partitioning.md
 │   │   ├── 0007-double-entry-ledger.md
-│   │   └── 0008-jwt-rotation-reuse-detect.md
+│   │   ├── 0008-jwt-rotation-reuse-detect.md
+│   │   ├── 0009-Folder-Structure.md
+│   │   └── pharmaciano_authentication_authorization_architecture.md
 │   ├── api/
 │   │   ├── openapi.yaml                     # single source of truth for REST API
 │   │   └── postman_collection.json
@@ -435,7 +496,11 @@ backend/
 │   ├── runbook/
 │   │   ├── incident_response.md
 │   │   ├── db_backup_restore.md
-│   │   └── deployment.md
+│   │   ├── deployment.md
+│   │   └── AUTH_DOCS.md                     # auth/authorization runbook
+│   ├── API.md                               # full endpoint reference
+│   ├── OPENAPI.md                           # OpenAPI usage guide
+│   ├── BUILD-SEQUENCE.md                    # build + deploy order
 │   └── README.md
 │
 ├── tests/
@@ -464,7 +529,11 @@ backend/
 │   ├── gen_swagger.sh                       # swaggo generation
 │   ├── lint.sh                              # golangci-lint
 │   ├── test.sh                              # unit + integration + coverage
-│   └── generate_mocks.sh                    # mockery
+│   ├── generate_mocks.sh                    # mockery
+│   ├── verify-api.sh                        # OpenAPI spec validation
+│   └── openapi/
+│       ├── bundle.py                        # OpenAPI bundle helper
+│       └── validate.py                      # OpenAPI spec validator
 │
 ├── .github/
 │   └── workflows/
