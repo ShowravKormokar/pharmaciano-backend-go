@@ -19,6 +19,7 @@ import (
 	"golang.org/x/crypto/argon2"
 	"gopkg.in/yaml.v3"
 
+	"backend/internal/modules/masterdata"
 	"backend/internal/platform/config"
 	"backend/internal/platform/db"
 	"backend/internal/platform/logger"
@@ -79,6 +80,7 @@ func main() {
 	seedRole := flag.Bool("roles", true, "seed roles and permissions")
 	seedUser := flag.Bool("user", true, "seed super admin user")
 	seedOrg := flag.Bool("org", true, "seed organization, branch, warehouse")
+	seedMaster := flag.Bool("masterdata", true, "seed master data catalogue (routes, dosage forms, units, categories, ...)")
 	flag.Parse()
 
 	cfg := config.MustLoad(config.LoadOptions{})
@@ -124,6 +126,13 @@ func main() {
 	}
 	if err := seedSettings(ctx, pg.Pool(), seedData.Settings); err != nil {
 		loggr.Fatal("seed system settings", zap.Error(err))
+	}
+
+	if *seedMaster {
+		masterSeeder := masterdata.NewSeeder(pg, loggr, findSeedDir())
+		if err := masterSeeder.Seed(ctx); err != nil {
+			loggr.Fatal("seed master data", zap.Error(err))
+		}
 	}
 
 	if *seedUser {

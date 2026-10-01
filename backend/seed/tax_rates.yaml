@@ -1,0 +1,28 @@
+# =============================================================================
+# Pharmaciano ERP — Tax Rates
+#
+# Idempotent by `code`. Exactly one active row should carry `is_default: true`;
+# that is the rate applied to a new sale when no rate is chosen explicitly.
+#
+# Only jurisdiction-neutral values are seeded here — a tax-exempt zero rate and
+# its alias — because actual rates are jurisdiction- and tenant-specific. Add
+# this tenant's VAT/GST rates via the API (or by editing this file) and mark the
+# one that should be the default.
+# =============================================================================
+
+version: 1
+description: "Base tax rate catalogue. Tenants extend this with their local VAT/GST rates."
+
+tax_rates:
+
+  - code: TAX_EXEMPT
+    name: "Tax Exempt"
+    rate_percent: 0
+    is_default: true
+    is_active: true
+
+  - code: ZERO
+    name: "Zero Rated"
+    rate_percent: 0
+    is_default: false
+    is_active: true
