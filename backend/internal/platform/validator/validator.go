@@ -299,6 +299,17 @@ func humanMessage(fe validator.FieldError, name string) string {
 		return "does not meet the password policy"
 	case "not_blank":
 		return fmt.Sprintf("%s must not be blank", name)
+	case "nil_uuid":
+		// Cross-field struct-level rules live in internal/modules/masterdata.
+		// Each gets its own tag because humanMessage can only return a static
+		// string per tag.
+		return "must not be the all-zero UUID"
+	case "temperature_range":
+		return "must be less than or equal to max_temp_celsius"
+	case "invalid_number":
+		return "must be a finite number that fits the column's numeric type"
+	case "above_maximum":
+		return "must be at most the configured maximum"
 	default:
 		return fmt.Sprintf("failed rule %q", fe.Tag())
 	}
