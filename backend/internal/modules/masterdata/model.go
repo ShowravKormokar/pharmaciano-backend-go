@@ -6,9 +6,9 @@ import (
 	"github.com/google/uuid"
 )
 
-// ---------------------------------------------------------------------------
-// ===== File: internal/modules/masterdata/model.go ==========================
-// ---------------------------------------------------------------------------
+// Scope: the eleven central master-data resources only. The `manufacturers`,
+// `brands` and `suppliers` tables (migrations/000005) are owned by their own
+// modules and are deliberately not represented here — see contract C-02.
 
 type ProductCategory struct {
 	common.BaseModel
@@ -72,49 +72,6 @@ type TaxRate struct {
 	RatePercent float64 `db:"rate_percent" json:"rate_percent"`
 	IsDefault   bool    `db:"is_default"   json:"is_default"`
 	IsActive    bool    `db:"is_active"    json:"is_active"`
-}
-
-type Manufacturer struct {
-	common.BaseModel
-	Code          string  `db:"code"           json:"code"`
-	Name          string  `db:"name"           json:"name"`
-	Country       *string `db:"country"        json:"country,omitempty"`
-	Address       *string `db:"address"        json:"address,omitempty"`
-	ContactPerson *string `db:"contact_person" json:"contact_person,omitempty"`
-	Phone         *string `db:"phone"          json:"phone,omitempty"`
-	Email         *string `db:"email"          json:"email,omitempty"`
-	Website       *string `db:"website"        json:"website,omitempty"`
-	DrugLicenseNo *string `db:"drug_license_no" json:"drug_license_no,omitempty"`
-	IsActive      bool    `db:"is_active"      json:"is_active"`
-}
-
-type Brand struct {
-	common.BaseModel
-	Code            string    `db:"code"               json:"code"`
-	Name            string    `db:"name"               json:"name"`
-	ManufacturerID  uuid.UUID `db:"manufacturer_id"    json:"manufacturer_id"`
-	CountryOfOrigin *string   `db:"country_of_origin"  json:"country_of_origin,omitempty"`
-	Description     *string   `db:"description"        json:"description,omitempty"`
-	IsActive        bool      `db:"is_active"          json:"is_active"`
-}
-
-type Supplier struct {
-	common.BaseModel
-	Code             string   `db:"code"              json:"code"`
-	Name             string   `db:"name"              json:"name"`
-	ContactPerson    *string  `db:"contact_person"    json:"contact_person,omitempty"`
-	Phone            *string  `db:"phone"             json:"phone,omitempty"`
-	Email            *string  `db:"email"             json:"email,omitempty"`
-	Address          *string  `db:"address"           json:"address,omitempty"`
-	City             *string  `db:"city"              json:"city,omitempty"`
-	Country          *string  `db:"country"           json:"country,omitempty"`
-	DrugLicenseNo    *string  `db:"drug_license_no"   json:"drug_license_no,omitempty"`
-	TIN              *string  `db:"tin"               json:"tin,omitempty"`
-	CreditLimit      *float64 `db:"credit_limit"      json:"credit_limit,omitempty"`
-	CreditPeriodDays *int     `db:"credit_period_days" json:"credit_period_days,omitempty"`
-	OpeningBalance   float64  `db:"opening_balance"    json:"opening_balance"`
-	CurrentBalance   float64  `db:"current_balance"    json:"current_balance"`
-	IsActive         bool     `db:"is_active"          json:"is_active"`
 }
 
 type DrugGroup struct {
