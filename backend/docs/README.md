@@ -36,6 +36,12 @@ evolves:
 8. [JWT rotation and reuse detection](adr/0008-jwt-rotation-reuse-detect.md)
 9. [Folder structure](adr/0009-Folder-Structure.md)
 
+Unnumbered architecture documents:
+
+- [MasterData implementation contract](adr/MASTERDATA_IMPLEMENTATION_CONTRACT.md): central-data
+  boundary, the 11 in-scope resources, authorization/audit/cache/OpenAPI contracts, and the
+  open architectural conflicts, for the MasterData module.
+
 ## Source of Truth
 
 Code and configuration are authoritative for runtime behavior. Documentation
