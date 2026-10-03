@@ -236,6 +236,45 @@ issues:
       linters:
         - all
 
+    # The eleven MasterData repositories are intentionally isomorphic.
+    #
+    # dupl compares across files, so two resources with the same shape clone no
+    # matter how thin their wrappers are -- D-11's assumption that "thin wrappers
+    # stay well under threshold" does not hold. Shrinking them did not remove the
+    # clones, because the residue is type glue, not logic.
+    #
+    # What is left per file is a column list, a tableSpec, a values accessor, a
+    # scan function and one-line delegations. Every piece of *behaviour* -- SQL
+    # construction, pagination, filtering, sorting, soft delete, the D-19
+    # reference probe -- is written exactly once in masterdata/repository.go.
+    # The drift risk dupl would catch here is instead asserted directly by
+    # TestUpdateColumnsAreInsertColumnsWithoutCode,
+    # TestWriteColumnsAreRealAndGeneratedAreNot and
+    # TestValuesAccessorsMatchColumnLists.
+    - path: internal/modules/masterdata/repository_[a-z_]*\.go
+      linters:
+        - dupl
+
+    # The eleven MasterData services are intentionally isomorphic for the same
+    # reason as the repositories above, and the argument in that comment applies
+    # unchanged: each service_<resource>.go holds five thin typed operations
+    # whose residue is type glue, not logic.
+    #
+    # Every piece of *behaviour* — the SUPER_ADMIN guard, error mapping, the
+    # reference check, the D-19 probe loop, listPage, the DTO-default helpers and
+    # the numeric/pair rules — is written exactly once in masterdata/service.go.
+    # What remains per file is Create/Get/List/Update/Delete plus one
+    # applyPatch, and the fields they touch are exactly what makes them a
+    # resource rather than a copy.
+    #
+    # The drift dupl would catch here is asserted directly instead: the service
+    # tests assert that all eleven resources expose the same operation set, that
+    # every applyPatch touches the fields its Update DTO declares, and that the
+    # reference and hierarchy probes are wired to the right repository methods.
+    - path: internal/modules/masterdata/service_[a-z_]*\.go
+      linters:
+        - dupl
+
     # Allow snake_case in DB struct tags without stylecheck complaints.
     - text: "ST1003:"
       linters:
