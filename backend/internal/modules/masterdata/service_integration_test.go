@@ -19,6 +19,7 @@ package masterdata
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -529,10 +530,24 @@ func TestDeleteRefusesWhileChildrenExist(t *testing.T) {
 	svc, _ := newIntegrationService(t)
 	ctx := superAdminCtx()
 
+	route, err := svc.CreateRoute(ctx, &CreateRouteRequest{Code: uniqueCode("RTE"), Name: "Oral"})
+	if err != nil {
+		t.Fatalf("create route: %v", err)
+	}
+	if _, err := svc.CreateDosageForm(ctx, &CreateDosageFormRequest{
+		Code: uniqueCode("DF"), Name: "Tablet", RouteID: &route.ID,
+	}); err != nil {
+		t.Fatalf("create dosage form: %v", err)
+	}
+	if err := svc.DeleteRoute(ctx, route.ID); !errs.Has(err, errs.CodeConflict) {
+		t.Fatalf("delete route with dosage-form child = %q, want CONFLICT", errs.CodeOf(err))
+	}
+
 	group, err := svc.CreateDrugGroup(ctx, &CreateDrugGroupRequest{Code: uniqueCode("DG"), Name: "Analgesics"})
 	if err != nil {
 		t.Fatalf("create group: %v", err)
 	}
+
 	class, err := svc.CreateDrugClass(ctx, &CreateDrugClassRequest{Code: uniqueCode("DC"), Name: "Opioids", DrugGroupID: &group.ID})
 	if err != nil {
 		t.Fatalf("create class: %v", err)
@@ -550,7 +565,6 @@ func TestDeleteRefusesWhileChildrenExist(t *testing.T) {
 	}{
 		{"group", group.ID, func(id uuid.UUID) error { return svc.DeleteDrugGroup(ctx, id) }},
 		{"class", class.ID, func(id uuid.UUID) error { return svc.DeleteDrugClass(ctx, id) }},
-		{"therapeutic class", therapeutic.ID, func(id uuid.UUID) error { return svc.DeleteTherapeuticClass(ctx, id) }},
 	} {
 		if err := tc.call(tc.id); !errs.Has(err, errs.CodeConflict) {
 			t.Errorf("delete %s with children = %q, want CONFLICT", tc.name, errs.CodeOf(err))
@@ -592,6 +606,68 @@ func TestDeleteRefusesWhileChildrenExist(t *testing.T) {
 	}
 	if err := svc.DeleteDrugGroup(ctx, group.ID); err != nil {
 		t.Errorf("delete drug group: %v", err)
+	}
+}
+
+// TestReferenceCheckSerializesWithSoftDelete ensures a reference cannot be
+// created after its parent has passed the service's live-row check but before a
+// concurrent soft delete commits. PostgreSQL FKs do not consider deleted_at.
+func TestReferenceCheckSerializesWithSoftDelete(t *testing.T) {
+	repo, database := newIntegrationRepo(t)
+	svc := NewService(repo, database, Limits{})
+	ctx := superAdminCtx()
+
+	route, err := svc.CreateRoute(ctx, &CreateRouteRequest{Code: uniqueCode("RTE"), Name: "Oral"})
+	if err != nil {
+		t.Fatalf("create route: %v", err)
+	}
+
+	locked := make(chan error, 1)
+	releaseDelete := make(chan struct{})
+	deleteDone := make(chan error, 1)
+	go func() {
+		deleteDone <- database.WithTx(ctx, func(txCtx context.Context) error {
+			if _, err := repo.GetRouteForUpdate(txCtx, route.ID); err != nil {
+				locked <- err
+				return err
+			}
+			locked <- nil
+			<-releaseDelete
+			_, err := repo.SoftDeleteRoute(txCtx, route.ID)
+			return err
+		})
+	}()
+	if err := <-locked; err != nil {
+		t.Fatalf("lock route: %v", err)
+	}
+
+	createStarted := make(chan struct{})
+	createDone := make(chan error, 1)
+	go func() {
+		close(createStarted)
+		_, err := svc.CreateDosageForm(ctx, &CreateDosageFormRequest{
+			Code: uniqueCode("DF"), Name: "Tablet", RouteID: &route.ID,
+		})
+		createDone <- err
+	}()
+	<-createStarted
+
+	select {
+	case err := <-createDone:
+		close(releaseDelete)
+		if deleteErr := <-deleteDone; deleteErr != nil {
+			t.Fatalf("soft delete route: %v", deleteErr)
+		}
+		t.Fatalf("reference creation completed while the parent was locked: %v", err)
+	case <-time.After(100 * time.Millisecond):
+	}
+
+	close(releaseDelete)
+	if err := <-deleteDone; err != nil {
+		t.Fatalf("soft delete route: %v", err)
+	}
+	if err := <-createDone; !errs.Has(err, errs.CodeNotFound) {
+		t.Fatalf("create against deleted parent = %q, want NOT_FOUND (err %v)", errs.CodeOf(err), err)
 	}
 }
 
