@@ -31,7 +31,7 @@ func (s *Service) CreateTherapeuticClass(ctx context.Context, req *CreateTherape
 
 	var out *TherapeuticClass
 	err := s.db.WithTx(ctx, func(ctx context.Context) error {
-		if err := requireReference(ctx, req.DrugClassID, s.repo.GetDrugClass, resDrugClass); err != nil {
+		if err := requireReference(ctx, req.DrugClassID, s.repo.GetDrugClassForUpdate, resDrugClass); err != nil {
 			return err
 		}
 		created, err := s.repo.CreateTherapeuticClass(ctx, t)
@@ -91,7 +91,7 @@ func (s *Service) UpdateTherapeuticClass(ctx context.Context, id uuid.UUID, req 
 			return mapReadErr(err, resTherapeuticClass)
 		}
 		applyTherapeuticClassPatch(current, req)
-		if err := requireReference(ctx, current.DrugClassID, s.repo.GetDrugClass, resDrugClass); err != nil {
+		if err := requireReference(ctx, current.DrugClassID, s.repo.GetDrugClassForUpdate, resDrugClass); err != nil {
 			return err
 		}
 		saved, err := s.repo.UpdateTherapeuticClass(ctx, current)
