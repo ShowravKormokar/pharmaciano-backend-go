@@ -51,7 +51,10 @@ Pharmaciano ERP is the backend service that powers a multi-branch pharmacy retai
 business. It handles:
 
 - One **organization** with many **branches**, each with one or more **warehouses**.
-- A **central catalog** of medicines, brands, and master data (managed by SUPER_ADMIN).
+- A **central master-data catalog** (managed by SUPER_ADMIN) — eleven resources
+  (product categories, routes, dosage forms, package types, unit types, storage
+  conditions, tax rates, drug groups, drug classes, therapeutic classes, and generic
+  medicines) — each with full CRUD, FEFO-safe reference guarding, and soft deletes.
 - **Branch-scoped inventory** with strict batch and expiry tracking (FEFO).
 - End-to-end **purchase workflow** (request → approval → receive → payment).
 - A **POS sales engine** with returns, coupons, offers, and multi-tender payments.
