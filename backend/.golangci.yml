@@ -275,6 +275,24 @@ issues:
       linters:
         - dupl
 
+    # The eleven MasterData handlers are intentionally isomorphic for the same
+    # reason as the services and repositories above and the argument in those
+    # comments applies unchanged: each resource contributes five thin handlers
+    # — bind, delegate, render — whose residue is type glue, not logic.
+    #
+    # Every piece of *behaviour* — input binding, error rendering, the response
+    # envelope — is inherited from httpx. What remains per handler is the
+    # resource-specific DTO and response converter, and the service method name,
+    # which is exactly what makes them a resource rather than a copy.
+    #
+    # The drift dupl would catch here is asserted directly instead:
+    # TestServiceExposesTheFullOperationSet in service_test.go already proves all
+    # eleven resources expose the same five operations, and that test will fail
+    # if a handler is added without a matching service method.
+    - path: internal/modules/masterdata/handler\.go
+      linters:
+        - dupl
+
     # Allow snake_case in DB struct tags without stylecheck complaints.
     - text: "ST1003:"
       linters:
