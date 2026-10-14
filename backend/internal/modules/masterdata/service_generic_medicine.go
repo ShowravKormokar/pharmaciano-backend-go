@@ -34,7 +34,7 @@ func (s *Service) CreateGenericMedicine(ctx context.Context, req *CreateGenericM
 
 	var out *GenericMedicine
 	err := s.db.WithTx(ctx, func(ctx context.Context) error {
-		if err := requireReference(ctx, req.TherapeuticClassID, s.repo.GetTherapeuticClass, resTherapeuticClass); err != nil {
+		if err := requireReference(ctx, req.TherapeuticClassID, s.repo.GetTherapeuticClassForUpdate, resTherapeuticClass); err != nil {
 			return err
 		}
 		created, err := s.repo.CreateGenericMedicine(ctx, g)
@@ -100,7 +100,7 @@ func (s *Service) UpdateGenericMedicine(ctx context.Context, id uuid.UUID, req *
 			return mapReadErr(err, resGenericMedicine)
 		}
 		applyGenericMedicinePatch(current, req)
-		if err := requireReference(ctx, current.TherapeuticClassID, s.repo.GetTherapeuticClass, resTherapeuticClass); err != nil {
+		if err := requireReference(ctx, current.TherapeuticClassID, s.repo.GetTherapeuticClassForUpdate, resTherapeuticClass); err != nil {
 			return err
 		}
 		saved, err := s.repo.UpdateGenericMedicine(ctx, current)
