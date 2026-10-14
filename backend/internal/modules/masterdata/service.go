@@ -152,7 +152,9 @@ func ruleViolation(err error) error {
 // Cross-row reference checks
 // ---------------------------------------------------------------------------
 
-// requireReference proves that a foreign key points at a live row.
+// requireReference proves that a foreign key points at a live row and locks that
+// row until the caller's transaction ends. The lock serializes the reference with
+// concurrent soft deletes, which PostgreSQL foreign keys alone cannot observe.
 //
 // A nil reference means "no parent", which is legal on every optional foreign key
 // in this schema and needs no check. Otherwise the referenced row must exist and
@@ -166,13 +168,13 @@ func ruleViolation(err error) error {
 func requireReference[T any](
 	ctx context.Context,
 	ref *uuid.UUID,
-	get func(context.Context, uuid.UUID) (*T, error),
+	getForUpdate func(context.Context, uuid.UUID) (*T, error),
 	resource string,
 ) error {
 	if ref == nil {
 		return nil
 	}
-	if _, err := get(ctx, *ref); err != nil {
+	if _, err := getForUpdate(ctx, *ref); err != nil {
 		if errors.Is(err, db.ErrNoRows) {
 			return errs.NotFound(resource)
 		}
