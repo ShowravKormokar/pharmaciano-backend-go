@@ -754,7 +754,7 @@ func TestProbeMethodsAreTypedPerResource(t *testing.T) {
 		"IsPackageTypeReferenced", "IsUnitTypeReferenced", "IsStorageConditionReferenced",
 		"IsTaxRateReferenced", "IsGenericMedicineReferenced",
 		"HasProductCategoryChildren", "HasUnitTypeChildren",
-		"HasDrugGroupChildren", "HasDrugClassChildren", "HasTherapeuticClassChildren",
+		"HasRouteChildren", "HasDrugGroupChildren", "HasDrugClassChildren", "HasTherapeuticClassChildren",
 	} {
 		if _, ok := repo.MethodByName(name); !ok {
 			t.Errorf("Repository is missing %s", name)
