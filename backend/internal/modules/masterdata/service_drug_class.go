@@ -31,7 +31,7 @@ func (s *Service) CreateDrugClass(ctx context.Context, req *CreateDrugClassReque
 
 	var out *DrugClass
 	err := s.db.WithTx(ctx, func(ctx context.Context) error {
-		if err := requireReference(ctx, req.DrugGroupID, s.repo.GetDrugGroup, resDrugGroup); err != nil {
+		if err := requireReference(ctx, req.DrugGroupID, s.repo.GetDrugGroupForUpdate, resDrugGroup); err != nil {
 			return err
 		}
 		created, err := s.repo.CreateDrugClass(ctx, c)
@@ -90,7 +90,7 @@ func (s *Service) UpdateDrugClass(ctx context.Context, id uuid.UUID, req *Update
 			return mapReadErr(err, resDrugClass)
 		}
 		applyDrugClassPatch(current, req)
-		if err := requireReference(ctx, current.DrugGroupID, s.repo.GetDrugGroup, resDrugGroup); err != nil {
+		if err := requireReference(ctx, current.DrugGroupID, s.repo.GetDrugGroupForUpdate, resDrugGroup); err != nil {
 			return err
 		}
 		saved, err := s.repo.UpdateDrugClass(ctx, current)
