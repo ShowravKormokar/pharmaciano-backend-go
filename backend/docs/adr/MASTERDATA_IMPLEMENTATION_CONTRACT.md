@@ -1,6 +1,8 @@
 # MasterData Implementation Contract (Phase 01 — Architecture & Contract Freeze)
 
-**Status:** Phases 01–04 complete. Service layer not started.
+**Status:** Contract decisions remain authoritative; the current working tree now includes the
+service, handler, routes, API registration, and OpenAPI source/bundled spec. The phase descriptions
+below preserve the original implementation history unless superseded by this amendment.
 **Phase 02 amendment (2026-10-02):** C-02 and C-07 are now **decided** and Phase 02 has been
 implemented. See §26 "Phase 02 Outcome" for what changed and what was deliberately left alone.
 **Phase 03 amendment (2026-10-02):** DTO and validation layer implemented; two defects in the
@@ -12,6 +14,16 @@ initially written against were wrong and are recorded in §28.2. See §28 "Phase
 sequential scan despite 000020's indexes (C-07 was not actually closed — §29.2), pagination could
 return the wrong page (§29.1), and the repository layer was restructured so behaviour exists once
 (§29.3). See §29.
+**Implementation audit amendment:** Phases 05–08 have since been implemented in the current
+working tree: MasterData CRUD services/handlers/routes are registered in the API composition root,
+and `/master` paths and schemas are present in the split and served OpenAPI specs. This does not
+close the contract's explicitly unresolved business decisions. CI now provisions a dedicated
+MasterData PostgreSQL test database and runs the DSN-gated tests; local DB-backed verification
+still depends on access to a disposable database. The OpenAPI lint passes with 31 warnings on the
+bundled contract, while oapi-codegen generation/drift remains to be run. The Makefile and OpenAPI
+workflow now pass the bundled spec explicitly and check both generated outputs. Statements below
+describing the pre-implementation repository state and original phase sequence are historical
+snapshots.
 **Applies to:** `backend/internal/modules/masterdata`
 **Repository state inspected:** `main` @ `5463f07` (working tree clean)
 **Inspection date:** 2026-10-02
@@ -192,7 +204,7 @@ wired**. All served endpoints are hand-written Gin handlers. There are no Swagge
 anywhere. The contract-first pipeline governs the **spec**; it does not generate MasterData's
 handler types.
 
-`api/openapi/openapi.yaml` currently declares 7 tags and no `/master` path.
+At the original inspection, `api/openapi/openapi.yaml` declared 7 tags and no `/master` path.
 
 ### 2.12 Redis
 
@@ -929,8 +941,9 @@ reusable after deletion; `httpx.NoContent` documented as *"used by soft-delete e
 
 | Resource | Hard `RESTRICT` inbound? | Contract |
 |---|---|---|
-| ProductCategory | **Yes** — `medicines.category_id` (000006:11) | `DELETE` must check references and refuse with 409 while referenced; recommend deactivation. **UNRESOLVED: exact check** (see below) |
-| Route, DosageForm, UnitType, StorageCondition, TaxRate, PackageType, DrugGroup, DrugClass, TherapeuticClass, GenericMedicine | No — inbound FKs are all `SET NULL` | `DELETE` is permitted; dependents degrade to NULL |
+| ProductCategory | **Yes** — `medicines.category_id` (000006:11) | `DELETE` checks live medicines and live child categories and refuses with 409 while referenced; recommend deactivation. |
+| Route | No — `medicines.route_id` and `dosage_forms.route_id` are `SET NULL` | `DELETE` is refused while a live medicine or dosage form references it; recommend deactivation |
+| DosageForm, UnitType, StorageCondition, TaxRate, PackageType, DrugGroup, DrugClass, TherapeuticClass, GenericMedicine | No — inbound FKs are `SET NULL` | `DELETE` is permitted only when no live medicine or MasterData child relationship would be orphaned |
 
 Because soft delete never fires a FK constraint, the RESTRICT above is only reachable through a
 hard delete, which is unavailable. So the ProductCategory case is a **policy** decision, not a
@@ -938,9 +951,9 @@ constraint. The cheapest policy consistent with `API.md:292` ("Archive, never re
 semantics") is:
 
 > **FROZEN (D-19): `DELETE` on any in-scope resource performs a soft delete. The service first
-> checks whether the row is still referenced by any live `medicines` / `medicine_variants` /
-> `inventory_batches` / `purchases` row; if so it returns 409 `CONFLICT` with a message
-> directing the caller to `PATCH {is_active:false}` instead. `is_active=false` always succeeds.**
+> checks whether the row is still referenced by any live downstream row or live MasterData child;
+> if so it returns 409 `CONFLICT` with a message directing the caller to
+> `PATCH {is_active:false}` instead. `is_active=false` always succeeds.**
 
 **RESOLVED (C-11) — Phase 04 confirmed the columns from the migrations.** The reference check is a
 single `SELECT EXISTS`, but **not** against four tables. Only `medicines` references the eleven
@@ -968,17 +981,21 @@ Three consequences, all now binding:
    cannot observe `deleted_at`. `medicines.category_id` being `ON DELETE RESTRICT` protects only
    against a hard delete, so nothing at the database layer stops a category being soft-deleted
    underneath stocked medicines.
-2. **Only eight resources have a probe.** The three taxonomy rows have nothing to be referenced
-   *by* `medicines`. They do have children (`drug_classes` → `therapeutic_classes` →
-   `generic_medicines`), all `ON DELETE SET NULL`, which this soft delete equally does not fire —
-   so Phase 05 must check children separately, walking down to `generic_medicines`, which *is*
-   referenced.
+2. **Eight resources have a medicine probe, and parent relationships need separate probes.**
+   The three taxonomy rows have nothing to be referenced *by* `medicines`; they do have children
+   (`drug_classes` → `therapeutic_classes` → `generic_medicines`). Other live MasterData child
+   relationships are `dosage_forms.route_id`, `product_categories.parent_id` and
+   `unit_types.base_unit_id`. `ON DELETE SET NULL` does not run for a soft delete, so all these
+   child relationships must be checked separately.
 3. **The probe filters `deleted_at IS NULL` on the referencing side**, so a soft-deleted medicine
    stops counting as a reference and the resource becomes deletable.
 
-Implemented as `Repository.Is<Resource>Referenced`, one per referenced resource, each passing a
-literal column name to the shared `referencedByMedicine` helper. Verified against a live database
-(`TestIntegrationReferenceProbes`).
+Implemented as `Repository.Is<Resource>Referenced`, one per resource referenced by medicines,
+each passing a literal column name to the shared `referencedByMedicine` helper. Hierarchy and
+parent-child probes use `referencedByChild`; the route→dosage-form probe is also required because
+soft deletion does not fire its `ON DELETE SET NULL` FK. Verified against a live database
+(`TestIntegrationReferenceProbes`); the route-child and concurrent-reference regression tests are
+DSN-gated by `MASTERDATA_TEST_DSN`.
 
 ---
 
@@ -1035,9 +1052,10 @@ literal column name to the shared `referencedByMedicine` helper. Verified agains
 
 ---
 
-## 23. Implementation Sequence
+## 23. Original Implementation Sequence (Historical)
 
-Frozen for MasterData. Phases 02–10 are **not authorized to begin** until the items marked
+This was the original implementation sequence and is superseded by the implementation audit
+amendment above. At the time it was written, Phases 02–10 were **not authorized to begin** until the items marked
 UNRESOLVED that gate them are decided (C-02 gates 02; C-07 gates 04; C-11 gates 04; C-10 gates
 09).
 
