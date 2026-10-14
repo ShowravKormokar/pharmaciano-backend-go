@@ -118,23 +118,19 @@ jobs:
             --config=api/openapi/config/redocly.yaml
 
       - name: Generate server code
-        run: oapi-codegen generate --config=api/openapi/config/oapi-codegen.yaml
+        run: oapi-codegen generate --config=api/openapi/config/oapi-codegen.yaml build/openapi.bundled.yaml
 
       - name: Generate client SDK
-        run: oapi-codegen generate --config=api/openapi/config/client.yaml
+        run: oapi-codegen generate --config=api/openapi/config/client.yaml build/openapi.bundled.yaml
 
       # Generated trees must equal the committed copy. Any diff means the commit
       # forgot `make oapi-generate` (or hand-edited generated output) — fail.
       - name: Detect generator drift
         run: |
           set -euo pipefail
-          gen_changed=false
-          if ! git diff --exit-code -- internal/api/gen internal/api/client > /dev/null; then
-            gen_changed=true
-          fi
-          if [ "$gen_changed" = "true" ]; then
+          if [ -n "$(git status --porcelain --untracked-files=all -- internal/api/gen internal/api/client)" ]; then
             echo "::error::Generated code is out of date. Run 'make oapi-generate' and 'make oapi-client' on the contract and commit the output."
-            git --no-pager diff --stat -- internal/api/gen internal/api/client
+            git status --short --untracked-files=all -- internal/api/gen internal/api/client
             exit 1
           fi
           echo "OK: generated code matches the contract"
