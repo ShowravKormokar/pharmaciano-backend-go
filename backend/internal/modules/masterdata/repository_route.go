@@ -86,3 +86,11 @@ func (r *Repository) SoftDeleteRoute(ctx context.Context, id uuid.UUID) (bool, e
 func (r *Repository) IsRouteReferenced(ctx context.Context, id uuid.UUID) (bool, error) {
 	return referencedByMedicine(ctx, r, "route_id", id)
 }
+
+// HasRouteChildren reports whether any live dosage form still names this route.
+//
+// A soft delete does not activate dosage_forms.route_id's ON DELETE SET NULL
+// action, so the service must refuse to hide a route that remains in use.
+func (r *Repository) HasRouteChildren(ctx context.Context, id uuid.UUID) (bool, error) {
+	return referencedByChild(ctx, r, "dosage_forms", "route_id", id)
+}

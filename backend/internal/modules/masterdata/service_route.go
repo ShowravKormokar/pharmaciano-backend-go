@@ -89,10 +89,9 @@ func (s *Service) UpdateRoute(ctx context.Context, id uuid.UUID, req *UpdateRout
 
 // DeleteRoute soft-deletes a route.
 //
-// Nothing points at a route other than medicines.route_id, which is ON DELETE SET
-// NULL — but a soft delete never fires a foreign key, so the D-19 probe is still
-// consulted: a route that stocked medicines sell in is refused and the caller is
-// pointed at is_active=false instead.
+// A route may be referenced by medicines.route_id or dosage_forms.route_id. A soft
+// delete never fires either foreign key's ON DELETE action, so both references are
+// checked before the route is hidden.
 func (s *Service) DeleteRoute(ctx context.Context, id uuid.UUID) error {
 	if err := s.requireSuperAdmin(ctx); err != nil {
 		return err
@@ -101,7 +100,10 @@ func (s *Service) DeleteRoute(ctx context.Context, id uuid.UUID) error {
 		if _, err := s.repo.GetRouteForUpdate(ctx, id); err != nil {
 			return mapReadErr(err, resRoute)
 		}
-		if err := checkUnreferenced(ctx, resRoute, id, s.repo.IsRouteReferenced); err != nil {
+		if err := checkUnreferenced(ctx, resRoute, id,
+			s.repo.IsRouteReferenced,
+			s.repo.HasRouteChildren,
+		); err != nil {
 			return err
 		}
 		ok, err := s.repo.SoftDeleteRoute(ctx, id)
