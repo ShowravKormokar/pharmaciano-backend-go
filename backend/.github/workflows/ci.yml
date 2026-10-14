@@ -133,6 +133,23 @@ jobs:
             -timeout=5m \
             $(go list ./... | grep -v '/tests/integration' | grep -v '/tests/load')
 
+      - name: Provision isolated MasterData test database
+        env:
+          PGHOST: localhost
+          PGPORT: 5432
+          PGUSER: pharmaciano
+          PGPASSWORD: pharmaciano_ci
+        run: |
+          createdb pharmaciano_masterdata_test
+          migrate -path migrations \
+            -database "postgres://$PGUSER:$PGPASSWORD@$PGHOST:$PGPORT/pharmaciano_masterdata_test?sslmode=disable" \
+            up
+
+      - name: MasterData PostgreSQL integration tests
+        env:
+          MASTERDATA_TEST_DSN: postgres://pharmaciano:pharmaciano_ci@localhost:5432/pharmaciano_masterdata_test?sslmode=disable
+        run: go test -race -count=1 -timeout=10m ./internal/modules/masterdata/...
+
       - name: Integration tests
         run: |
           go test -race -covermode=atomic \
