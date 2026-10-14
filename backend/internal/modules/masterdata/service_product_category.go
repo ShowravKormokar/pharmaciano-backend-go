@@ -42,7 +42,7 @@ func (s *Service) CreateProductCategory(ctx context.Context, req *CreateProductC
 
 	var out *ProductCategory
 	err := s.db.WithTx(ctx, func(ctx context.Context) error {
-		if err := requireReference(ctx, req.ParentID, s.repo.GetProductCategory, resProductCategory); err != nil {
+		if err := requireReference(ctx, req.ParentID, s.repo.GetProductCategoryForUpdate, resProductCategory); err != nil {
 			return err
 		}
 		created, err := s.repo.CreateProductCategory(ctx, c)
@@ -112,7 +112,7 @@ func (s *Service) UpdateProductCategory(ctx context.Context, id uuid.UUID, req *
 		if err := ValidateSelfReference("parent_id", current.ID, current.ParentID); err != nil {
 			return ruleViolation(err)
 		}
-		if err := requireReference(ctx, current.ParentID, s.repo.GetProductCategory, resProductCategory); err != nil {
+		if err := requireReference(ctx, current.ParentID, s.repo.GetProductCategoryForUpdate, resProductCategory); err != nil {
 			return err
 		}
 
