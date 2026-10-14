@@ -208,11 +208,11 @@ oapi-bundle-docs:
 
 # Regenerate Go models + gin strict-server from the bundled spec.
 oapi-generate: $(OAS_BUNDLED)
-	$(OAICODEGEN) generate --config=$(OAS_SPEC_TREE)/config/oapi-codegen.yaml
+	$(OAICODEGEN) generate --config=$(OAS_SPEC_TREE)/config/oapi-codegen.yaml $(OAS_BUNDLED)
 
 # Regenerate the optional typed Go SDK client.
 oapi-client: $(OAS_BUNDLED)
-	$(OAICODEGEN) generate --config=$(OAS_SPEC_TREE)/config/client.yaml
+	$(OAICODEGEN) generate --config=$(OAS_SPEC_TREE)/config/client.yaml $(OAS_BUNDLED)
 
 # kin-openapi runtime validation build (enforces contract inside a tagged build).
 oapi-validate:
@@ -237,15 +237,20 @@ oapi-diff: $(OAS_BUNDLED)
 # Drift gate for CI: generate into a scratch dir and diff against committed output.
 oapi-drift: $(OAS_BUNDLED)
 	@mkdir -p $(OAS_TMP)/drift
-	@cp $(OAS_SPEC_TREE)/config/oapi-codegen.yaml $(OAS_TMP)/drift/config.yaml
+	@cp $(OAS_SPEC_TREE)/config/oapi-codegen.yaml $(OAS_TMP)/drift/server-config.yaml
 	@sed -i 's#output: internal/api/gen/v1/api.gen.go#output: build/drift/api.gen.go#' \
-		$(OAS_TMP)/drift/config.yaml
-	rm -f build/drift/api.gen.go
-	$(OAICODEGEN) generate --config=$(OAS_TMP)/drift/config.yaml
-	@set -e; if ! diff -q internal/api/gen/v1/api.gen.go build/drift/api.gen.go >/dev/null; then \
-		echo "DRIFT: api.gen.go is out of date — run 'make oapi-generate' and commit."; \
+		$(OAS_TMP)/drift/server-config.yaml
+	@cp $(OAS_SPEC_TREE)/config/client.yaml $(OAS_TMP)/drift/client-config.yaml
+	@sed -i 's#output: internal/api/client/v1/client.gen.go#output: build/drift/client.gen.go#' \
+		$(OAS_TMP)/drift/client-config.yaml
+	rm -f build/drift/api.gen.go build/drift/client.gen.go
+	$(OAICODEGEN) generate --config=$(OAS_TMP)/drift/server-config.yaml $(OAS_BUNDLED)
+	$(OAICODEGEN) generate --config=$(OAS_TMP)/drift/client-config.yaml $(OAS_BUNDLED)
+	@set -e; if ! diff -q internal/api/gen/v1/api.gen.go build/drift/api.gen.go >/dev/null \
+		|| ! diff -q internal/api/client/v1/client.gen.go build/drift/client.gen.go >/dev/null; then \
+		echo "DRIFT: generated API code is out of date — run 'make oapi-generate oapi-client' and commit the output."; \
 		exit 1; fi
-	@echo "no drift: generated code matches the contract"
+	@echo "no drift: generated server and client code match the contract"
 
 # Default dev view: serve Scalar reference docs against :6060.
 oapi-serve: $(OAS_BUNDLED)
