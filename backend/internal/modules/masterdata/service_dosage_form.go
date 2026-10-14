@@ -35,7 +35,7 @@ func (s *Service) CreateDosageForm(ctx context.Context, req *CreateDosageFormReq
 
 	var out *DosageForm
 	err := s.db.WithTx(ctx, func(ctx context.Context) error {
-		if err := requireReference(ctx, req.RouteID, s.repo.GetRoute, resRoute); err != nil {
+		if err := requireReference(ctx, req.RouteID, s.repo.GetRouteForUpdate, resRoute); err != nil {
 			return err
 		}
 		created, err := s.repo.CreateDosageForm(ctx, f)
@@ -97,7 +97,7 @@ func (s *Service) UpdateDosageForm(ctx context.Context, id uuid.UUID, req *Updat
 			return mapReadErr(err, resDosageForm)
 		}
 		applyDosageFormPatch(current, req)
-		if err := requireReference(ctx, current.RouteID, s.repo.GetRoute, resRoute); err != nil {
+		if err := requireReference(ctx, current.RouteID, s.repo.GetRouteForUpdate, resRoute); err != nil {
 			return err
 		}
 		saved, err := s.repo.UpdateDosageForm(ctx, current)
