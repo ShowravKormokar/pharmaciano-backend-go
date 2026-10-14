@@ -68,6 +68,8 @@ tags:
     description: Tenant identity and settings.
   - name: warehouses
     description: Inventory storage locations.
+  - name: masterdata
+    description: Central reference catalogues shared across organizations.
   - name: rbac
     description: Roles and permissions.
 
@@ -143,6 +145,50 @@ paths:
     $ref: 'paths/warehouses.yaml#/~1warehouses'
   /warehouses/{id}:
     $ref: 'paths/warehouses.yaml#/~1warehouses~1{id}'
+  /master/product-categories:
+    $ref: 'paths/masterdata.yaml#/~1master~1product-categories'
+  /master/product-categories/{id}:
+    $ref: 'paths/masterdata.yaml#/~1master~1product-categories~1{id}'
+  /master/routes:
+    $ref: 'paths/masterdata.yaml#/~1master~1routes'
+  /master/routes/{id}:
+    $ref: 'paths/masterdata.yaml#/~1master~1routes~1{id}'
+  /master/dosage-forms:
+    $ref: 'paths/masterdata.yaml#/~1master~1dosage-forms'
+  /master/dosage-forms/{id}:
+    $ref: 'paths/masterdata.yaml#/~1master~1dosage-forms~1{id}'
+  /master/package-types:
+    $ref: 'paths/masterdata.yaml#/~1master~1package-types'
+  /master/package-types/{id}:
+    $ref: 'paths/masterdata.yaml#/~1master~1package-types~1{id}'
+  /master/unit-types:
+    $ref: 'paths/masterdata.yaml#/~1master~1unit-types'
+  /master/unit-types/{id}:
+    $ref: 'paths/masterdata.yaml#/~1master~1unit-types~1{id}'
+  /master/storage-conditions:
+    $ref: 'paths/masterdata.yaml#/~1master~1storage-conditions'
+  /master/storage-conditions/{id}:
+    $ref: 'paths/masterdata.yaml#/~1master~1storage-conditions~1{id}'
+  /master/tax-rates:
+    $ref: 'paths/masterdata.yaml#/~1master~1tax-rates'
+  /master/tax-rates/{id}:
+    $ref: 'paths/masterdata.yaml#/~1master~1tax-rates~1{id}'
+  /master/drug-groups:
+    $ref: 'paths/masterdata.yaml#/~1master~1drug-groups'
+  /master/drug-groups/{id}:
+    $ref: 'paths/masterdata.yaml#/~1master~1drug-groups~1{id}'
+  /master/drug-classes:
+    $ref: 'paths/masterdata.yaml#/~1master~1drug-classes'
+  /master/drug-classes/{id}:
+    $ref: 'paths/masterdata.yaml#/~1master~1drug-classes~1{id}'
+  /master/therapeutic-classes:
+    $ref: 'paths/masterdata.yaml#/~1master~1therapeutic-classes'
+  /master/therapeutic-classes/{id}:
+    $ref: 'paths/masterdata.yaml#/~1master~1therapeutic-classes~1{id}'
+  /master/generic-medicines:
+    $ref: 'paths/masterdata.yaml#/~1master~1generic-medicines'
+  /master/generic-medicines/{id}:
+    $ref: 'paths/masterdata.yaml#/~1master~1generic-medicines~1{id}'
   /roles:
     $ref: 'paths/rbac.yaml#/~1roles'
   /roles/{id}:
@@ -258,6 +304,79 @@ components:
       $ref: 'components/schemas/warehouse.yaml#/Warehouse'
     WarehouseListItem:
       $ref: 'components/schemas/warehouse.yaml#/WarehouseListItem'
+    # masterdata
+    MasterDataCreateBase:
+      $ref: 'components/schemas/masterdata.yaml#/MasterDataCreateBase'
+    MasterDataUpdateBase:
+      $ref: 'components/schemas/masterdata.yaml#/MasterDataUpdateBase'
+    MasterDataResponseBase:
+      $ref: 'components/schemas/masterdata.yaml#/MasterDataResponseBase'
+    CreateProductCategoryRequest:
+      $ref: 'components/schemas/masterdata.yaml#/CreateProductCategoryRequest'
+    UpdateProductCategoryRequest:
+      $ref: 'components/schemas/masterdata.yaml#/UpdateProductCategoryRequest'
+    ProductCategoryResponse:
+      $ref: 'components/schemas/masterdata.yaml#/ProductCategoryResponse'
+    CreateRouteRequest:
+      $ref: 'components/schemas/masterdata.yaml#/CreateRouteRequest'
+    UpdateRouteRequest:
+      $ref: 'components/schemas/masterdata.yaml#/UpdateRouteRequest'
+    RouteResponse:
+      $ref: 'components/schemas/masterdata.yaml#/RouteResponse'
+    CreateDosageFormRequest:
+      $ref: 'components/schemas/masterdata.yaml#/CreateDosageFormRequest'
+    UpdateDosageFormRequest:
+      $ref: 'components/schemas/masterdata.yaml#/UpdateDosageFormRequest'
+    DosageFormResponse:
+      $ref: 'components/schemas/masterdata.yaml#/DosageFormResponse'
+    CreatePackageTypeRequest:
+      $ref: 'components/schemas/masterdata.yaml#/CreatePackageTypeRequest'
+    UpdatePackageTypeRequest:
+      $ref: 'components/schemas/masterdata.yaml#/UpdatePackageTypeRequest'
+    PackageTypeResponse:
+      $ref: 'components/schemas/masterdata.yaml#/PackageTypeResponse'
+    CreateUnitTypeRequest:
+      $ref: 'components/schemas/masterdata.yaml#/CreateUnitTypeRequest'
+    UpdateUnitTypeRequest:
+      $ref: 'components/schemas/masterdata.yaml#/UpdateUnitTypeRequest'
+    UnitTypeResponse:
+      $ref: 'components/schemas/masterdata.yaml#/UnitTypeResponse'
+    CreateStorageConditionRequest:
+      $ref: 'components/schemas/masterdata.yaml#/CreateStorageConditionRequest'
+    UpdateStorageConditionRequest:
+      $ref: 'components/schemas/masterdata.yaml#/UpdateStorageConditionRequest'
+    StorageConditionResponse:
+      $ref: 'components/schemas/masterdata.yaml#/StorageConditionResponse'
+    CreateTaxRateRequest:
+      $ref: 'components/schemas/masterdata.yaml#/CreateTaxRateRequest'
+    UpdateTaxRateRequest:
+      $ref: 'components/schemas/masterdata.yaml#/UpdateTaxRateRequest'
+    TaxRateResponse:
+      $ref: 'components/schemas/masterdata.yaml#/TaxRateResponse'
+    CreateDrugGroupRequest:
+      $ref: 'components/schemas/masterdata.yaml#/CreateDrugGroupRequest'
+    UpdateDrugGroupRequest:
+      $ref: 'components/schemas/masterdata.yaml#/UpdateDrugGroupRequest'
+    DrugGroupResponse:
+      $ref: 'components/schemas/masterdata.yaml#/DrugGroupResponse'
+    CreateDrugClassRequest:
+      $ref: 'components/schemas/masterdata.yaml#/CreateDrugClassRequest'
+    UpdateDrugClassRequest:
+      $ref: 'components/schemas/masterdata.yaml#/UpdateDrugClassRequest'
+    DrugClassResponse:
+      $ref: 'components/schemas/masterdata.yaml#/DrugClassResponse'
+    CreateTherapeuticClassRequest:
+      $ref: 'components/schemas/masterdata.yaml#/CreateTherapeuticClassRequest'
+    UpdateTherapeuticClassRequest:
+      $ref: 'components/schemas/masterdata.yaml#/UpdateTherapeuticClassRequest'
+    TherapeuticClassResponse:
+      $ref: 'components/schemas/masterdata.yaml#/TherapeuticClassResponse'
+    CreateGenericMedicineRequest:
+      $ref: 'components/schemas/masterdata.yaml#/CreateGenericMedicineRequest'
+    UpdateGenericMedicineRequest:
+      $ref: 'components/schemas/masterdata.yaml#/UpdateGenericMedicineRequest'
+    GenericMedicineResponse:
+      $ref: 'components/schemas/masterdata.yaml#/GenericMedicineResponse'
     # rbac
     CreateRoleRequest:
       $ref: 'components/schemas/rbac.yaml#/CreateRoleRequest'
