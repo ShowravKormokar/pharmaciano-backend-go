@@ -42,7 +42,7 @@ func (s *Service) CreateUnitType(ctx context.Context, req *CreateUnitTypeRequest
 
 	var out *UnitType
 	err := s.db.WithTx(ctx, func(ctx context.Context) error {
-		if err := requireReference(ctx, req.BaseUnitID, s.repo.GetUnitType, resUnitType); err != nil {
+		if err := requireReference(ctx, req.BaseUnitID, s.repo.GetUnitTypeForUpdate, resUnitType); err != nil {
 			return err
 		}
 		created, err := s.repo.CreateUnitType(ctx, u)
@@ -115,7 +115,7 @@ func (s *Service) UpdateUnitType(ctx context.Context, id uuid.UUID, req *UpdateU
 		if err := ValidateSelfReference("base_unit_id", current.ID, current.BaseUnitID); err != nil {
 			return ruleViolation(err)
 		}
-		if err := requireReference(ctx, current.BaseUnitID, s.repo.GetUnitType, resUnitType); err != nil {
+		if err := requireReference(ctx, current.BaseUnitID, s.repo.GetUnitTypeForUpdate, resUnitType); err != nil {
 			return err
 		}
 		saved, err := s.repo.UpdateUnitType(ctx, current)
