@@ -1,0 +1,565 @@
+# MasterData DTOs — mirrors internal/modules/masterdata/dto.go.
+
+MasterDataCreateBase:
+  type: object
+  required: [code, name]
+  properties:
+    code:
+      type: string
+      minLength: 1
+      maxLength: 40
+      description: Immutable after creation and unique among live rows.
+    name:
+      type: string
+      minLength: 1
+      description: Required display name. Maximum length is resource-specific.
+
+MasterDataUpdateBase:
+  type: object
+  description: All properties are optional; code cannot be changed.
+
+MasterDataResponseBase:
+  type: object
+  required: [id, code, name, is_active, created_at, updated_at]
+  properties:
+    id:
+      type: string
+      format: uuid
+    code:
+      type: string
+    name:
+      type: string
+    is_active:
+      type: boolean
+    created_at:
+      type: string
+      format: date-time
+    updated_at:
+      type: string
+      format: date-time
+
+CreateProductCategoryRequest:
+  allOf:
+    - $ref: '#/MasterDataCreateBase'
+    - type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 160
+        parent_id:
+          type: [string, 'null']
+          format: uuid
+        description:
+          type: [string, 'null']
+        sort_order:
+          type: [integer, 'null']
+          minimum: 0
+        is_active:
+          type: [boolean, 'null']
+
+UpdateProductCategoryRequest:
+  allOf:
+    - $ref: '#/MasterDataUpdateBase'
+    - type: object
+      properties:
+        name:
+          type: [string, 'null']
+          minLength: 1
+          maxLength: 160
+        parent_id:
+          type: [string, 'null']
+          format: uuid
+          description: Null is treated as omitted; use a root assignment only where supported.
+        description:
+          type: [string, 'null']
+        sort_order:
+          type: [integer, 'null']
+          minimum: 0
+        is_active:
+          type: [boolean, 'null']
+
+ProductCategoryResponse:
+  allOf:
+    - $ref: '#/MasterDataResponseBase'
+    - type: object
+      properties:
+        parent_id:
+          type: string
+          format: uuid
+        description:
+          type: string
+        sort_order:
+          type: integer
+
+CreateRouteRequest:
+  allOf:
+    - $ref: '#/MasterDataCreateBase'
+    - type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        description:
+          type: [string, 'null']
+        is_active:
+          type: [boolean, 'null']
+
+UpdateRouteRequest:
+  allOf:
+    - $ref: '#/MasterDataUpdateBase'
+    - type: object
+      properties:
+        name:
+          type: [string, 'null']
+          minLength: 1
+          maxLength: 120
+        description:
+          type: [string, 'null']
+        is_active:
+          type: [boolean, 'null']
+
+RouteResponse:
+  allOf:
+    - $ref: '#/MasterDataResponseBase'
+    - type: object
+      properties:
+        description:
+          type: string
+
+CreateDosageFormRequest:
+  allOf:
+    - $ref: '#/MasterDataCreateBase'
+    - type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        route_id:
+          type: [string, 'null']
+          format: uuid
+        description:
+          type: [string, 'null']
+        is_active:
+          type: [boolean, 'null']
+
+UpdateDosageFormRequest:
+  allOf:
+    - $ref: '#/MasterDataUpdateBase'
+    - type: object
+      properties:
+        name:
+          type: [string, 'null']
+          minLength: 1
+          maxLength: 120
+        route_id:
+          type: [string, 'null']
+          format: uuid
+          description: Null is treated as omitted.
+        description:
+          type: [string, 'null']
+        is_active:
+          type: [boolean, 'null']
+
+DosageFormResponse:
+  allOf:
+    - $ref: '#/MasterDataResponseBase'
+    - type: object
+      properties:
+        route_id:
+          type: string
+          format: uuid
+        description:
+          type: string
+
+CreatePackageTypeRequest:
+  allOf:
+    - $ref: '#/MasterDataCreateBase'
+    - type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        description:
+          type: [string, 'null']
+        is_active:
+          type: [boolean, 'null']
+
+UpdatePackageTypeRequest:
+  allOf:
+    - $ref: '#/MasterDataUpdateBase'
+    - type: object
+      properties:
+        name:
+          type: [string, 'null']
+          minLength: 1
+          maxLength: 120
+        description:
+          type: [string, 'null']
+        is_active:
+          type: [boolean, 'null']
+
+PackageTypeResponse:
+  allOf:
+    - $ref: '#/MasterDataResponseBase'
+    - type: object
+      properties:
+        description:
+          type: string
+
+CreateUnitTypeRequest:
+  allOf:
+    - $ref: '#/MasterDataCreateBase'
+    - type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        symbol:
+          type: [string, 'null']
+          maxLength: 20
+        base_unit_id:
+          type: [string, 'null']
+          format: uuid
+        conversion_factor:
+          type: [number, 'null']
+          format: double
+          minimum: -999999999.999999
+          maximum: 999999999.999999
+        is_active:
+          type: [boolean, 'null']
+
+UpdateUnitTypeRequest:
+  allOf:
+    - $ref: '#/MasterDataUpdateBase'
+    - type: object
+      properties:
+        name:
+          type: [string, 'null']
+          minLength: 1
+          maxLength: 120
+        symbol:
+          type: [string, 'null']
+          maxLength: 20
+        base_unit_id:
+          type: [string, 'null']
+          format: uuid
+          description: Null is treated as omitted.
+        conversion_factor:
+          type: [number, 'null']
+          format: double
+          minimum: -999999999.999999
+          maximum: 999999999.999999
+        is_active:
+          type: [boolean, 'null']
+
+UnitTypeResponse:
+  allOf:
+    - $ref: '#/MasterDataResponseBase'
+    - type: object
+      properties:
+        symbol:
+          type: string
+        base_unit_id:
+          type: string
+          format: uuid
+        conversion_factor:
+          type: number
+          format: double
+
+CreateStorageConditionRequest:
+  allOf:
+    - $ref: '#/MasterDataCreateBase'
+    - type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        min_temp_celsius:
+          type: [number, 'null']
+          format: double
+          minimum: -999.99
+          maximum: 999.99
+        max_temp_celsius:
+          type: [number, 'null']
+          format: double
+          minimum: -999.99
+          maximum: 999.99
+        description:
+          type: [string, 'null']
+        is_active:
+          type: [boolean, 'null']
+
+UpdateStorageConditionRequest:
+  allOf:
+    - $ref: '#/MasterDataUpdateBase'
+    - type: object
+      properties:
+        name:
+          type: [string, 'null']
+          minLength: 1
+          maxLength: 120
+        min_temp_celsius:
+          type: [number, 'null']
+          format: double
+          minimum: -999.99
+          maximum: 999.99
+        max_temp_celsius:
+          type: [number, 'null']
+          format: double
+          minimum: -999.99
+          maximum: 999.99
+        description:
+          type: [string, 'null']
+        is_active:
+          type: [boolean, 'null']
+
+StorageConditionResponse:
+  allOf:
+    - $ref: '#/MasterDataResponseBase'
+    - type: object
+      properties:
+        min_temp_celsius:
+          type: number
+          format: double
+        max_temp_celsius:
+          type: number
+          format: double
+        description:
+          type: string
+
+CreateTaxRateRequest:
+  allOf:
+    - $ref: '#/MasterDataCreateBase'
+    - type: object
+      required: [rate_percent]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        rate_percent:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 999.999
+        is_default:
+          type: [boolean, 'null']
+        is_active:
+          type: [boolean, 'null']
+
+UpdateTaxRateRequest:
+  allOf:
+    - $ref: '#/MasterDataUpdateBase'
+    - type: object
+      properties:
+        name:
+          type: [string, 'null']
+          minLength: 1
+          maxLength: 120
+        rate_percent:
+          type: [number, 'null']
+          format: double
+          minimum: 0
+          maximum: 999.999
+        is_default:
+          type: [boolean, 'null']
+        is_active:
+          type: [boolean, 'null']
+
+TaxRateResponse:
+  allOf:
+    - $ref: '#/MasterDataResponseBase'
+    - type: object
+      required: [rate_percent, is_default]
+      properties:
+        rate_percent:
+          type: number
+          format: double
+        is_default:
+          type: boolean
+
+CreateDrugGroupRequest:
+  allOf:
+    - $ref: '#/MasterDataCreateBase'
+    - type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 160
+        description:
+          type: [string, 'null']
+        is_active:
+          type: [boolean, 'null']
+
+UpdateDrugGroupRequest:
+  allOf:
+    - $ref: '#/MasterDataUpdateBase'
+    - type: object
+      properties:
+        name:
+          type: [string, 'null']
+          minLength: 1
+          maxLength: 160
+        description:
+          type: [string, 'null']
+        is_active:
+          type: [boolean, 'null']
+
+DrugGroupResponse:
+  allOf:
+    - $ref: '#/MasterDataResponseBase'
+    - type: object
+      properties:
+        description:
+          type: string
+
+CreateDrugClassRequest:
+  allOf:
+    - $ref: '#/MasterDataCreateBase'
+    - type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 160
+        drug_group_id:
+          type: [string, 'null']
+          format: uuid
+        description:
+          type: [string, 'null']
+        is_active:
+          type: [boolean, 'null']
+
+UpdateDrugClassRequest:
+  allOf:
+    - $ref: '#/MasterDataUpdateBase'
+    - type: object
+      properties:
+        name:
+          type: [string, 'null']
+          minLength: 1
+          maxLength: 160
+        drug_group_id:
+          type: [string, 'null']
+          format: uuid
+          description: Null is treated as omitted.
+        description:
+          type: [string, 'null']
+        is_active:
+          type: [boolean, 'null']
+
+DrugClassResponse:
+  allOf:
+    - $ref: '#/MasterDataResponseBase'
+    - type: object
+      properties:
+        drug_group_id:
+          type: string
+          format: uuid
+        description:
+          type: string
+
+CreateTherapeuticClassRequest:
+  allOf:
+    - $ref: '#/MasterDataCreateBase'
+    - type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 160
+        drug_class_id:
+          type: [string, 'null']
+          format: uuid
+        description:
+          type: [string, 'null']
+        is_active:
+          type: [boolean, 'null']
+
+UpdateTherapeuticClassRequest:
+  allOf:
+    - $ref: '#/MasterDataUpdateBase'
+    - type: object
+      properties:
+        name:
+          type: [string, 'null']
+          minLength: 1
+          maxLength: 160
+        drug_class_id:
+          type: [string, 'null']
+          format: uuid
+          description: Null is treated as omitted.
+        description:
+          type: [string, 'null']
+        is_active:
+          type: [boolean, 'null']
+
+TherapeuticClassResponse:
+  allOf:
+    - $ref: '#/MasterDataResponseBase'
+    - type: object
+      properties:
+        drug_class_id:
+          type: string
+          format: uuid
+        description:
+          type: string
+
+CreateGenericMedicineRequest:
+  allOf:
+    - $ref: '#/MasterDataCreateBase'
+    - type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        description:
+          type: [string, 'null']
+        therapeutic_class_id:
+          type: [string, 'null']
+          format: uuid
+        is_controlled:
+          type: [boolean, 'null']
+        is_active:
+          type: [boolean, 'null']
+
+UpdateGenericMedicineRequest:
+  allOf:
+    - $ref: '#/MasterDataUpdateBase'
+    - type: object
+      properties:
+        name:
+          type: [string, 'null']
+          minLength: 1
+          maxLength: 200
+        description:
+          type: [string, 'null']
+        therapeutic_class_id:
+          type: [string, 'null']
+          format: uuid
+          description: Null is treated as omitted.
+        is_controlled:
+          type: [boolean, 'null']
+        is_active:
+          type: [boolean, 'null']
+
+GenericMedicineResponse:
+  allOf:
+    - $ref: '#/MasterDataResponseBase'
+    - type: object
+      properties:
+        description:
+          type: string
+        therapeutic_class_id:
+          type: string
+          format: uuid
+        is_controlled:
+          type: boolean

@@ -1,0 +1,976 @@
+# Central MasterData catalogues. All endpoints are protected and share the
+# masterdata permissions; writes additionally require SUPER_ADMIN in the service.
+
+/master/product-categories:
+  post: &masterdata_create
+    operationId: masterdata.productCategories.create
+    summary: Create a product category
+    security:
+      - bearerAuth: []
+    tags: [masterdata]
+    description: Requires masterdata:create and the SUPER_ADMIN role.
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/IdempotencyKey'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/masterdata.yaml#/CreateProductCategoryRequest'
+    responses: &masterdata_create_responses
+      '201':
+        description: MasterData resource created.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/common.yaml#/CreatedEnvelope'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '409':
+        $ref: '../components/responses/error.yaml#/Conflict'
+      '422':
+        $ref: '../components/responses/error.yaml#/UnprocessableEntity'
+      '429':
+        $ref: '../components/responses/error.yaml#/TooManyRequests'
+      '500':
+        $ref: '../components/responses/error.yaml#/InternalError'
+      '503':
+        $ref: '../components/responses/error.yaml#/InternalError'
+  get: &masterdata_list
+    operationId: masterdata.productCategories.list
+    summary: List product categories
+    security:
+      - bearerAuth: []
+    tags: [masterdata]
+    description: Requires masterdata:view. Results are central and shared across organizations.
+    parameters: &masterdata_list_parameters
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/Page'
+      - $ref: '../components/parameters/pagination.yaml#/Limit'
+      - $ref: '../components/parameters/pagination.yaml#/Sort'
+      - $ref: '../components/parameters/pagination.yaml#/Q'
+      - name: is_active
+        in: query
+        description: Filter by active state.
+        schema:
+          type: boolean
+      - name: parent_id
+        in: query
+        description: Parent filter; applies to product categories, drug classes and therapeutic classes only.
+        schema:
+          type: string
+          format: uuid
+    responses: &masterdata_list_responses
+      '200':
+        description: Paginated list of product categories.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/common.yaml#/ListEnvelope'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: '../components/schemas/masterdata.yaml#/ProductCategoryResponse'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '429':
+        $ref: '../components/responses/error.yaml#/TooManyRequests'
+      '500':
+        $ref: '../components/responses/error.yaml#/InternalError'
+
+/master/product-categories/{id}:
+  parameters: &masterdata_item_parameters
+    - $ref: '../components/parameters/pagination.yaml#/RequestId'
+    - name: id
+      in: path
+      required: true
+      description: MasterData resource UUID.
+      schema:
+        type: string
+        format: uuid
+  get: &masterdata_get
+    operationId: masterdata.productCategories.get
+    summary: Get a product category
+    security:
+      - bearerAuth: []
+    tags: [masterdata]
+    description: Requires masterdata:view.
+    responses: &masterdata_get_responses
+      '200':
+        description: Product category.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/common.yaml#/SuccessEnvelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '../components/schemas/masterdata.yaml#/ProductCategoryResponse'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+      '429':
+        $ref: '../components/responses/error.yaml#/TooManyRequests'
+      '500':
+        $ref: '../components/responses/error.yaml#/InternalError'
+  patch: &masterdata_update
+    operationId: masterdata.productCategories.update
+    summary: Update a product category
+    security:
+      - bearerAuth: []
+    tags: [masterdata]
+    description: Requires masterdata:update and the SUPER_ADMIN role. Null PATCH values are treated as omitted.
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/IdempotencyKey'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/masterdata.yaml#/UpdateProductCategoryRequest'
+    responses: &masterdata_update_responses
+      '200':
+        description: Updated product category.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/common.yaml#/SuccessEnvelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '../components/schemas/masterdata.yaml#/ProductCategoryResponse'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+      '409':
+        $ref: '../components/responses/error.yaml#/Conflict'
+      '422':
+        $ref: '../components/responses/error.yaml#/UnprocessableEntity'
+      '429':
+        $ref: '../components/responses/error.yaml#/TooManyRequests'
+      '500':
+        $ref: '../components/responses/error.yaml#/InternalError'
+      '503':
+        $ref: '../components/responses/error.yaml#/InternalError'
+  delete: &masterdata_delete
+    operationId: masterdata.productCategories.delete
+    summary: Soft-delete a product category
+    security:
+      - bearerAuth: []
+    tags: [masterdata]
+    description: Requires masterdata:delete and the SUPER_ADMIN role. Returns 409 while the category has live references.
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/IdempotencyKey'
+    responses: &masterdata_delete_responses
+      '204':
+        description: Product category soft-deleted.
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+      '409':
+        $ref: '../components/responses/error.yaml#/Conflict'
+      '429':
+        $ref: '../components/responses/error.yaml#/TooManyRequests'
+      '500':
+        $ref: '../components/responses/error.yaml#/InternalError'
+      '503':
+        $ref: '../components/responses/error.yaml#/InternalError'
+
+/master/routes:
+  post:
+    <<: *masterdata_create
+    operationId: masterdata.routes.create
+    summary: Create a route
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/masterdata.yaml#/CreateRouteRequest'
+  get:
+    <<: *masterdata_list
+    operationId: masterdata.routes.list
+    summary: List routes
+    responses:
+      <<: *masterdata_list_responses
+      '200':
+        description: Paginated list of routes.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/common.yaml#/ListEnvelope'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: '../components/schemas/masterdata.yaml#/RouteResponse'
+/master/routes/{id}:
+  parameters: *masterdata_item_parameters
+  get:
+    <<: *masterdata_get
+    operationId: masterdata.routes.get
+    summary: Get a route
+    responses:
+      <<: *masterdata_get_responses
+      '200':
+        description: Route.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/common.yaml#/SuccessEnvelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '../components/schemas/masterdata.yaml#/RouteResponse'
+  patch:
+    <<: *masterdata_update
+    operationId: masterdata.routes.update
+    summary: Update a route
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/masterdata.yaml#/UpdateRouteRequest'
+    responses:
+      <<: *masterdata_update_responses
+      '200':
+        description: Updated route.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/common.yaml#/SuccessEnvelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '../components/schemas/masterdata.yaml#/RouteResponse'
+  delete:
+    <<: *masterdata_delete
+    operationId: masterdata.routes.delete
+    summary: Soft-delete a route
+
+/master/dosage-forms:
+  post:
+    <<: *masterdata_create
+    operationId: masterdata.dosageForms.create
+    summary: Create a dosage form
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/masterdata.yaml#/CreateDosageFormRequest'
+  get:
+    <<: *masterdata_list
+    operationId: masterdata.dosageForms.list
+    summary: List dosage forms
+    responses:
+      <<: *masterdata_list_responses
+      '200':
+        description: Paginated list of dosage forms.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/common.yaml#/ListEnvelope'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: '../components/schemas/masterdata.yaml#/DosageFormResponse'
+/master/dosage-forms/{id}:
+  parameters: *masterdata_item_parameters
+  get:
+    <<: *masterdata_get
+    operationId: masterdata.dosageForms.get
+    summary: Get a dosage form
+    responses:
+      <<: *masterdata_get_responses
+      '200':
+        description: Dosage form.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/common.yaml#/SuccessEnvelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '../components/schemas/masterdata.yaml#/DosageFormResponse'
+  patch:
+    <<: *masterdata_update
+    operationId: masterdata.dosageForms.update
+    summary: Update a dosage form
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/masterdata.yaml#/UpdateDosageFormRequest'
+    responses:
+      <<: *masterdata_update_responses
+      '200':
+        description: Updated dosage form.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/common.yaml#/SuccessEnvelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '../components/schemas/masterdata.yaml#/DosageFormResponse'
+  delete:
+    <<: *masterdata_delete
+    operationId: masterdata.dosageForms.delete
+    summary: Soft-delete a dosage form
+
+/master/package-types:
+  post:
+    <<: *masterdata_create
+    operationId: masterdata.packageTypes.create
+    summary: Create a package type
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/masterdata.yaml#/CreatePackageTypeRequest'
+  get:
+    <<: *masterdata_list
+    operationId: masterdata.packageTypes.list
+    summary: List package types
+    responses:
+      <<: *masterdata_list_responses
+      '200':
+        description: Paginated list of package types.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/common.yaml#/ListEnvelope'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: '../components/schemas/masterdata.yaml#/PackageTypeResponse'
+/master/package-types/{id}:
+  parameters: *masterdata_item_parameters
+  get:
+    <<: *masterdata_get
+    operationId: masterdata.packageTypes.get
+    summary: Get a package type
+    responses:
+      <<: *masterdata_get_responses
+      '200':
+        description: Package type.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/common.yaml#/SuccessEnvelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '../components/schemas/masterdata.yaml#/PackageTypeResponse'
+  patch:
+    <<: *masterdata_update
+    operationId: masterdata.packageTypes.update
+    summary: Update a package type
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/masterdata.yaml#/UpdatePackageTypeRequest'
+    responses:
+      <<: *masterdata_update_responses
+      '200':
+        description: Updated package type.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/common.yaml#/SuccessEnvelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '../components/schemas/masterdata.yaml#/PackageTypeResponse'
+  delete:
+    <<: *masterdata_delete
+    operationId: masterdata.packageTypes.delete
+    summary: Soft-delete a package type
+
+/master/unit-types:
+  post:
+    <<: *masterdata_create
+    operationId: masterdata.unitTypes.create
+    summary: Create a unit type
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/masterdata.yaml#/CreateUnitTypeRequest'
+  get:
+    <<: *masterdata_list
+    operationId: masterdata.unitTypes.list
+    summary: List unit types
+    responses:
+      <<: *masterdata_list_responses
+      '200':
+        description: Paginated list of unit types.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/common.yaml#/ListEnvelope'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: '../components/schemas/masterdata.yaml#/UnitTypeResponse'
+/master/unit-types/{id}:
+  parameters: *masterdata_item_parameters
+  get:
+    <<: *masterdata_get
+    operationId: masterdata.unitTypes.get
+    summary: Get a unit type
+    responses:
+      <<: *masterdata_get_responses
+      '200':
+        description: Unit type.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/common.yaml#/SuccessEnvelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '../components/schemas/masterdata.yaml#/UnitTypeResponse'
+  patch:
+    <<: *masterdata_update
+    operationId: masterdata.unitTypes.update
+    summary: Update a unit type
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/masterdata.yaml#/UpdateUnitTypeRequest'
+    responses:
+      <<: *masterdata_update_responses
+      '200':
+        description: Updated unit type.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/common.yaml#/SuccessEnvelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '../components/schemas/masterdata.yaml#/UnitTypeResponse'
+  delete:
+    <<: *masterdata_delete
+    operationId: masterdata.unitTypes.delete
+    summary: Soft-delete a unit type
+
+/master/storage-conditions:
+  post:
+    <<: *masterdata_create
+    operationId: masterdata.storageConditions.create
+    summary: Create a storage condition
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/masterdata.yaml#/CreateStorageConditionRequest'
+  get:
+    <<: *masterdata_list
+    operationId: masterdata.storageConditions.list
+    summary: List storage conditions
+    responses:
+      <<: *masterdata_list_responses
+      '200':
+        description: Paginated list of storage conditions.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/common.yaml#/ListEnvelope'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: '../components/schemas/masterdata.yaml#/StorageConditionResponse'
+/master/storage-conditions/{id}:
+  parameters: *masterdata_item_parameters
+  get:
+    <<: *masterdata_get
+    operationId: masterdata.storageConditions.get
+    summary: Get a storage condition
+    responses:
+      <<: *masterdata_get_responses
+      '200':
+        description: Storage condition.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/common.yaml#/SuccessEnvelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '../components/schemas/masterdata.yaml#/StorageConditionResponse'
+  patch:
+    <<: *masterdata_update
+    operationId: masterdata.storageConditions.update
+    summary: Update a storage condition
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/masterdata.yaml#/UpdateStorageConditionRequest'
+    responses:
+      <<: *masterdata_update_responses
+      '200':
+        description: Updated storage condition.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/common.yaml#/SuccessEnvelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '../components/schemas/masterdata.yaml#/StorageConditionResponse'
+  delete:
+    <<: *masterdata_delete
+    operationId: masterdata.storageConditions.delete
+    summary: Soft-delete a storage condition
+
+/master/tax-rates:
+  post:
+    <<: *masterdata_create
+    operationId: masterdata.taxRates.create
+    summary: Create a tax rate
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/masterdata.yaml#/CreateTaxRateRequest'
+  get:
+    <<: *masterdata_list
+    operationId: masterdata.taxRates.list
+    summary: List tax rates
+    responses:
+      <<: *masterdata_list_responses
+      '200':
+        description: Paginated list of tax rates.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/common.yaml#/ListEnvelope'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: '../components/schemas/masterdata.yaml#/TaxRateResponse'
+/master/tax-rates/{id}:
+  parameters: *masterdata_item_parameters
+  get:
+    <<: *masterdata_get
+    operationId: masterdata.taxRates.get
+    summary: Get a tax rate
+    responses:
+      <<: *masterdata_get_responses
+      '200':
+        description: Tax rate.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/common.yaml#/SuccessEnvelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '../components/schemas/masterdata.yaml#/TaxRateResponse'
+  patch:
+    <<: *masterdata_update
+    operationId: masterdata.taxRates.update
+    summary: Update a tax rate
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/masterdata.yaml#/UpdateTaxRateRequest'
+    responses:
+      <<: *masterdata_update_responses
+      '200':
+        description: Updated tax rate.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/common.yaml#/SuccessEnvelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '../components/schemas/masterdata.yaml#/TaxRateResponse'
+  delete:
+    <<: *masterdata_delete
+    operationId: masterdata.taxRates.delete
+    summary: Soft-delete a tax rate
+
+/master/drug-groups:
+  post:
+    <<: *masterdata_create
+    operationId: masterdata.drugGroups.create
+    summary: Create a drug group
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/masterdata.yaml#/CreateDrugGroupRequest'
+  get:
+    <<: *masterdata_list
+    operationId: masterdata.drugGroups.list
+    summary: List drug groups
+    responses:
+      <<: *masterdata_list_responses
+      '200':
+        description: Paginated list of drug groups.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/common.yaml#/ListEnvelope'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: '../components/schemas/masterdata.yaml#/DrugGroupResponse'
+/master/drug-groups/{id}:
+  parameters: *masterdata_item_parameters
+  get:
+    <<: *masterdata_get
+    operationId: masterdata.drugGroups.get
+    summary: Get a drug group
+    responses:
+      <<: *masterdata_get_responses
+      '200':
+        description: Drug group.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/common.yaml#/SuccessEnvelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '../components/schemas/masterdata.yaml#/DrugGroupResponse'
+  patch:
+    <<: *masterdata_update
+    operationId: masterdata.drugGroups.update
+    summary: Update a drug group
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/masterdata.yaml#/UpdateDrugGroupRequest'
+    responses:
+      <<: *masterdata_update_responses
+      '200':
+        description: Updated drug group.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/common.yaml#/SuccessEnvelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '../components/schemas/masterdata.yaml#/DrugGroupResponse'
+  delete:
+    <<: *masterdata_delete
+    operationId: masterdata.drugGroups.delete
+    summary: Soft-delete a drug group
+
+/master/drug-classes:
+  post:
+    <<: *masterdata_create
+    operationId: masterdata.drugClasses.create
+    summary: Create a drug class
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/masterdata.yaml#/CreateDrugClassRequest'
+  get:
+    <<: *masterdata_list
+    operationId: masterdata.drugClasses.list
+    summary: List drug classes
+    responses:
+      <<: *masterdata_list_responses
+      '200':
+        description: Paginated list of drug classes.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/common.yaml#/ListEnvelope'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: '../components/schemas/masterdata.yaml#/DrugClassResponse'
+/master/drug-classes/{id}:
+  parameters: *masterdata_item_parameters
+  get:
+    <<: *masterdata_get
+    operationId: masterdata.drugClasses.get
+    summary: Get a drug class
+    responses:
+      <<: *masterdata_get_responses
+      '200':
+        description: Drug class.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/common.yaml#/SuccessEnvelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '../components/schemas/masterdata.yaml#/DrugClassResponse'
+  patch:
+    <<: *masterdata_update
+    operationId: masterdata.drugClasses.update
+    summary: Update a drug class
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/masterdata.yaml#/UpdateDrugClassRequest'
+    responses:
+      <<: *masterdata_update_responses
+      '200':
+        description: Updated drug class.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/common.yaml#/SuccessEnvelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '../components/schemas/masterdata.yaml#/DrugClassResponse'
+  delete:
+    <<: *masterdata_delete
+    operationId: masterdata.drugClasses.delete
+    summary: Soft-delete a drug class
+
+/master/therapeutic-classes:
+  post:
+    <<: *masterdata_create
+    operationId: masterdata.therapeuticClasses.create
+    summary: Create a therapeutic class
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/masterdata.yaml#/CreateTherapeuticClassRequest'
+  get:
+    <<: *masterdata_list
+    operationId: masterdata.therapeuticClasses.list
+    summary: List therapeutic classes
+    responses:
+      <<: *masterdata_list_responses
+      '200':
+        description: Paginated list of therapeutic classes.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/common.yaml#/ListEnvelope'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: '../components/schemas/masterdata.yaml#/TherapeuticClassResponse'
+/master/therapeutic-classes/{id}:
+  parameters: *masterdata_item_parameters
+  get:
+    <<: *masterdata_get
+    operationId: masterdata.therapeuticClasses.get
+    summary: Get a therapeutic class
+    responses:
+      <<: *masterdata_get_responses
+      '200':
+        description: Therapeutic class.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/common.yaml#/SuccessEnvelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '../components/schemas/masterdata.yaml#/TherapeuticClassResponse'
+  patch:
+    <<: *masterdata_update
+    operationId: masterdata.therapeuticClasses.update
+    summary: Update a therapeutic class
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/masterdata.yaml#/UpdateTherapeuticClassRequest'
+    responses:
+      <<: *masterdata_update_responses
+      '200':
+        description: Updated therapeutic class.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/common.yaml#/SuccessEnvelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '../components/schemas/masterdata.yaml#/TherapeuticClassResponse'
+  delete:
+    <<: *masterdata_delete
+    operationId: masterdata.therapeuticClasses.delete
+    summary: Soft-delete a therapeutic class
+
+/master/generic-medicines:
+  post:
+    <<: *masterdata_create
+    operationId: masterdata.genericMedicines.create
+    summary: Create a generic medicine
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/masterdata.yaml#/CreateGenericMedicineRequest'
+  get:
+    <<: *masterdata_list
+    operationId: masterdata.genericMedicines.list
+    summary: List generic medicines
+    responses:
+      <<: *masterdata_list_responses
+      '200':
+        description: Paginated list of generic medicines.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/common.yaml#/ListEnvelope'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: '../components/schemas/masterdata.yaml#/GenericMedicineResponse'
+/master/generic-medicines/{id}:
+  parameters: *masterdata_item_parameters
+  get:
+    <<: *masterdata_get
+    operationId: masterdata.genericMedicines.get
+    summary: Get a generic medicine
+    responses:
+      <<: *masterdata_get_responses
+      '200':
+        description: Generic medicine.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/common.yaml#/SuccessEnvelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '../components/schemas/masterdata.yaml#/GenericMedicineResponse'
+  patch:
+    <<: *masterdata_update
+    operationId: masterdata.genericMedicines.update
+    summary: Update a generic medicine
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/masterdata.yaml#/UpdateGenericMedicineRequest'
+    responses:
+      <<: *masterdata_update_responses
+      '200':
+        description: Updated generic medicine.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/common.yaml#/SuccessEnvelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '../components/schemas/masterdata.yaml#/GenericMedicineResponse'
+  delete:
+    <<: *masterdata_delete
+    operationId: masterdata.genericMedicines.delete
+    summary: Soft-delete a generic medicine
