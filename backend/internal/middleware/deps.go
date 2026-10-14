@@ -239,7 +239,7 @@ func (m *Middleware) abortError(c *gin.Context, err error) {
 
 	// 5xx: fixed, generic body — the cause is in the log, never on the wire.
 	if status >= 500 {
-		_ = response.Internal(c.Writer, rid)
+		_ = response.Error(c.Writer, rid, status, string(errs.CodeInternal), "internal server error")
 		c.Abort()
 		return
 	}
