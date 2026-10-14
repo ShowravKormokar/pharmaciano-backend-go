@@ -17,6 +17,7 @@ import (
 	"backend/internal/middleware"
 	"backend/internal/modules/auth"
 	"backend/internal/modules/branch"
+	"backend/internal/modules/masterdata"
 	"backend/internal/modules/organization"
 	"backend/internal/modules/rbac"
 	"backend/internal/modules/user"
@@ -121,13 +122,13 @@ func run() error {
 	// shutdown (signal → ctx.Done()) stops it before the server drains; the
 	// deferred Wait gives an in-flight DELETE up to one second to finish.
 	retentionWorker := retention.New(pg.Pool(), retention.Config{
-		Enabled:              cfg.Cleanup.Enabled,
-		Interval:             cfg.Cleanup.Interval,
-		BatchSize:            cfg.Cleanup.BatchSize,
-		SessionsGrace:        cfg.Cleanup.SessionsGrace,
-		RefreshTokensGrace:   cfg.Cleanup.RefreshTokensGrace,
-		PasswordResetsGrace:  cfg.Cleanup.PasswordResetsGrace,
-		MFAChallengesGrace:   cfg.Cleanup.MFAChallengesGrace,
+		Enabled:             cfg.Cleanup.Enabled,
+		Interval:            cfg.Cleanup.Interval,
+		BatchSize:           cfg.Cleanup.BatchSize,
+		SessionsGrace:       cfg.Cleanup.SessionsGrace,
+		RefreshTokensGrace:  cfg.Cleanup.RefreshTokensGrace,
+		PasswordResetsGrace: cfg.Cleanup.PasswordResetsGrace,
+		MFAChallengesGrace:  cfg.Cleanup.MFAChallengesGrace,
 	}, log)
 	retentionDone := make(chan struct{})
 	go func() {
@@ -267,6 +268,7 @@ func run() error {
 	modules := []router.ModuleRegistrar{
 		organization.New(pg, val, log),
 		branch.New(pg, val, log),
+		masterdata.New(pg, val, log),
 		warehouse.New(pg, val, log),
 		rbacModule,
 		authModule,
