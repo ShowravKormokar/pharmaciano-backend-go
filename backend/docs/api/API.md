@@ -740,10 +740,10 @@ SUPER_ADMIN and users with `audit:view`. Cursor pagination.
 
 | Method & Path | Rate | Permission | Description |
 |---|---|---|---|
-| `GET    /api/v1/settings` | `rate_auth_read` | `settings:view` | List settings (non-sensitive by default). `?include_sensitive=true` requires SUPER_ADMIN. |
-| `GET    /api/v1/settings/{key}` | `rate_auth_read` | `settings:view` | Single. |
-| `PUT    /api/v1/settings/{key}` | `rate_auth_write` | `settings:update` | Update value. |
-| `POST   /api/v1/settings/bulk` | `rate_auth_write` | `settings:update` | Body: `[{key,value}]`. |
+| `GET    /api/v1/settings` | `rate_auth_read` | `settings:view` | List effective values by default; `scope=system|organization` selects a direct scope. `include_sensitive=true` requires privileged platform authorization and never reveals secret material. |
+| `GET    /api/v1/settings/{key}` | `rate_auth_read` | `settings:view` | Resolve one setting; accepts the same `scope` and `include_sensitive` query controls. |
+| `PUT    /api/v1/settings/{key}` | `rate_auth_write` | `settings:update` | Body: `{"scope":"organization","value":...,"expected_version":0,"reason":"..."}`. Scope identity comes from trusted context. `expected_version` is required; 0 means create-only. |
+| `POST   /api/v1/settings/bulk` | `rate_auth_write` | `settings:update` | Body: `{"scope":"organization","items":[{"key":"...","value":...,"expected_version":0,"reason":"..."}]}`. 1–100 unique keys; all-or-nothing. |
 
 ---
 
