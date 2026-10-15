@@ -118,10 +118,10 @@ jobs:
             --config=api/openapi/config/redocly.yaml
 
       - name: Generate server code
-        run: oapi-codegen generate --config=api/openapi/config/oapi-codegen.yaml build/openapi.bundled.yaml
+        run: oapi-codegen --config=api/openapi/config/oapi-codegen.yaml build/openapi.bundled.yaml
 
       - name: Generate client SDK
-        run: oapi-codegen generate --config=api/openapi/config/client.yaml build/openapi.bundled.yaml
+        run: oapi-codegen --config=api/openapi/config/client.yaml build/openapi.bundled.yaml
 
       # Generated trees must equal the committed copy. Any diff means the commit
       # forgot `make oapi-generate` (or hand-edited generated output) — fail.

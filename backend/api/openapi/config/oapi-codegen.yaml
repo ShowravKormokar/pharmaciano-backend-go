@@ -6,7 +6,7 @@
 # internal/api/gen/v1. That directory is GENERATED — never edit by hand.
 #
 # Regenerate with: make oapi-generate
-#   or  oapi-codegen -config api/openapi/config/oapi-codegen.yaml build/openapi.bundled.yaml
+#   or  oapi-codegen --config api/openapi/config/oapi-codegen.yaml build/openapi.bundled.yaml
 # ---------------------------------------------------------------------------
 
 package: v1
@@ -36,10 +36,8 @@ generate:
   client: false
 
 compatibility:
-  # Keep generated Go names stable whether a schema is referenced through $ref or inlined.
-  # Without this, opvi / oneOf unions get prefixed names tied to the operation id, which
-  # churns on rename. We add `x-go-type-name` where a stable name is important instead.
-  components-schemas: true
+  # Preserve the established named Go types for referenced component schemas.
+  old-aliasing: true
 
 output-options:
   # Exclude these generated names. Grep the bundled spec for the real names after a first
