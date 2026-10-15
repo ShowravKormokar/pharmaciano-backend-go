@@ -100,7 +100,7 @@ func (m *Middleware) Audit() gin.HandlerFunc {
 			Success:     status < 400,
 			ErrorCode:   c.GetString(ginKeyErrorCode),
 			LatencyMS:   m.now().Sub(start).Milliseconds(),
-			RequestBody: maskBody(rawBody),
+			RequestBody: maskBodyForModule(rawBody, c.GetString(ginKeyAuditModule)),
 		}
 
 		// context.WithoutCancel keeps trace/request values for correlation while detaching from the request's (possibly already-cancelled) deadline.
@@ -118,6 +118,10 @@ func isJSONRequest(c *gin.Context) bool {
 // maskBody parses a JSON body, redacts sensitive fields recursively, and caps the
 // serialized result. Returns nil for empty or non-JSON input.
 func maskBody(raw []byte) json.RawMessage {
+	return maskBodyForModule(raw, "")
+}
+
+func maskBodyForModule(raw []byte, module string) json.RawMessage {
 	if len(raw) == 0 {
 		return nil
 	}
@@ -125,7 +129,7 @@ func maskBody(raw []byte) json.RawMessage {
 	if err := json.Unmarshal(raw, &parsed); err != nil {
 		return nil // not JSON — don't capture arbitrary bytes
 	}
-	masked := maskAny(parsed)
+	masked := maskAny(parsed, module == "settings")
 	out, err := json.Marshal(masked)
 	if err != nil {
 		return nil
@@ -137,20 +141,20 @@ func maskBody(raw []byte) json.RawMessage {
 }
 
 // maskAny walks a decoded JSON value and redacts sensitive object keys in place.
-func maskAny(v any) any {
+func maskAny(v any, redactSettingValues bool) any {
 	switch t := v.(type) {
 	case map[string]any:
 		for k, val := range t {
-			if isSensitiveKey(k) {
+			if isSensitiveKey(k) || (redactSettingValues && strings.EqualFold(k, "value")) {
 				t[k] = auditRedaction
 				continue
 			}
-			t[k] = maskAny(val)
+			t[k] = maskAny(val, redactSettingValues)
 		}
 		return t
 	case []any:
 		for i, val := range t {
-			t[i] = maskAny(val)
+			t[i] = maskAny(val, redactSettingValues)
 		}
 		return t
 	default:
