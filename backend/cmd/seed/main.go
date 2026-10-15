@@ -4,12 +4,16 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
 	"log"
+	"math"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/google/uuid"
@@ -72,6 +76,7 @@ type SettingSeed struct {
 	Key         string `yaml:"key"`
 	Value       string `yaml:"value"`
 	ValueType   string `yaml:"value_type"`
+	Status      string `yaml:"status"`
 	Description string `yaml:"description"`
 	IsSensitive bool   `yaml:"is_sensitive"`
 }
@@ -342,27 +347,122 @@ func seedRBAC(ctx context.Context, pool *pgxpool.Pool, data SeedData) error {
 }
 
 func seedSettings(ctx context.Context, pool *pgxpool.Pool, settings []SettingSeed) error {
+	tx, err := pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("begin settings seed: %w", err)
+	}
+	defer func() { _ = tx.Rollback(context.Background()) }()
+
+	seen := make(map[string]struct{}, len(settings))
 	for _, setting := range settings {
 		key := strings.TrimSpace(setting.Key)
-		if key == "" {
-			continue
+		if !seedSettingKeyPattern.MatchString(key) {
+			return fmt.Errorf("invalid setting key %q", key)
 		}
-		valueType := setting.ValueType
-		if valueType == "duration" {
-			valueType = "string"
+		if _, duplicate := seen[key]; duplicate {
+			return fmt.Errorf("duplicate setting key %q in seed data", key)
 		}
-		var id uuid.UUID
-		err := pool.QueryRow(ctx, `SELECT id FROM system_settings WHERE organization_id IS NULL AND key = $1 AND deleted_at IS NULL`, key).Scan(&id)
-		if errors.Is(err, pgx.ErrNoRows) {
-			err = pool.QueryRow(ctx, `INSERT INTO system_settings (key, value, value_type, description, is_sensitive) VALUES ($1,$2,$3,$4,$5) RETURNING id`, key, setting.Value, valueType, setting.Description, setting.IsSensitive).Scan(&id)
-		} else if err == nil {
-			_, err = pool.Exec(ctx, `UPDATE system_settings SET value = $2, value_type = $3, description = $4, is_sensitive = $5, updated_at = now() WHERE id = $1`, id, setting.Value, valueType, setting.Description, setting.IsSensitive)
-		}
+		seen[key] = struct{}{}
+
+		valueType, value, err := normalizeSeedSetting(setting)
 		if err != nil {
-			return fmt.Errorf("upsert setting %s: %w", key, err)
+			return fmt.Errorf("setting %s: %w", key, err)
+		}
+		status := strings.ToLower(strings.TrimSpace(setting.Status))
+		if status == "" {
+			status = "deprecated"
+		}
+		if status != "active" && status != "deprecated" {
+			return fmt.Errorf("setting %s: status must be active or deprecated", key)
+		}
+		scopes := []string{"system"}
+		if allowsOrganizationSetting(key) {
+			scopes = []string{"system", "organization"}
+		}
+		var description *string
+		if text := strings.TrimSpace(setting.Description); text != "" {
+			description = &text
+		}
+		tag, err := tx.Exec(ctx, `INSERT INTO setting_definitions
+			(key, value_type, schema_version, allowed_scopes, description,
+			 is_sensitive, secret_reference_only, status)
+			VALUES ($1,$2,1,$3,$4,$5,FALSE,$6)
+			ON CONFLICT (key) DO UPDATE SET
+				allowed_scopes = EXCLUDED.allowed_scopes,
+				description = EXCLUDED.description,
+				is_sensitive = setting_definitions.is_sensitive OR EXCLUDED.is_sensitive,
+				status = EXCLUDED.status,
+				updated_at = now()
+			WHERE setting_definitions.deleted_at IS NULL
+			  AND setting_definitions.value_type = EXCLUDED.value_type`,
+			key, valueType, scopes, description, setting.IsSensitive, status)
+		if err != nil {
+			return fmt.Errorf("upsert setting definition %s: %w", key, err)
+		}
+		if tag.RowsAffected() != 1 {
+			return fmt.Errorf("setting definition %s is deleted or has a conflicting value type", key)
+		}
+		_, err = tx.Exec(ctx, `INSERT INTO system_setting_values (key, value, version)
+			VALUES ($1,$2,1)
+			ON CONFLICT (key) WHERE deleted_at IS NULL DO NOTHING`, key, value)
+		if err != nil {
+			return fmt.Errorf("insert initial setting value %s: %w", key, err)
 		}
 	}
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("commit settings seed: %w", err)
+	}
 	return nil
+}
+
+var seedSettingKeyPattern = regexp.MustCompile(`^[a-z0-9][a-z0-9._-]{0,119}$`)
+
+func allowsOrganizationSetting(key string) bool {
+	for _, prefix := range []string{"app.", "invoice.", "pos.", "purchase.", "inventory.", "tax.", "notifications.", "reports."} {
+		if strings.HasPrefix(key, prefix) {
+			return true
+		}
+	}
+	return false
+}
+
+func normalizeSeedSetting(setting SettingSeed) (string, json.RawMessage, error) {
+	valueType := strings.ToLower(strings.TrimSpace(setting.ValueType))
+	value := strings.TrimSpace(setting.Value)
+	var raw json.RawMessage
+	switch valueType {
+	case "string", "duration":
+		valueType = "string"
+		encoded, err := json.Marshal(setting.Value)
+		return valueType, encoded, err
+	case "int", "integer":
+		parsed, err := strconv.ParseInt(value, 10, 64)
+		if err != nil {
+			return "", nil, fmt.Errorf("invalid integer %q", setting.Value)
+		}
+		return "integer", json.RawMessage(strconv.FormatInt(parsed, 10)), nil
+	case "bool", "boolean":
+		parsed, err := strconv.ParseBool(value)
+		if err != nil {
+			return "", nil, fmt.Errorf("invalid boolean %q", setting.Value)
+		}
+		return "boolean", json.RawMessage(strconv.FormatBool(parsed)), nil
+	case "float":
+		parsed, err := strconv.ParseFloat(value, 64)
+		if err != nil || math.IsInf(parsed, 0) || math.IsNaN(parsed) {
+			return "", nil, fmt.Errorf("invalid finite float %q", setting.Value)
+		}
+		encoded, err := json.Marshal(parsed)
+		return "float", encoded, err
+	case "json":
+		raw = json.RawMessage(value)
+		if !json.Valid(raw) {
+			return "", nil, fmt.Errorf("invalid JSON value")
+		}
+		return "json", raw, nil
+	default:
+		return "", nil, fmt.Errorf("unsupported value type %q", setting.ValueType)
+	}
 }
 
 func normalizePermission(module, action string) (string, string) {
