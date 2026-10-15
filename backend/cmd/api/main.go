@@ -20,6 +20,7 @@ import (
 	"backend/internal/modules/masterdata"
 	"backend/internal/modules/organization"
 	"backend/internal/modules/rbac"
+	"backend/internal/modules/settings"
 	"backend/internal/modules/user"
 	"backend/internal/modules/warehouse"
 	"backend/internal/platform/audit"
@@ -272,6 +273,7 @@ func run() error {
 		warehouse.New(pg, val, log),
 		rbacModule,
 		authModule,
+		settings.New(pg, val, log),
 		userHandler,
 	}
 
