@@ -1,0 +1,145 @@
+Setting:
+  type: object
+  required:
+    - key
+    - value
+    - value_type
+    - effective_scope
+    - source_scope
+    - version
+    - schema_version
+    - is_sensitive
+    - secret_reference_only
+  properties:
+    key:
+      type: string
+    value: {}
+    value_type:
+      type: string
+      enum: [string, integer, boolean, float, json]
+    effective_scope:
+      type: string
+      enum: [system, organization]
+    source_scope:
+      type: string
+      enum: [system, organization, default]
+    version:
+      type: integer
+      format: int64
+      minimum: 0
+    schema_version:
+      type: integer
+      minimum: 1
+    is_sensitive:
+      type: boolean
+    description:
+      type: [string, 'null']
+    secret_reference_only:
+      type: boolean
+
+SettingEnvelope:
+  type: object
+  required: [success, data, meta]
+  properties:
+    success:
+      type: boolean
+      const: true
+    data:
+      $ref: '#/Setting'
+    meta:
+      $ref: './common.yaml#/Meta'
+
+UpdateRequest:
+  type: object
+  additionalProperties: false
+  required: [scope, value, expected_version]
+  properties:
+    scope:
+      type: string
+      enum: [system, organization]
+    value: {}
+    expected_version:
+      type: integer
+      format: int64
+      minimum: 0
+    reason:
+      type: string
+      maxLength: 500
+
+UpdateResult:
+  type: object
+  required: [key, version, scope]
+  properties:
+    key:
+      type: string
+    version:
+      type: integer
+      format: int64
+      minimum: 1
+    scope:
+      type: string
+      enum: [system, organization]
+
+UpdateEnvelope:
+  type: object
+  required: [success, data, meta]
+  properties:
+    success:
+      type: boolean
+      const: true
+    data:
+      $ref: '#/UpdateResult'
+    meta:
+      $ref: './common.yaml#/Meta'
+
+BulkUpdateItem:
+  type: object
+  additionalProperties: false
+  required: [key, value, expected_version]
+  properties:
+    key:
+      type: string
+      minLength: 1
+      maxLength: 120
+      pattern: '^[a-z0-9][a-z0-9._-]*$'
+    value: {}
+    expected_version:
+      type: integer
+      format: int64
+      minimum: 0
+    reason:
+      type: string
+      maxLength: 500
+
+BulkUpdateRequest:
+  type: object
+  additionalProperties: false
+  required: [scope, items]
+  properties:
+    scope:
+      type: string
+      enum: [system, organization]
+    items:
+      type: array
+      minItems: 1
+      maxItems: 100
+      items:
+        $ref: '#/BulkUpdateItem'
+
+BulkUpdateEnvelope:
+  type: object
+  required: [success, data, meta]
+  properties:
+    success:
+      type: boolean
+      const: true
+    data:
+      type: object
+      required: [updated]
+      properties:
+        updated:
+          type: array
+          items:
+            $ref: '#/UpdateResult'
+    meta:
+      $ref: './common.yaml#/Meta'

@@ -1,0 +1,198 @@
+# Settings API. System-scope access and sensitive-value inclusion are additionally
+# restricted by the platform administrator policy in the service layer.
+/settings:
+  get:
+    operationId: settings.list
+    summary: List resolved settings
+    description: |
+      Lists active, registered settings. Scope defaults to effective, resolving
+      organization override, system value, then definition default. Direct system
+      reads and sensitive-value inclusion require platform administrator access.
+      Sensitive values are redacted unless include_sensitive=true is requested by
+      an authorized platform administrator. Actual secret material is never returned.
+    tags: [settings]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/Page'
+      - $ref: '../components/parameters/pagination.yaml#/Limit'
+      - $ref: '../components/parameters/pagination.yaml#/Sort'
+      - $ref: '../components/parameters/pagination.yaml#/Q'
+      - name: scope
+        in: query
+        description: Value source to read. Organization identity always comes from authenticated context.
+        schema:
+          type: string
+          enum: [effective, system, organization]
+          default: effective
+      - name: include_sensitive
+        in: query
+        description: Request sensitive-value disclosure. Requires privileged platform authorization.
+        schema:
+          type: boolean
+          default: false
+    responses:
+      '200':
+        description: Paginated settings.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [success, data, pagination, meta]
+              properties:
+                success:
+                  type: boolean
+                  const: true
+                data:
+                  type: array
+                  items:
+                    $ref: '../components/schemas/settings.yaml#/Setting'
+                pagination:
+                  $ref: '../components/schemas/common.yaml#/PaginationMeta'
+                meta:
+                  $ref: '../components/schemas/common.yaml#/Meta'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '429':
+        $ref: '../components/responses/error.yaml#/TooManyRequests'
+      '500':
+        $ref: '../components/responses/error.yaml#/InternalError'
+
+/settings/bulk:
+  post:
+    operationId: settings.bulkUpdate
+    summary: Atomically update multiple settings
+    description: |
+      Updates 1–100 unique registered settings in one transaction. Every entry
+      must include expected_version (0 means create-only). The entire operation
+      rolls back if any definition, value, scope, or version check fails.
+      Organization identity is taken from authenticated context and cannot be
+      supplied by the client. System scope requires platform administrator access.
+    tags: [settings]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/IdempotencyKey'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/settings.yaml#/BulkUpdateRequest'
+    responses:
+      '200':
+        description: Every requested setting was updated.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/settings.yaml#/BulkUpdateEnvelope'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+      '409':
+        $ref: '../components/responses/error.yaml#/Conflict'
+      '429':
+        $ref: '../components/responses/error.yaml#/TooManyRequests'
+      '500':
+        $ref: '../components/responses/error.yaml#/InternalError'
+
+/settings/{key}:
+  parameters:
+    - name: key
+      in: path
+      required: true
+      description: Registered setting key.
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 120
+        pattern: '^[a-z0-9][a-z0-9._-]*$'
+  get:
+    operationId: settings.get
+    summary: Resolve one setting
+    description: |
+      Returns a registered setting from the requested scope. Scope defaults to
+      effective resolution. Direct system reads and sensitive-value inclusion
+      require platform administrator access. Actual secret material is never returned.
+    tags: [settings]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - name: scope
+        in: query
+        description: Value source to read. Organization identity always comes from authenticated context.
+        schema:
+          type: string
+          enum: [effective, system, organization]
+          default: effective
+      - name: include_sensitive
+        in: query
+        description: Request sensitive-value disclosure. Requires privileged platform authorization.
+        schema:
+          type: boolean
+          default: false
+    responses:
+      '200':
+        description: Resolved setting.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/settings.yaml#/SettingEnvelope'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+      '429':
+        $ref: '../components/responses/error.yaml#/TooManyRequests'
+      '500':
+        $ref: '../components/responses/error.yaml#/InternalError'
+  put:
+    operationId: settings.update
+    summary: Create or update a setting override
+    description: |
+      Writes one setting value in the selected scope. expected_version is required:
+      0 means create-only, otherwise it must match the current version. Organization
+      identity is taken from authenticated context. System scope requires platform
+      administrator access. Sensitive settings require a reason and accept only
+      approved secret references when configured to do so.
+    tags: [settings]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/IdempotencyKey'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/settings.yaml#/UpdateRequest'
+    responses:
+      '200':
+        description: Setting updated.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/settings.yaml#/UpdateEnvelope'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+      '409':
+        $ref: '../components/responses/error.yaml#/Conflict'
+      '429':
+        $ref: '../components/responses/error.yaml#/TooManyRequests'
+      '500':
+        $ref: '../components/responses/error.yaml#/InternalError'
