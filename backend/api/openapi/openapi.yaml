@@ -72,6 +72,8 @@ tags:
     description: Central reference catalogues shared across organizations.
   - name: rbac
     description: Roles and permissions.
+  - name: settings
+    description: Typed, scoped application and business settings.
 
 # ── Paths ────────────────────────────────────────────────────────────────
 paths:
@@ -145,6 +147,12 @@ paths:
     $ref: 'paths/warehouses.yaml#/~1warehouses'
   /warehouses/{id}:
     $ref: 'paths/warehouses.yaml#/~1warehouses~1{id}'
+  /settings:
+    $ref: 'paths/settings.yaml#/~1settings'
+  /settings/bulk:
+    $ref: 'paths/settings.yaml#/~1settings~1bulk'
+  /settings/{key}:
+    $ref: 'paths/settings.yaml#/~1settings~1{key}'
   /master/product-categories:
     $ref: 'paths/masterdata.yaml#/~1master~1product-categories'
   /master/product-categories/{id}:
