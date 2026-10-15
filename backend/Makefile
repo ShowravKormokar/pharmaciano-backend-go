@@ -202,17 +202,17 @@ oapi-bundle: $(OAS_BUNDLED) oapi-bundle-docs
 oapi-bundle-docs:
 	python3 scripts/openapi/bundle.py \
 		--out api/scalar/openapi.yaml \
-		--server http://localhost:8080/api/v1,v1 (current) \
-		--server http://localhost:8080/api/v2,v2 (future)
+		--server 'http://localhost:8080/api/v1,v1 (current)' \
+		--server 'http://localhost:8080/api/v2,v2 (future)'
 	@echo "docs spec -> api/scalar/openapi.yaml (served at /api-docs/openapi.yaml)"
 
 # Regenerate Go models + gin strict-server from the bundled spec.
 oapi-generate: $(OAS_BUNDLED)
-	$(OAICODEGEN) generate --config=$(OAS_SPEC_TREE)/config/oapi-codegen.yaml $(OAS_BUNDLED)
+	$(OAICODEGEN) --config=$(OAS_SPEC_TREE)/config/oapi-codegen.yaml $(OAS_BUNDLED)
 
 # Regenerate the optional typed Go SDK client.
 oapi-client: $(OAS_BUNDLED)
-	$(OAICODEGEN) generate --config=$(OAS_SPEC_TREE)/config/client.yaml $(OAS_BUNDLED)
+	$(OAICODEGEN) --config=$(OAS_SPEC_TREE)/config/client.yaml $(OAS_BUNDLED)
 
 # kin-openapi runtime validation build (enforces contract inside a tagged build).
 oapi-validate:
@@ -236,18 +236,18 @@ oapi-diff: $(OAS_BUNDLED)
 
 # Drift gate for CI: generate into a scratch dir and diff against committed output.
 oapi-drift: $(OAS_BUNDLED)
-	@mkdir -p $(OAS_TMP)/drift
-	@cp $(OAS_SPEC_TREE)/config/oapi-codegen.yaml $(OAS_TMP)/drift/server-config.yaml
-	@sed -i 's#output: internal/api/gen/v1/api.gen.go#output: build/drift/api.gen.go#' \
-		$(OAS_TMP)/drift/server-config.yaml
-	@cp $(OAS_SPEC_TREE)/config/client.yaml $(OAS_TMP)/drift/client-config.yaml
-	@sed -i 's#output: internal/api/client/v1/client.gen.go#output: build/drift/client.gen.go#' \
-		$(OAS_TMP)/drift/client-config.yaml
-	rm -f build/drift/api.gen.go build/drift/client.gen.go
-	$(OAICODEGEN) generate --config=$(OAS_TMP)/drift/server-config.yaml $(OAS_BUNDLED)
-	$(OAICODEGEN) generate --config=$(OAS_TMP)/drift/client-config.yaml $(OAS_BUNDLED)
-	@set -e; if ! diff -q internal/api/gen/v1/api.gen.go build/drift/api.gen.go >/dev/null \
-		|| ! diff -q internal/api/client/v1/client.gen.go build/drift/client.gen.go >/dev/null; then \
+	@mkdir -p $(OAS_TMP)/.drift
+	@cp $(OAS_SPEC_TREE)/config/oapi-codegen.yaml $(OAS_TMP)/.drift/server-config.yaml
+	@sed -i 's#output: internal/api/gen/v1/api.gen.go#output: build/.drift/api.gen.go#' \
+		$(OAS_TMP)/.drift/server-config.yaml
+	@cp $(OAS_SPEC_TREE)/config/client.yaml $(OAS_TMP)/.drift/client-config.yaml
+	@sed -i 's#output: internal/api/client/v1/client.gen.go#output: build/.drift/client.gen.go#' \
+		$(OAS_TMP)/.drift/client-config.yaml
+	rm -f $(OAS_TMP)/.drift/api.gen.go $(OAS_TMP)/.drift/client.gen.go
+	$(OAICODEGEN) --config=$(OAS_TMP)/.drift/server-config.yaml $(OAS_BUNDLED)
+	$(OAICODEGEN) --config=$(OAS_TMP)/.drift/client-config.yaml $(OAS_BUNDLED)
+	@set -e; if ! git diff --no-index --quiet internal/api/gen/v1/api.gen.go $(OAS_TMP)/.drift/api.gen.go \
+		|| ! git diff --no-index --quiet internal/api/client/v1/client.gen.go $(OAS_TMP)/.drift/client.gen.go; then \
 		echo "DRIFT: generated API code is out of date — run 'make oapi-generate oapi-client' and commit the output."; \
 		exit 1; fi
 	@echo "no drift: generated server and client code match the contract"
