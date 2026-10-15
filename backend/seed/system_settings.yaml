@@ -1,17 +1,19 @@
 # =============================================================================
-# Pharmaciano ERP — Default System Settings
+# Pharmaciano ERP — Legacy Settings Catalog
 #
-# Loaded by cmd/seed on first boot (idempotent upsert by `key`).
-# organization_id=null means a global default; per-org overrides can be
-# created at runtime via the settings API.
+# Loaded by cmd/seed into the typed settings registry. These legacy entries
+# are retained as deprecated until their owning runtime consumers are verified.
+# Do not activate a definition merely because it appears in this catalog.
 #
 # `value_type` tells the runtime how to parse the string:
 #   string | int | float | bool | json | duration
+# `status: active` is permitted only after an owning runtime consumer is wired;
+# omitted status remains deprecated.
 # `is_sensitive=true` hides the value from non-admin API responses.
 # =============================================================================
 
 version: 1
-description: "Default system settings applied to a fresh organization."
+description: "Legacy settings retained pending runtime-consumer migration."
 
 settings:
 
