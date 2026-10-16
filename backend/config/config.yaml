@@ -143,6 +143,8 @@ rate_limit:
   policies:
     public: { limit: 60,  window: 1m }
     auth_read: { limit: 300, window: 1m }
+    audit_read_ip: { limit: 300, window: 1m }
+    audit_read: { limit: 60, window: 1m }
     auth_write: { limit: 120, window: 1m }
     login_per_email: { limit: 5,  window: 15m }
     login_per_ip: { limit: 20, window: 15m }
