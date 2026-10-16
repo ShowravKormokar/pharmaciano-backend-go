@@ -31,13 +31,16 @@ func (m *Middleware) Tenant() gin.HandlerFunc {
 		requested := m.parseBranchSelector(c)
 
 		assigned := p.BranchIDs
-		orgWide := p.RoleName == constants.RoleSuperAdmin || p.RoleName == constants.RoleAdmin
+		orgWide := p.RoleName == constants.RoleSuperAdmin ||
+			p.RoleName == constants.RoleAdmin ||
+			p.RoleName == constants.RoleAccountant ||
+			p.RoleName == constants.RoleAuditor
 
 		if orgWide {
-			// Admins default to org-wide (nil) scope and may narrow to any
-			// subset of the org's branches via either header. The X-Branch-ID
-			// legacy form coerces to a single-element slice so the rest of
-			// the pipeline can stay slice-only.
+			// Organization-scoped roles default to org-wide (nil) scope and may
+			// narrow to any subset of the org's branches via either header. The
+			// X-Branch-ID legacy form coerces to a single-element slice so the
+			// rest of the pipeline can stay slice-only.
 			if len(requested) > 0 {
 				p.BranchID = &requested[0]
 				p.BranchIDs = requested
@@ -174,9 +177,9 @@ func (m *Middleware) observeSecurityDenial(reason string) {
 //     middleware relies on that invariant rather than duplicating it.
 //   - Branch scope is selectable within the caller's org via the X-Branch-ID
 //     (legacy single) or X-Branch-IDs (multi-subset) headers:
-//       * Org-wide roles (SUPER_ADMIN, ADMIN) may target any subset of the
-//         org's branches, or omit the header for org-wide access (effective
-//         branch = nil).
+//       * Organization-scoped roles (SUPER_ADMIN, ADMIN, ACCOUNTANT, AUDITOR)
+//         may target any subset of the org's branches, or omit the header for
+//         org-wide access (effective branch = nil).
 //       * Branch-bound roles are pinned to the subset baked into their JWT
 //         (BranchIDs, ADR §19): they may pass a subset of it, or nothing,
 //         but requesting a branch outside it is denied
