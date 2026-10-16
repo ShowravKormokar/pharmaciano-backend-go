@@ -1,0 +1,9 @@
+DROP INDEX IF EXISTS ix_audit_logs_error_code_trgm;
+DROP INDEX IF EXISTS ix_audit_logs_request_id_trgm;
+DROP INDEX IF EXISTS ix_audit_logs_entity_type_trgm;
+DROP INDEX IF EXISTS ix_audit_logs_action_trgm;
+DROP INDEX IF EXISTS ix_audit_logs_module_trgm;
+DROP INDEX IF EXISTS ix_audit_logs_platform_timeline;
+DROP INDEX IF EXISTS ix_audit_logs_org_user_timeline;
+DROP INDEX IF EXISTS ix_audit_logs_branch_timeline;
+DROP INDEX IF EXISTS ix_audit_logs_org_timeline;
