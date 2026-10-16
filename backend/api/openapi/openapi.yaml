@@ -74,6 +74,8 @@ tags:
     description: Roles and permissions.
   - name: settings
     description: Typed, scoped application and business settings.
+  - name: audit
+    description: Authorized, tenant- and branch-scoped audit evidence reads.
 
 # ── Paths ────────────────────────────────────────────────────────────────
 paths:
@@ -153,6 +155,18 @@ paths:
     $ref: 'paths/settings.yaml#/~1settings~1bulk'
   /settings/{key}:
     $ref: 'paths/settings.yaml#/~1settings~1{key}'
+  /audit-logs:
+    $ref: 'paths/audit.yaml#/~1audit-logs'
+  /audit-logs/modules:
+    $ref: 'paths/audit.yaml#/~1audit-logs~1modules'
+  /audit-logs/actions:
+    $ref: 'paths/audit.yaml#/~1audit-logs~1actions'
+  /audit-logs/{id}:
+    $ref: 'paths/audit.yaml#/~1audit-logs~1{id}'
+  /audit-logs/platform:
+    $ref: 'paths/audit.yaml#/~1audit-logs~1platform'
+  /audit-logs/platform/{id}:
+    $ref: 'paths/audit.yaml#/~1audit-logs~1platform~1{id}'
   /master/product-categories:
     $ref: 'paths/masterdata.yaml#/~1master~1product-categories'
   /master/product-categories/{id}:
