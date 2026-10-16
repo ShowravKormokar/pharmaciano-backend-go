@@ -22,6 +22,69 @@ import (
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
+// Defines values for AuditDetailEnvelopeSuccess.
+const (
+	AuditDetailEnvelopeSuccessTrue AuditDetailEnvelopeSuccess = true
+)
+
+// Valid indicates whether the value is a known member of the AuditDetailEnvelopeSuccess enum.
+func (e AuditDetailEnvelopeSuccess) Valid() bool {
+	switch e {
+	case AuditDetailEnvelopeSuccessTrue:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for AuditEventOutcome.
+const (
+	AuditEventOutcomeFailure AuditEventOutcome = "failure"
+	AuditEventOutcomeSuccess AuditEventOutcome = "success"
+)
+
+// Valid indicates whether the value is a known member of the AuditEventOutcome enum.
+func (e AuditEventOutcome) Valid() bool {
+	switch e {
+	case AuditEventOutcomeFailure:
+		return true
+	case AuditEventOutcomeSuccess:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for AuditListEnvelopeSuccess.
+const (
+	AuditListEnvelopeSuccessTrue AuditListEnvelopeSuccess = true
+)
+
+// Valid indicates whether the value is a known member of the AuditListEnvelopeSuccess enum.
+func (e AuditListEnvelopeSuccess) Valid() bool {
+	switch e {
+	case AuditListEnvelopeSuccessTrue:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for AuditValuesEnvelopeSuccess.
+const (
+	AuditValuesEnvelopeSuccessTrue AuditValuesEnvelopeSuccess = true
+)
+
+// Valid indicates whether the value is a known member of the AuditValuesEnvelopeSuccess enum.
+func (e AuditValuesEnvelopeSuccess) Valid() bool {
+	switch e {
+	case AuditValuesEnvelopeSuccessTrue:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for BulkUpdateEnvelopeSuccess.
 const (
 	BulkUpdateEnvelopeSuccessTrue BulkUpdateEnvelopeSuccess = true
@@ -442,6 +505,60 @@ func (e UserStatus) Valid() bool {
 	case Suspended:
 		return true
 	case Terminated:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for AuditOutcomeFilter.
+const (
+	AuditOutcomeFilterFailure AuditOutcomeFilter = "failure"
+	AuditOutcomeFilterSuccess AuditOutcomeFilter = "success"
+)
+
+// Valid indicates whether the value is a known member of the AuditOutcomeFilter enum.
+func (e AuditOutcomeFilter) Valid() bool {
+	switch e {
+	case AuditOutcomeFilterFailure:
+		return true
+	case AuditOutcomeFilterSuccess:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for AuditListParamsOutcome.
+const (
+	AuditListParamsOutcomeFailure AuditListParamsOutcome = "failure"
+	AuditListParamsOutcomeSuccess AuditListParamsOutcome = "success"
+)
+
+// Valid indicates whether the value is a known member of the AuditListParamsOutcome enum.
+func (e AuditListParamsOutcome) Valid() bool {
+	switch e {
+	case AuditListParamsOutcomeFailure:
+		return true
+	case AuditListParamsOutcomeSuccess:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for AuditListPlatformEventsParamsOutcome.
+const (
+	AuditListPlatformEventsParamsOutcomeFailure AuditListPlatformEventsParamsOutcome = "failure"
+	AuditListPlatformEventsParamsOutcomeSuccess AuditListPlatformEventsParamsOutcome = "success"
+)
+
+// Valid indicates whether the value is a known member of the AuditListPlatformEventsParamsOutcome enum.
+func (e AuditListPlatformEventsParamsOutcome) Valid() bool {
+	switch e {
+	case AuditListPlatformEventsParamsOutcomeFailure:
+		return true
+	case AuditListPlatformEventsParamsOutcomeSuccess:
 		return true
 	default:
 		return false
@@ -1053,6 +1170,104 @@ type AssignRoleRequest struct {
 	ExpiresAt *time.Time         `json:"expires_at,omitempty"`
 	RoleId    openapi_types.UUID `json:"role_id"`
 }
+
+// AuditDetailEnvelope defines model for AuditDetailEnvelope.
+type AuditDetailEnvelope struct {
+	Data    AuditLogDetail             `json:"data"`
+	Meta    Meta                       `json:"meta"`
+	Success AuditDetailEnvelopeSuccess `json:"success"`
+}
+
+// AuditDetailEnvelopeSuccess defines model for AuditDetailEnvelope.Success.
+type AuditDetailEnvelopeSuccess bool
+
+// AuditEventOutcome defines model for AuditEventOutcome.
+type AuditEventOutcome string
+
+// AuditListEnvelope defines model for AuditListEnvelope.
+type AuditListEnvelope struct {
+	Data    AuditLogList             `json:"data"`
+	Meta    Meta                     `json:"meta"`
+	Success AuditListEnvelopeSuccess `json:"success"`
+}
+
+// AuditListEnvelopeSuccess defines model for AuditListEnvelope.Success.
+type AuditListEnvelopeSuccess bool
+
+// AuditLogDetail defines model for AuditLogDetail.
+type AuditLogDetail struct {
+	Action string `json:"action"`
+
+	// AfterData Redacted after-state snapshot, when available.
+	AfterData *map[string]interface{} `json:"after_data,omitempty"`
+
+	// BeforeData Redacted before-state snapshot, when available.
+	BeforeData *map[string]interface{} `json:"before_data,omitempty"`
+	BranchId   *openapi_types.UUID     `json:"branch_id,omitempty"`
+	Browser    *string                 `json:"browser,omitempty"`
+
+	// Details Redacted event metadata. Secrets and sensitive values are removed before response.
+	Details        *map[string]interface{} `json:"details,omitempty"`
+	Device         *string                 `json:"device,omitempty"`
+	DurationMs     *int32                  `json:"duration_ms,omitempty"`
+	EntityId       *openapi_types.UUID     `json:"entity_id,omitempty"`
+	EntityType     *string                 `json:"entity_type,omitempty"`
+	ErrorCode      *string                 `json:"error_code,omitempty"`
+	Id             openapi_types.UUID      `json:"id"`
+	Ip             *string                 `json:"ip,omitempty"`
+	Location       *string                 `json:"location,omitempty"`
+	Module         string                  `json:"module"`
+	OccurredAt     time.Time               `json:"occurred_at"`
+	OrganizationId *openapi_types.UUID     `json:"organization_id,omitempty"`
+	Os             *string                 `json:"os,omitempty"`
+	Outcome        AuditEventOutcome       `json:"outcome"`
+	RequestId      *string                 `json:"request_id,omitempty"`
+	RoleName       *string                 `json:"role_name,omitempty"`
+	SessionId      *openapi_types.UUID     `json:"session_id,omitempty"`
+	UserAgent      *string                 `json:"user_agent,omitempty"`
+	UserId         *openapi_types.UUID     `json:"user_id,omitempty"`
+}
+
+// AuditLogList defines model for AuditLogList.
+type AuditLogList struct {
+	HasMore    bool               `json:"has_more"`
+	Items      []AuditLogListItem `json:"items"`
+	NextCursor *string            `json:"next_cursor,omitempty"`
+}
+
+// AuditLogListItem defines model for AuditLogListItem.
+type AuditLogListItem struct {
+	Action         string              `json:"action"`
+	BranchId       *openapi_types.UUID `json:"branch_id,omitempty"`
+	DurationMs     *int32              `json:"duration_ms,omitempty"`
+	EntityId       *openapi_types.UUID `json:"entity_id,omitempty"`
+	EntityType     *string             `json:"entity_type,omitempty"`
+	ErrorCode      *string             `json:"error_code,omitempty"`
+	Id             openapi_types.UUID  `json:"id"`
+	Module         string              `json:"module"`
+	OccurredAt     time.Time           `json:"occurred_at"`
+	OrganizationId *openapi_types.UUID `json:"organization_id,omitempty"`
+	Outcome        AuditEventOutcome   `json:"outcome"`
+	RequestId      *string             `json:"request_id,omitempty"`
+	RoleName       *string             `json:"role_name,omitempty"`
+	SessionId      *openapi_types.UUID `json:"session_id,omitempty"`
+	UserId         *openapi_types.UUID `json:"user_id,omitempty"`
+}
+
+// AuditValues defines model for AuditValues.
+type AuditValues struct {
+	Items []string `json:"items"`
+}
+
+// AuditValuesEnvelope defines model for AuditValuesEnvelope.
+type AuditValuesEnvelope struct {
+	Data    AuditValues                `json:"data"`
+	Meta    Meta                       `json:"meta"`
+	Success AuditValuesEnvelopeSuccess `json:"success"`
+}
+
+// AuditValuesEnvelopeSuccess defines model for AuditValuesEnvelope.Success.
+type AuditValuesEnvelopeSuccess bool
 
 // Branch defines model for Branch.
 type Branch struct {
@@ -2196,6 +2411,51 @@ type WarehouseListItem struct {
 	Name     string             `json:"name"`
 }
 
+// AuditAction defines model for AuditAction.
+type AuditAction = string
+
+// AuditCursor defines model for AuditCursor.
+type AuditCursor = string
+
+// AuditEntityID defines model for AuditEntityID.
+type AuditEntityID = openapi_types.UUID
+
+// AuditEntityType defines model for AuditEntityType.
+type AuditEntityType = string
+
+// AuditEventID defines model for AuditEventID.
+type AuditEventID = openapi_types.UUID
+
+// AuditFrom defines model for AuditFrom.
+type AuditFrom = time.Time
+
+// AuditIP defines model for AuditIP.
+type AuditIP = string
+
+// AuditLimit defines model for AuditLimit.
+type AuditLimit = int
+
+// AuditModule defines model for AuditModule.
+type AuditModule = string
+
+// AuditOccurredAt defines model for AuditOccurredAt.
+type AuditOccurredAt = time.Time
+
+// AuditOutcomeFilter defines model for AuditOutcomeFilter.
+type AuditOutcomeFilter string
+
+// AuditSearch defines model for AuditSearch.
+type AuditSearch = string
+
+// AuditTo defines model for AuditTo.
+type AuditTo = time.Time
+
+// AuditUserID defines model for AuditUserID.
+type AuditUserID = openapi_types.UUID
+
+// AuditValuesLimit defines model for AuditValuesLimit.
+type AuditValuesLimit = int
+
 // IdempotencyKey defines model for IdempotencyKey.
 type IdempotencyKey = string
 
@@ -2243,6 +2503,144 @@ type Unauthorized = ErrorEnvelope
 
 // UnprocessableEntity Uniform error envelope. Success is always false; the payload lives under error.
 type UnprocessableEntity = ErrorEnvelope
+
+// AuditListParams defines parameters for AuditList.
+type AuditListParams struct {
+	// From Inclusive beginning of the event-time window. Must be earlier than `to`; the window cannot exceed 90 days.
+	From AuditFrom `form:"from" json:"from"`
+
+	// To Exclusive end of the event-time window. Must be later than `from`; the window cannot exceed 90 days.
+	To AuditTo `form:"to" json:"to"`
+
+	// Cursor Opaque HMAC-signed cursor returned as `data.next_cursor`. It is bound to the current scope, filters, and time window.
+	Cursor *AuditCursor `form:"cursor,omitempty" json:"cursor,omitempty"`
+
+	// Limit Maximum events to return. Defaults to 50.
+	Limit *AuditLimit `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// UserId Filter by actor UUID.
+	UserId *AuditUserID `form:"user_id,omitempty" json:"user_id,omitempty"`
+
+	// Module Exact module filter.
+	Module *AuditModule `form:"module,omitempty" json:"module,omitempty"`
+
+	// Action Exact action filter.
+	Action *AuditAction `form:"action,omitempty" json:"action,omitempty"`
+
+	// EntityType Exact affected entity type filter.
+	EntityType *AuditEntityType `form:"entity_type,omitempty" json:"entity_type,omitempty"`
+
+	// EntityId Filter by affected entity UUID.
+	EntityId *AuditEntityID `form:"entity_id,omitempty" json:"entity_id,omitempty"`
+
+	// Outcome Filter by recorded operation outcome.
+	Outcome *AuditListParamsOutcome `form:"outcome,omitempty" json:"outcome,omitempty"`
+
+	// Ip Filter by exact IPv4 or IPv6 address.
+	Ip *AuditIP `form:"ip,omitempty" json:"ip,omitempty"`
+
+	// Q Full-text search. Must contain 3 to 120 characters.
+	Q *AuditSearch `form:"q,omitempty" json:"q,omitempty"`
+
+	// XRequestID Caller-supplied correlation id. If omitted the server mints one and returns it.
+	XRequestID *RequestId `json:"X-Request-ID,omitempty"`
+}
+
+// AuditListParamsOutcome defines parameters for AuditList.
+type AuditListParamsOutcome string
+
+// AuditListActionsParams defines parameters for AuditListActions.
+type AuditListActionsParams struct {
+	// From Inclusive beginning of the event-time window. Must be earlier than `to`; the window cannot exceed 90 days.
+	From AuditFrom `form:"from" json:"from"`
+
+	// To Exclusive end of the event-time window. Must be later than `from`; the window cannot exceed 90 days.
+	To AuditTo `form:"to" json:"to"`
+
+	// Limit Maximum distinct values to return. Defaults to 100.
+	Limit *AuditValuesLimit `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// XRequestID Caller-supplied correlation id. If omitted the server mints one and returns it.
+	XRequestID *RequestId `json:"X-Request-ID,omitempty"`
+}
+
+// AuditListModulesParams defines parameters for AuditListModules.
+type AuditListModulesParams struct {
+	// From Inclusive beginning of the event-time window. Must be earlier than `to`; the window cannot exceed 90 days.
+	From AuditFrom `form:"from" json:"from"`
+
+	// To Exclusive end of the event-time window. Must be later than `from`; the window cannot exceed 90 days.
+	To AuditTo `form:"to" json:"to"`
+
+	// Limit Maximum distinct values to return. Defaults to 100.
+	Limit *AuditValuesLimit `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// XRequestID Caller-supplied correlation id. If omitted the server mints one and returns it.
+	XRequestID *RequestId `json:"X-Request-ID,omitempty"`
+}
+
+// AuditListPlatformEventsParams defines parameters for AuditListPlatformEvents.
+type AuditListPlatformEventsParams struct {
+	// From Inclusive beginning of the event-time window. Must be earlier than `to`; the window cannot exceed 90 days.
+	From AuditFrom `form:"from" json:"from"`
+
+	// To Exclusive end of the event-time window. Must be later than `from`; the window cannot exceed 90 days.
+	To AuditTo `form:"to" json:"to"`
+
+	// Cursor Opaque HMAC-signed cursor returned as `data.next_cursor`. It is bound to the current scope, filters, and time window.
+	Cursor *AuditCursor `form:"cursor,omitempty" json:"cursor,omitempty"`
+
+	// Limit Maximum events to return. Defaults to 50.
+	Limit *AuditLimit `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// UserId Filter by actor UUID.
+	UserId *AuditUserID `form:"user_id,omitempty" json:"user_id,omitempty"`
+
+	// Module Exact module filter.
+	Module *AuditModule `form:"module,omitempty" json:"module,omitempty"`
+
+	// Action Exact action filter.
+	Action *AuditAction `form:"action,omitempty" json:"action,omitempty"`
+
+	// EntityType Exact affected entity type filter.
+	EntityType *AuditEntityType `form:"entity_type,omitempty" json:"entity_type,omitempty"`
+
+	// EntityId Filter by affected entity UUID.
+	EntityId *AuditEntityID `form:"entity_id,omitempty" json:"entity_id,omitempty"`
+
+	// Outcome Filter by recorded operation outcome.
+	Outcome *AuditListPlatformEventsParamsOutcome `form:"outcome,omitempty" json:"outcome,omitempty"`
+
+	// Ip Filter by exact IPv4 or IPv6 address.
+	Ip *AuditIP `form:"ip,omitempty" json:"ip,omitempty"`
+
+	// Q Full-text search. Must contain 3 to 120 characters.
+	Q *AuditSearch `form:"q,omitempty" json:"q,omitempty"`
+
+	// XRequestID Caller-supplied correlation id. If omitted the server mints one and returns it.
+	XRequestID *RequestId `json:"X-Request-ID,omitempty"`
+}
+
+// AuditListPlatformEventsParamsOutcome defines parameters for AuditListPlatformEvents.
+type AuditListPlatformEventsParamsOutcome string
+
+// AuditGetPlatformEventParams defines parameters for AuditGetPlatformEvent.
+type AuditGetPlatformEventParams struct {
+	// OccurredAt RFC 3339 event occurrence timestamp and partition key. Required because event IDs are not globally unique across partitions.
+	OccurredAt AuditOccurredAt `form:"occurred_at" json:"occurred_at"`
+
+	// XRequestID Caller-supplied correlation id. If omitted the server mints one and returns it.
+	XRequestID *RequestId `json:"X-Request-ID,omitempty"`
+}
+
+// AuditGetParams defines parameters for AuditGet.
+type AuditGetParams struct {
+	// OccurredAt RFC 3339 event occurrence timestamp and partition key. Required because event IDs are not globally unique across partitions.
+	OccurredAt AuditOccurredAt `form:"occurred_at" json:"occurred_at"`
+
+	// XRequestID Caller-supplied correlation id. If omitted the server mints one and returns it.
+	XRequestID *RequestId `json:"X-Request-ID,omitempty"`
+}
 
 // AuthLogoutParams defines parameters for AuthLogout.
 type AuthLogoutParams struct {
@@ -3965,6 +4363,72 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 // The interface specification for the client above.
 type ClientInterface interface {
 
+	// AuditList Search audit events
+	//
+	// Returns a newest-first cursor-paginated page within the caller's authorized
+	// organization and branch scope. Tenant and branch scope are derived from the
+	// authenticated principal and cannot be selected through query parameters.
+	// Search windows are mandatory, half-open (`from` inclusive, `to` exclusive),
+	// and limited to 90 days. Unknown, repeated, malformed, and oversized query
+	// parameters are rejected. Responses are private and not cacheable.
+	//
+	// Requires `audit:view`. The endpoint is rate-limited by IP and authenticated
+	// user. Successful reads are themselves recorded without storing query values
+	// or response bodies.
+	//
+	// Corresponds with GET /audit-logs (the `AuditList` operationId).
+	AuditList(ctx context.Context, params *AuditListParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AuditListActions List observed audit actions
+	//
+	// Returns distinct action values visible to the caller within the requested
+	// time window and authorized organization/branch scope. Requires `audit:view`.
+	// The range must not exceed 90 days. Responses are private and not cacheable.
+	//
+	// Corresponds with GET /audit-logs/actions (the `AuditListActions` operationId).
+	AuditListActions(ctx context.Context, params *AuditListActionsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AuditListModules List observed audit modules
+	//
+	// Returns distinct module values visible to the caller within the requested
+	// time window and authorized organization/branch scope. Requires `audit:view`.
+	// The range must not exceed 90 days. Responses are private and not cacheable.
+	//
+	// Corresponds with GET /audit-logs/modules (the `AuditListModules` operationId).
+	AuditListModules(ctx context.Context, params *AuditListModulesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AuditListPlatformEvents Search platform audit events
+	//
+	// Returns events whose `organization_id` is NULL; this operation never
+	// returns tenant-owned events. Requires `audit:view` and the SUPER_ADMIN
+	// role. Filters and time window have the same limits as `GET /audit-logs`.
+	// Responses are private and not cacheable.
+	//
+	// Corresponds with GET /audit-logs/platform (the `AuditListPlatformEvents` operationId).
+	AuditListPlatformEvents(ctx context.Context, params *AuditListPlatformEventsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AuditGetPlatformEvent Get a platform audit event
+	//
+	// Returns one event only when its `organization_id` is NULL. Requires
+	// `audit:view` and the SUPER_ADMIN role. Both the event UUID and its
+	// `occurred_at` partition timestamp are required. Missing and inaccessible
+	// events are not distinguishable. Payload data is redacted before returning.
+	// Responses are private and not cacheable.
+	//
+	// Corresponds with GET /audit-logs/platform/{id} (the `AuditGetPlatformEvent` operationId).
+	AuditGetPlatformEvent(ctx context.Context, id AuditEventID, params *AuditGetPlatformEventParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AuditGet Get an audit event
+	//
+	// Returns one event only if it is visible in the caller's authorized
+	// organization/branch scope. Both the event UUID and its `occurred_at`
+	// partition timestamp are required. Inaccessible and missing events are not
+	// distinguishable. Details and before/after snapshots are redacted before
+	// returning. Requires `audit:view`; responses are private and not cacheable.
+	//
+	// Corresponds with GET /audit-logs/{id} (the `AuditGet` operationId).
+	AuditGet(ctx context.Context, id AuditEventID, params *AuditGetParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// AuthLoginWithBody Authenticate with email and password
 	//
 	// Authenticates against organization-scoped credentials. The response contains access and
@@ -5505,6 +5969,132 @@ type ClientInterface interface {
 	//
 	// Corresponds with PATCH /warehouses/{id} (the `WarehousesUpdate` operationId).
 	WarehousesUpdate(ctx context.Context, id openapi_types.UUID, params *WarehousesUpdateParams, body WarehousesUpdateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+}
+
+// AuditList Search audit events
+//
+// Returns a newest-first cursor-paginated page within the caller's authorized
+// organization and branch scope. Tenant and branch scope are derived from the
+// authenticated principal and cannot be selected through query parameters.
+// Search windows are mandatory, half-open (`from` inclusive, `to` exclusive),
+// and limited to 90 days. Unknown, repeated, malformed, and oversized query
+// parameters are rejected. Responses are private and not cacheable.
+//
+// Requires `audit:view`. The endpoint is rate-limited by IP and authenticated
+// user. Successful reads are themselves recorded without storing query values
+// or response bodies.
+//
+// Corresponds with GET /audit-logs (the `AuditList` operationId).
+func (c *Client) AuditList(ctx context.Context, params *AuditListParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAuditListRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AuditListActions List observed audit actions
+//
+// Returns distinct action values visible to the caller within the requested
+// time window and authorized organization/branch scope. Requires `audit:view`.
+// The range must not exceed 90 days. Responses are private and not cacheable.
+//
+// Corresponds with GET /audit-logs/actions (the `AuditListActions` operationId).
+func (c *Client) AuditListActions(ctx context.Context, params *AuditListActionsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAuditListActionsRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AuditListModules List observed audit modules
+//
+// Returns distinct module values visible to the caller within the requested
+// time window and authorized organization/branch scope. Requires `audit:view`.
+// The range must not exceed 90 days. Responses are private and not cacheable.
+//
+// Corresponds with GET /audit-logs/modules (the `AuditListModules` operationId).
+func (c *Client) AuditListModules(ctx context.Context, params *AuditListModulesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAuditListModulesRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AuditListPlatformEvents Search platform audit events
+//
+// Returns events whose `organization_id` is NULL; this operation never
+// returns tenant-owned events. Requires `audit:view` and the SUPER_ADMIN
+// role. Filters and time window have the same limits as `GET /audit-logs`.
+// Responses are private and not cacheable.
+//
+// Corresponds with GET /audit-logs/platform (the `AuditListPlatformEvents` operationId).
+func (c *Client) AuditListPlatformEvents(ctx context.Context, params *AuditListPlatformEventsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAuditListPlatformEventsRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AuditGetPlatformEvent Get a platform audit event
+//
+// Returns one event only when its `organization_id` is NULL. Requires
+// `audit:view` and the SUPER_ADMIN role. Both the event UUID and its
+// `occurred_at` partition timestamp are required. Missing and inaccessible
+// events are not distinguishable. Payload data is redacted before returning.
+// Responses are private and not cacheable.
+//
+// Corresponds with GET /audit-logs/platform/{id} (the `AuditGetPlatformEvent` operationId).
+func (c *Client) AuditGetPlatformEvent(ctx context.Context, id AuditEventID, params *AuditGetPlatformEventParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAuditGetPlatformEventRequest(c.Server, id, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AuditGet Get an audit event
+//
+// Returns one event only if it is visible in the caller's authorized
+// organization/branch scope. Both the event UUID and its `occurred_at`
+// partition timestamp are required. Inaccessible and missing events are not
+// distinguishable. Details and before/after snapshots are redacted before
+// returning. Requires `audit:view`; responses are private and not cacheable.
+//
+// Corresponds with GET /audit-logs/{id} (the `AuditGet` operationId).
+func (c *Client) AuditGet(ctx context.Context, id AuditEventID, params *AuditGetParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAuditGetRequest(c.Server, id, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
 }
 
 // AuthLoginWithBody Authenticate with email and password
@@ -8716,6 +9306,706 @@ func (c *Client) WarehousesUpdate(ctx context.Context, id openapi_types.UUID, pa
 		return nil, err
 	}
 	return c.Client.Do(req)
+}
+
+// NewAuditListRequest constructs an http.Request for the AuditList method
+func NewAuditListRequest(server string, params *AuditListParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/audit-logs")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if queryFrag, err := runtime.StyleParamWithOptions("form", true, "from", params.From, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: "date-time"}); err != nil {
+			return nil, err
+		} else {
+			for _, qp := range strings.Split(queryFrag, "&") {
+				rawQueryFragments = append(rawQueryFragments, qp)
+			}
+		}
+
+		if queryFrag, err := runtime.StyleParamWithOptions("form", true, "to", params.To, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: "date-time"}); err != nil {
+			return nil, err
+		} else {
+			for _, qp := range strings.Split(queryFrag, "&") {
+				rawQueryFragments = append(rawQueryFragments, qp)
+			}
+		}
+
+		if params.Cursor != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "cursor", *params.Cursor, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.UserId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "user_id", *params.UserId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Module != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "module", *params.Module, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Action != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "action", *params.Action, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.EntityType != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "entity_type", *params.EntityType, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.EntityId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "entity_id", *params.EntityId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Outcome != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "outcome", *params.Outcome, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Ip != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "ip", *params.Ip, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Q != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "q", *params.Q, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+
+		if params.XRequestID != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithOptions("simple", false, "X-Request-ID", *params.XRequestID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: "uuid"})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Request-ID", headerParam0)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewAuditListActionsRequest constructs an http.Request for the AuditListActions method
+func NewAuditListActionsRequest(server string, params *AuditListActionsParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/audit-logs/actions")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if queryFrag, err := runtime.StyleParamWithOptions("form", true, "from", params.From, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: "date-time"}); err != nil {
+			return nil, err
+		} else {
+			for _, qp := range strings.Split(queryFrag, "&") {
+				rawQueryFragments = append(rawQueryFragments, qp)
+			}
+		}
+
+		if queryFrag, err := runtime.StyleParamWithOptions("form", true, "to", params.To, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: "date-time"}); err != nil {
+			return nil, err
+		} else {
+			for _, qp := range strings.Split(queryFrag, "&") {
+				rawQueryFragments = append(rawQueryFragments, qp)
+			}
+		}
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+
+		if params.XRequestID != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithOptions("simple", false, "X-Request-ID", *params.XRequestID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: "uuid"})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Request-ID", headerParam0)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewAuditListModulesRequest constructs an http.Request for the AuditListModules method
+func NewAuditListModulesRequest(server string, params *AuditListModulesParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/audit-logs/modules")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if queryFrag, err := runtime.StyleParamWithOptions("form", true, "from", params.From, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: "date-time"}); err != nil {
+			return nil, err
+		} else {
+			for _, qp := range strings.Split(queryFrag, "&") {
+				rawQueryFragments = append(rawQueryFragments, qp)
+			}
+		}
+
+		if queryFrag, err := runtime.StyleParamWithOptions("form", true, "to", params.To, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: "date-time"}); err != nil {
+			return nil, err
+		} else {
+			for _, qp := range strings.Split(queryFrag, "&") {
+				rawQueryFragments = append(rawQueryFragments, qp)
+			}
+		}
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+
+		if params.XRequestID != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithOptions("simple", false, "X-Request-ID", *params.XRequestID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: "uuid"})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Request-ID", headerParam0)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewAuditListPlatformEventsRequest constructs an http.Request for the AuditListPlatformEvents method
+func NewAuditListPlatformEventsRequest(server string, params *AuditListPlatformEventsParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/audit-logs/platform")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if queryFrag, err := runtime.StyleParamWithOptions("form", true, "from", params.From, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: "date-time"}); err != nil {
+			return nil, err
+		} else {
+			for _, qp := range strings.Split(queryFrag, "&") {
+				rawQueryFragments = append(rawQueryFragments, qp)
+			}
+		}
+
+		if queryFrag, err := runtime.StyleParamWithOptions("form", true, "to", params.To, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: "date-time"}); err != nil {
+			return nil, err
+		} else {
+			for _, qp := range strings.Split(queryFrag, "&") {
+				rawQueryFragments = append(rawQueryFragments, qp)
+			}
+		}
+
+		if params.Cursor != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "cursor", *params.Cursor, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.UserId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "user_id", *params.UserId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Module != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "module", *params.Module, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Action != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "action", *params.Action, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.EntityType != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "entity_type", *params.EntityType, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.EntityId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "entity_id", *params.EntityId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Outcome != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "outcome", *params.Outcome, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Ip != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "ip", *params.Ip, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Q != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "q", *params.Q, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+
+		if params.XRequestID != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithOptions("simple", false, "X-Request-ID", *params.XRequestID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: "uuid"})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Request-ID", headerParam0)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewAuditGetPlatformEventRequest constructs an http.Request for the AuditGetPlatformEvent method
+func NewAuditGetPlatformEventRequest(server string, id AuditEventID, params *AuditGetPlatformEventParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "id", id, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/audit-logs/platform/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if queryFrag, err := runtime.StyleParamWithOptions("form", true, "occurred_at", params.OccurredAt, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: "date-time"}); err != nil {
+			return nil, err
+		} else {
+			for _, qp := range strings.Split(queryFrag, "&") {
+				rawQueryFragments = append(rawQueryFragments, qp)
+			}
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+
+		if params.XRequestID != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithOptions("simple", false, "X-Request-ID", *params.XRequestID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: "uuid"})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Request-ID", headerParam0)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewAuditGetRequest constructs an http.Request for the AuditGet method
+func NewAuditGetRequest(server string, id AuditEventID, params *AuditGetParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "id", id, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/audit-logs/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if queryFrag, err := runtime.StyleParamWithOptions("form", true, "occurred_at", params.OccurredAt, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: "date-time"}); err != nil {
+			return nil, err
+		} else {
+			for _, qp := range strings.Split(queryFrag, "&") {
+				rawQueryFragments = append(rawQueryFragments, qp)
+			}
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+
+		if params.XRequestID != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithOptions("simple", false, "X-Request-ID", *params.XRequestID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: "uuid"})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Request-ID", headerParam0)
+		}
+
+	}
+
+	return req, nil
 }
 
 // NewAuthLoginRequest calls the generic AuthLogin builder with application/json body
@@ -16948,6 +18238,84 @@ func WithBaseURL(baseURL string) ClientOption {
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
 
+	// AuditListWithResponse Search audit events
+	//
+	// Returns a newest-first cursor-paginated page within the caller's authorized
+	// organization and branch scope. Tenant and branch scope are derived from the
+	// authenticated principal and cannot be selected through query parameters.
+	// Search windows are mandatory, half-open (`from` inclusive, `to` exclusive),
+	// and limited to 90 days. Unknown, repeated, malformed, and oversized query
+	// parameters are rejected. Responses are private and not cacheable.
+	//
+	// Requires `audit:view`. The endpoint is rate-limited by IP and authenticated
+	// user. Successful reads are themselves recorded without storing query values
+	// or response bodies.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /audit-logs (the `AuditList` operationId).
+	AuditListWithResponse(ctx context.Context, params *AuditListParams, reqEditors ...RequestEditorFn) (*AuditListResponse, error)
+
+	// AuditListActionsWithResponse List observed audit actions
+	//
+	// Returns distinct action values visible to the caller within the requested
+	// time window and authorized organization/branch scope. Requires `audit:view`.
+	// The range must not exceed 90 days. Responses are private and not cacheable.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /audit-logs/actions (the `AuditListActions` operationId).
+	AuditListActionsWithResponse(ctx context.Context, params *AuditListActionsParams, reqEditors ...RequestEditorFn) (*AuditListActionsResponse, error)
+
+	// AuditListModulesWithResponse List observed audit modules
+	//
+	// Returns distinct module values visible to the caller within the requested
+	// time window and authorized organization/branch scope. Requires `audit:view`.
+	// The range must not exceed 90 days. Responses are private and not cacheable.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /audit-logs/modules (the `AuditListModules` operationId).
+	AuditListModulesWithResponse(ctx context.Context, params *AuditListModulesParams, reqEditors ...RequestEditorFn) (*AuditListModulesResponse, error)
+
+	// AuditListPlatformEventsWithResponse Search platform audit events
+	//
+	// Returns events whose `organization_id` is NULL; this operation never
+	// returns tenant-owned events. Requires `audit:view` and the SUPER_ADMIN
+	// role. Filters and time window have the same limits as `GET /audit-logs`.
+	// Responses are private and not cacheable.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /audit-logs/platform (the `AuditListPlatformEvents` operationId).
+	AuditListPlatformEventsWithResponse(ctx context.Context, params *AuditListPlatformEventsParams, reqEditors ...RequestEditorFn) (*AuditListPlatformEventsResponse, error)
+
+	// AuditGetPlatformEventWithResponse Get a platform audit event
+	//
+	// Returns one event only when its `organization_id` is NULL. Requires
+	// `audit:view` and the SUPER_ADMIN role. Both the event UUID and its
+	// `occurred_at` partition timestamp are required. Missing and inaccessible
+	// events are not distinguishable. Payload data is redacted before returning.
+	// Responses are private and not cacheable.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /audit-logs/platform/{id} (the `AuditGetPlatformEvent` operationId).
+	AuditGetPlatformEventWithResponse(ctx context.Context, id AuditEventID, params *AuditGetPlatformEventParams, reqEditors ...RequestEditorFn) (*AuditGetPlatformEventResponse, error)
+
+	// AuditGetWithResponse Get an audit event
+	//
+	// Returns one event only if it is visible in the caller's authorized
+	// organization/branch scope. Both the event UUID and its `occurred_at`
+	// partition timestamp are required. Inaccessible and missing events are not
+	// distinguishable. Details and before/after snapshots are redacted before
+	// returning. Requires `audit:view`; responses are private and not cacheable.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /audit-logs/{id} (the `AuditGet` operationId).
+	AuditGetWithResponse(ctx context.Context, id AuditEventID, params *AuditGetParams, reqEditors ...RequestEditorFn) (*AuditGetResponse, error)
+
 	// AuthLoginWithBodyWithResponse Authenticate with email and password
 	//
 	// Authenticates against organization-scoped credentials. The response contains access and
@@ -18622,6 +19990,826 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with PATCH /warehouses/{id} (the `WarehousesUpdate` operationId).
 	WarehousesUpdateWithResponse(ctx context.Context, id openapi_types.UUID, params *WarehousesUpdateParams, body WarehousesUpdateJSONRequestBody, reqEditors ...RequestEditorFn) (*WarehousesUpdateResponse, error)
+}
+
+// AuditListResponse400Headers the declared response headers of an HTTP 400 response for AuditList
+type AuditListResponse400Headers struct {
+	XRequestID *openapi_types.UUID
+}
+
+// AuditListResponse401Headers the declared response headers of an HTTP 401 response for AuditList
+type AuditListResponse401Headers struct {
+	WWWAuthenticate      *string
+	XMFAChallenge        *string
+	XPasswordChangeToken *string
+	XRequestID           *openapi_types.UUID
+}
+
+// AuditListResponse403Headers the declared response headers of an HTTP 403 response for AuditList
+type AuditListResponse403Headers struct {
+	XRequestID *openapi_types.UUID
+}
+
+// AuditListResponse429Headers the declared response headers of an HTTP 429 response for AuditList
+type AuditListResponse429Headers struct {
+	RetryAfter          *string
+	XRateLimitLimit     *int
+	XRateLimitRemaining *int
+	XRateLimitReset     *int
+	XRequestID          *openapi_types.UUID
+}
+
+// AuditListResponse500Headers the declared response headers of an HTTP 500 response for AuditList
+type AuditListResponse500Headers struct {
+	XRequestID *openapi_types.UUID
+}
+
+// AuditListResponse503Headers the declared response headers of an HTTP 503 response for AuditList
+type AuditListResponse503Headers struct {
+	XRequestID *openapi_types.UUID
+}
+
+type AuditListResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *AuditListEnvelope
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *BadRequest
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+	// JSON429 the response for an HTTP 429 `application/json` response
+	JSON429 *TooManyRequests
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *InternalError
+	// JSON503 the response for an HTTP 503 `application/json` response
+	JSON503 *InternalError
+	// Headers400 the parsed response headers for an HTTP 400 response
+	Headers400 *AuditListResponse400Headers
+	// Headers401 the parsed response headers for an HTTP 401 response
+	Headers401 *AuditListResponse401Headers
+	// Headers403 the parsed response headers for an HTTP 403 response
+	Headers403 *AuditListResponse403Headers
+	// Headers429 the parsed response headers for an HTTP 429 response
+	Headers429 *AuditListResponse429Headers
+	// Headers500 the parsed response headers for an HTTP 500 response
+	Headers500 *AuditListResponse500Headers
+	// Headers503 the parsed response headers for an HTTP 503 response
+	Headers503 *AuditListResponse503Headers
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r AuditListResponse) GetJSON200() *AuditListEnvelope {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r AuditListResponse) GetJSON400() *BadRequest {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r AuditListResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r AuditListResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetJSON429 returns the response for an HTTP 429 `application/json` response
+func (r AuditListResponse) GetJSON429() *TooManyRequests {
+	return r.JSON429
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r AuditListResponse) GetJSON500() *InternalError {
+	return r.JSON500
+}
+
+// GetJSON503 returns the response for an HTTP 503 `application/json` response
+func (r AuditListResponse) GetJSON503() *InternalError {
+	return r.JSON503
+}
+
+// GetBody returns the raw response body bytes
+func (r AuditListResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r AuditListResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AuditListResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r AuditListResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+// AuditListActionsResponse400Headers the declared response headers of an HTTP 400 response for AuditListActions
+type AuditListActionsResponse400Headers struct {
+	XRequestID *openapi_types.UUID
+}
+
+// AuditListActionsResponse401Headers the declared response headers of an HTTP 401 response for AuditListActions
+type AuditListActionsResponse401Headers struct {
+	WWWAuthenticate      *string
+	XMFAChallenge        *string
+	XPasswordChangeToken *string
+	XRequestID           *openapi_types.UUID
+}
+
+// AuditListActionsResponse403Headers the declared response headers of an HTTP 403 response for AuditListActions
+type AuditListActionsResponse403Headers struct {
+	XRequestID *openapi_types.UUID
+}
+
+// AuditListActionsResponse429Headers the declared response headers of an HTTP 429 response for AuditListActions
+type AuditListActionsResponse429Headers struct {
+	RetryAfter          *string
+	XRateLimitLimit     *int
+	XRateLimitRemaining *int
+	XRateLimitReset     *int
+	XRequestID          *openapi_types.UUID
+}
+
+// AuditListActionsResponse500Headers the declared response headers of an HTTP 500 response for AuditListActions
+type AuditListActionsResponse500Headers struct {
+	XRequestID *openapi_types.UUID
+}
+
+// AuditListActionsResponse503Headers the declared response headers of an HTTP 503 response for AuditListActions
+type AuditListActionsResponse503Headers struct {
+	XRequestID *openapi_types.UUID
+}
+
+type AuditListActionsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *AuditValuesEnvelope
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *BadRequest
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+	// JSON429 the response for an HTTP 429 `application/json` response
+	JSON429 *TooManyRequests
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *InternalError
+	// JSON503 the response for an HTTP 503 `application/json` response
+	JSON503 *InternalError
+	// Headers400 the parsed response headers for an HTTP 400 response
+	Headers400 *AuditListActionsResponse400Headers
+	// Headers401 the parsed response headers for an HTTP 401 response
+	Headers401 *AuditListActionsResponse401Headers
+	// Headers403 the parsed response headers for an HTTP 403 response
+	Headers403 *AuditListActionsResponse403Headers
+	// Headers429 the parsed response headers for an HTTP 429 response
+	Headers429 *AuditListActionsResponse429Headers
+	// Headers500 the parsed response headers for an HTTP 500 response
+	Headers500 *AuditListActionsResponse500Headers
+	// Headers503 the parsed response headers for an HTTP 503 response
+	Headers503 *AuditListActionsResponse503Headers
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r AuditListActionsResponse) GetJSON200() *AuditValuesEnvelope {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r AuditListActionsResponse) GetJSON400() *BadRequest {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r AuditListActionsResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r AuditListActionsResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetJSON429 returns the response for an HTTP 429 `application/json` response
+func (r AuditListActionsResponse) GetJSON429() *TooManyRequests {
+	return r.JSON429
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r AuditListActionsResponse) GetJSON500() *InternalError {
+	return r.JSON500
+}
+
+// GetJSON503 returns the response for an HTTP 503 `application/json` response
+func (r AuditListActionsResponse) GetJSON503() *InternalError {
+	return r.JSON503
+}
+
+// GetBody returns the raw response body bytes
+func (r AuditListActionsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r AuditListActionsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AuditListActionsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r AuditListActionsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+// AuditListModulesResponse400Headers the declared response headers of an HTTP 400 response for AuditListModules
+type AuditListModulesResponse400Headers struct {
+	XRequestID *openapi_types.UUID
+}
+
+// AuditListModulesResponse401Headers the declared response headers of an HTTP 401 response for AuditListModules
+type AuditListModulesResponse401Headers struct {
+	WWWAuthenticate      *string
+	XMFAChallenge        *string
+	XPasswordChangeToken *string
+	XRequestID           *openapi_types.UUID
+}
+
+// AuditListModulesResponse403Headers the declared response headers of an HTTP 403 response for AuditListModules
+type AuditListModulesResponse403Headers struct {
+	XRequestID *openapi_types.UUID
+}
+
+// AuditListModulesResponse429Headers the declared response headers of an HTTP 429 response for AuditListModules
+type AuditListModulesResponse429Headers struct {
+	RetryAfter          *string
+	XRateLimitLimit     *int
+	XRateLimitRemaining *int
+	XRateLimitReset     *int
+	XRequestID          *openapi_types.UUID
+}
+
+// AuditListModulesResponse500Headers the declared response headers of an HTTP 500 response for AuditListModules
+type AuditListModulesResponse500Headers struct {
+	XRequestID *openapi_types.UUID
+}
+
+// AuditListModulesResponse503Headers the declared response headers of an HTTP 503 response for AuditListModules
+type AuditListModulesResponse503Headers struct {
+	XRequestID *openapi_types.UUID
+}
+
+type AuditListModulesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *AuditValuesEnvelope
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *BadRequest
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+	// JSON429 the response for an HTTP 429 `application/json` response
+	JSON429 *TooManyRequests
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *InternalError
+	// JSON503 the response for an HTTP 503 `application/json` response
+	JSON503 *InternalError
+	// Headers400 the parsed response headers for an HTTP 400 response
+	Headers400 *AuditListModulesResponse400Headers
+	// Headers401 the parsed response headers for an HTTP 401 response
+	Headers401 *AuditListModulesResponse401Headers
+	// Headers403 the parsed response headers for an HTTP 403 response
+	Headers403 *AuditListModulesResponse403Headers
+	// Headers429 the parsed response headers for an HTTP 429 response
+	Headers429 *AuditListModulesResponse429Headers
+	// Headers500 the parsed response headers for an HTTP 500 response
+	Headers500 *AuditListModulesResponse500Headers
+	// Headers503 the parsed response headers for an HTTP 503 response
+	Headers503 *AuditListModulesResponse503Headers
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r AuditListModulesResponse) GetJSON200() *AuditValuesEnvelope {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r AuditListModulesResponse) GetJSON400() *BadRequest {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r AuditListModulesResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r AuditListModulesResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetJSON429 returns the response for an HTTP 429 `application/json` response
+func (r AuditListModulesResponse) GetJSON429() *TooManyRequests {
+	return r.JSON429
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r AuditListModulesResponse) GetJSON500() *InternalError {
+	return r.JSON500
+}
+
+// GetJSON503 returns the response for an HTTP 503 `application/json` response
+func (r AuditListModulesResponse) GetJSON503() *InternalError {
+	return r.JSON503
+}
+
+// GetBody returns the raw response body bytes
+func (r AuditListModulesResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r AuditListModulesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AuditListModulesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r AuditListModulesResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+// AuditListPlatformEventsResponse400Headers the declared response headers of an HTTP 400 response for AuditListPlatformEvents
+type AuditListPlatformEventsResponse400Headers struct {
+	XRequestID *openapi_types.UUID
+}
+
+// AuditListPlatformEventsResponse401Headers the declared response headers of an HTTP 401 response for AuditListPlatformEvents
+type AuditListPlatformEventsResponse401Headers struct {
+	WWWAuthenticate      *string
+	XMFAChallenge        *string
+	XPasswordChangeToken *string
+	XRequestID           *openapi_types.UUID
+}
+
+// AuditListPlatformEventsResponse403Headers the declared response headers of an HTTP 403 response for AuditListPlatformEvents
+type AuditListPlatformEventsResponse403Headers struct {
+	XRequestID *openapi_types.UUID
+}
+
+// AuditListPlatformEventsResponse429Headers the declared response headers of an HTTP 429 response for AuditListPlatformEvents
+type AuditListPlatformEventsResponse429Headers struct {
+	RetryAfter          *string
+	XRateLimitLimit     *int
+	XRateLimitRemaining *int
+	XRateLimitReset     *int
+	XRequestID          *openapi_types.UUID
+}
+
+// AuditListPlatformEventsResponse500Headers the declared response headers of an HTTP 500 response for AuditListPlatformEvents
+type AuditListPlatformEventsResponse500Headers struct {
+	XRequestID *openapi_types.UUID
+}
+
+// AuditListPlatformEventsResponse503Headers the declared response headers of an HTTP 503 response for AuditListPlatformEvents
+type AuditListPlatformEventsResponse503Headers struct {
+	XRequestID *openapi_types.UUID
+}
+
+type AuditListPlatformEventsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *AuditListEnvelope
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *BadRequest
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+	// JSON429 the response for an HTTP 429 `application/json` response
+	JSON429 *TooManyRequests
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *InternalError
+	// JSON503 the response for an HTTP 503 `application/json` response
+	JSON503 *InternalError
+	// Headers400 the parsed response headers for an HTTP 400 response
+	Headers400 *AuditListPlatformEventsResponse400Headers
+	// Headers401 the parsed response headers for an HTTP 401 response
+	Headers401 *AuditListPlatformEventsResponse401Headers
+	// Headers403 the parsed response headers for an HTTP 403 response
+	Headers403 *AuditListPlatformEventsResponse403Headers
+	// Headers429 the parsed response headers for an HTTP 429 response
+	Headers429 *AuditListPlatformEventsResponse429Headers
+	// Headers500 the parsed response headers for an HTTP 500 response
+	Headers500 *AuditListPlatformEventsResponse500Headers
+	// Headers503 the parsed response headers for an HTTP 503 response
+	Headers503 *AuditListPlatformEventsResponse503Headers
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r AuditListPlatformEventsResponse) GetJSON200() *AuditListEnvelope {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r AuditListPlatformEventsResponse) GetJSON400() *BadRequest {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r AuditListPlatformEventsResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r AuditListPlatformEventsResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetJSON429 returns the response for an HTTP 429 `application/json` response
+func (r AuditListPlatformEventsResponse) GetJSON429() *TooManyRequests {
+	return r.JSON429
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r AuditListPlatformEventsResponse) GetJSON500() *InternalError {
+	return r.JSON500
+}
+
+// GetJSON503 returns the response for an HTTP 503 `application/json` response
+func (r AuditListPlatformEventsResponse) GetJSON503() *InternalError {
+	return r.JSON503
+}
+
+// GetBody returns the raw response body bytes
+func (r AuditListPlatformEventsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r AuditListPlatformEventsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AuditListPlatformEventsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r AuditListPlatformEventsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+// AuditGetPlatformEventResponse400Headers the declared response headers of an HTTP 400 response for AuditGetPlatformEvent
+type AuditGetPlatformEventResponse400Headers struct {
+	XRequestID *openapi_types.UUID
+}
+
+// AuditGetPlatformEventResponse401Headers the declared response headers of an HTTP 401 response for AuditGetPlatformEvent
+type AuditGetPlatformEventResponse401Headers struct {
+	WWWAuthenticate      *string
+	XMFAChallenge        *string
+	XPasswordChangeToken *string
+	XRequestID           *openapi_types.UUID
+}
+
+// AuditGetPlatformEventResponse403Headers the declared response headers of an HTTP 403 response for AuditGetPlatformEvent
+type AuditGetPlatformEventResponse403Headers struct {
+	XRequestID *openapi_types.UUID
+}
+
+// AuditGetPlatformEventResponse404Headers the declared response headers of an HTTP 404 response for AuditGetPlatformEvent
+type AuditGetPlatformEventResponse404Headers struct {
+	XRequestID *openapi_types.UUID
+}
+
+// AuditGetPlatformEventResponse429Headers the declared response headers of an HTTP 429 response for AuditGetPlatformEvent
+type AuditGetPlatformEventResponse429Headers struct {
+	RetryAfter          *string
+	XRateLimitLimit     *int
+	XRateLimitRemaining *int
+	XRateLimitReset     *int
+	XRequestID          *openapi_types.UUID
+}
+
+// AuditGetPlatformEventResponse500Headers the declared response headers of an HTTP 500 response for AuditGetPlatformEvent
+type AuditGetPlatformEventResponse500Headers struct {
+	XRequestID *openapi_types.UUID
+}
+
+// AuditGetPlatformEventResponse503Headers the declared response headers of an HTTP 503 response for AuditGetPlatformEvent
+type AuditGetPlatformEventResponse503Headers struct {
+	XRequestID *openapi_types.UUID
+}
+
+type AuditGetPlatformEventResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *AuditDetailEnvelope
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *BadRequest
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *NotFound
+	// JSON429 the response for an HTTP 429 `application/json` response
+	JSON429 *TooManyRequests
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *InternalError
+	// JSON503 the response for an HTTP 503 `application/json` response
+	JSON503 *InternalError
+	// Headers400 the parsed response headers for an HTTP 400 response
+	Headers400 *AuditGetPlatformEventResponse400Headers
+	// Headers401 the parsed response headers for an HTTP 401 response
+	Headers401 *AuditGetPlatformEventResponse401Headers
+	// Headers403 the parsed response headers for an HTTP 403 response
+	Headers403 *AuditGetPlatformEventResponse403Headers
+	// Headers404 the parsed response headers for an HTTP 404 response
+	Headers404 *AuditGetPlatformEventResponse404Headers
+	// Headers429 the parsed response headers for an HTTP 429 response
+	Headers429 *AuditGetPlatformEventResponse429Headers
+	// Headers500 the parsed response headers for an HTTP 500 response
+	Headers500 *AuditGetPlatformEventResponse500Headers
+	// Headers503 the parsed response headers for an HTTP 503 response
+	Headers503 *AuditGetPlatformEventResponse503Headers
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r AuditGetPlatformEventResponse) GetJSON200() *AuditDetailEnvelope {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r AuditGetPlatformEventResponse) GetJSON400() *BadRequest {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r AuditGetPlatformEventResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r AuditGetPlatformEventResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r AuditGetPlatformEventResponse) GetJSON404() *NotFound {
+	return r.JSON404
+}
+
+// GetJSON429 returns the response for an HTTP 429 `application/json` response
+func (r AuditGetPlatformEventResponse) GetJSON429() *TooManyRequests {
+	return r.JSON429
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r AuditGetPlatformEventResponse) GetJSON500() *InternalError {
+	return r.JSON500
+}
+
+// GetJSON503 returns the response for an HTTP 503 `application/json` response
+func (r AuditGetPlatformEventResponse) GetJSON503() *InternalError {
+	return r.JSON503
+}
+
+// GetBody returns the raw response body bytes
+func (r AuditGetPlatformEventResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r AuditGetPlatformEventResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AuditGetPlatformEventResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r AuditGetPlatformEventResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+// AuditGetResponse400Headers the declared response headers of an HTTP 400 response for AuditGet
+type AuditGetResponse400Headers struct {
+	XRequestID *openapi_types.UUID
+}
+
+// AuditGetResponse401Headers the declared response headers of an HTTP 401 response for AuditGet
+type AuditGetResponse401Headers struct {
+	WWWAuthenticate      *string
+	XMFAChallenge        *string
+	XPasswordChangeToken *string
+	XRequestID           *openapi_types.UUID
+}
+
+// AuditGetResponse403Headers the declared response headers of an HTTP 403 response for AuditGet
+type AuditGetResponse403Headers struct {
+	XRequestID *openapi_types.UUID
+}
+
+// AuditGetResponse404Headers the declared response headers of an HTTP 404 response for AuditGet
+type AuditGetResponse404Headers struct {
+	XRequestID *openapi_types.UUID
+}
+
+// AuditGetResponse429Headers the declared response headers of an HTTP 429 response for AuditGet
+type AuditGetResponse429Headers struct {
+	RetryAfter          *string
+	XRateLimitLimit     *int
+	XRateLimitRemaining *int
+	XRateLimitReset     *int
+	XRequestID          *openapi_types.UUID
+}
+
+// AuditGetResponse500Headers the declared response headers of an HTTP 500 response for AuditGet
+type AuditGetResponse500Headers struct {
+	XRequestID *openapi_types.UUID
+}
+
+// AuditGetResponse503Headers the declared response headers of an HTTP 503 response for AuditGet
+type AuditGetResponse503Headers struct {
+	XRequestID *openapi_types.UUID
+}
+
+type AuditGetResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *AuditDetailEnvelope
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *BadRequest
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *NotFound
+	// JSON429 the response for an HTTP 429 `application/json` response
+	JSON429 *TooManyRequests
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *InternalError
+	// JSON503 the response for an HTTP 503 `application/json` response
+	JSON503 *InternalError
+	// Headers400 the parsed response headers for an HTTP 400 response
+	Headers400 *AuditGetResponse400Headers
+	// Headers401 the parsed response headers for an HTTP 401 response
+	Headers401 *AuditGetResponse401Headers
+	// Headers403 the parsed response headers for an HTTP 403 response
+	Headers403 *AuditGetResponse403Headers
+	// Headers404 the parsed response headers for an HTTP 404 response
+	Headers404 *AuditGetResponse404Headers
+	// Headers429 the parsed response headers for an HTTP 429 response
+	Headers429 *AuditGetResponse429Headers
+	// Headers500 the parsed response headers for an HTTP 500 response
+	Headers500 *AuditGetResponse500Headers
+	// Headers503 the parsed response headers for an HTTP 503 response
+	Headers503 *AuditGetResponse503Headers
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r AuditGetResponse) GetJSON200() *AuditDetailEnvelope {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r AuditGetResponse) GetJSON400() *BadRequest {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r AuditGetResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r AuditGetResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r AuditGetResponse) GetJSON404() *NotFound {
+	return r.JSON404
+}
+
+// GetJSON429 returns the response for an HTTP 429 `application/json` response
+func (r AuditGetResponse) GetJSON429() *TooManyRequests {
+	return r.JSON429
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r AuditGetResponse) GetJSON500() *InternalError {
+	return r.JSON500
+}
+
+// GetJSON503 returns the response for an HTTP 503 `application/json` response
+func (r AuditGetResponse) GetJSON503() *InternalError {
+	return r.JSON503
+}
+
+// GetBody returns the raw response body bytes
+func (r AuditGetResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r AuditGetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AuditGetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r AuditGetResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
 }
 
 // AuthLoginResponse200Headers the declared response headers of an HTTP 200 response for AuthLogin
@@ -32586,6 +34774,120 @@ func (r WarehousesUpdateResponse) ContentType() string {
 	return ""
 }
 
+// AuditListWithResponse Search audit events
+//
+// Returns a newest-first cursor-paginated page within the caller's authorized
+// organization and branch scope. Tenant and branch scope are derived from the
+// authenticated principal and cannot be selected through query parameters.
+// Search windows are mandatory, half-open (`from` inclusive, `to` exclusive),
+// and limited to 90 days. Unknown, repeated, malformed, and oversized query
+// parameters are rejected. Responses are private and not cacheable.
+//
+// Requires `audit:view`. The endpoint is rate-limited by IP and authenticated
+// user. Successful reads are themselves recorded without storing query values
+// or response bodies.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /audit-logs (the `AuditList` operationId).
+func (c *ClientWithResponses) AuditListWithResponse(ctx context.Context, params *AuditListParams, reqEditors ...RequestEditorFn) (*AuditListResponse, error) {
+	rsp, err := c.AuditList(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAuditListResponse(rsp)
+}
+
+// AuditListActionsWithResponse List observed audit actions
+//
+// Returns distinct action values visible to the caller within the requested
+// time window and authorized organization/branch scope. Requires `audit:view`.
+// The range must not exceed 90 days. Responses are private and not cacheable.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /audit-logs/actions (the `AuditListActions` operationId).
+func (c *ClientWithResponses) AuditListActionsWithResponse(ctx context.Context, params *AuditListActionsParams, reqEditors ...RequestEditorFn) (*AuditListActionsResponse, error) {
+	rsp, err := c.AuditListActions(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAuditListActionsResponse(rsp)
+}
+
+// AuditListModulesWithResponse List observed audit modules
+//
+// Returns distinct module values visible to the caller within the requested
+// time window and authorized organization/branch scope. Requires `audit:view`.
+// The range must not exceed 90 days. Responses are private and not cacheable.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /audit-logs/modules (the `AuditListModules` operationId).
+func (c *ClientWithResponses) AuditListModulesWithResponse(ctx context.Context, params *AuditListModulesParams, reqEditors ...RequestEditorFn) (*AuditListModulesResponse, error) {
+	rsp, err := c.AuditListModules(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAuditListModulesResponse(rsp)
+}
+
+// AuditListPlatformEventsWithResponse Search platform audit events
+//
+// Returns events whose `organization_id` is NULL; this operation never
+// returns tenant-owned events. Requires `audit:view` and the SUPER_ADMIN
+// role. Filters and time window have the same limits as `GET /audit-logs`.
+// Responses are private and not cacheable.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /audit-logs/platform (the `AuditListPlatformEvents` operationId).
+func (c *ClientWithResponses) AuditListPlatformEventsWithResponse(ctx context.Context, params *AuditListPlatformEventsParams, reqEditors ...RequestEditorFn) (*AuditListPlatformEventsResponse, error) {
+	rsp, err := c.AuditListPlatformEvents(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAuditListPlatformEventsResponse(rsp)
+}
+
+// AuditGetPlatformEventWithResponse Get a platform audit event
+//
+// Returns one event only when its `organization_id` is NULL. Requires
+// `audit:view` and the SUPER_ADMIN role. Both the event UUID and its
+// `occurred_at` partition timestamp are required. Missing and inaccessible
+// events are not distinguishable. Payload data is redacted before returning.
+// Responses are private and not cacheable.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /audit-logs/platform/{id} (the `AuditGetPlatformEvent` operationId).
+func (c *ClientWithResponses) AuditGetPlatformEventWithResponse(ctx context.Context, id AuditEventID, params *AuditGetPlatformEventParams, reqEditors ...RequestEditorFn) (*AuditGetPlatformEventResponse, error) {
+	rsp, err := c.AuditGetPlatformEvent(ctx, id, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAuditGetPlatformEventResponse(rsp)
+}
+
+// AuditGetWithResponse Get an audit event
+//
+// Returns one event only if it is visible in the caller's authorized
+// organization/branch scope. Both the event UUID and its `occurred_at`
+// partition timestamp are required. Inaccessible and missing events are not
+// distinguishable. Details and before/after snapshots are redacted before
+// returning. Requires `audit:view`; responses are private and not cacheable.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /audit-logs/{id} (the `AuditGet` operationId).
+func (c *ClientWithResponses) AuditGetWithResponse(ctx context.Context, id AuditEventID, params *AuditGetParams, reqEditors ...RequestEditorFn) (*AuditGetResponse, error) {
+	rsp, err := c.AuditGet(ctx, id, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAuditGetResponse(rsp)
+}
+
 // AuthLoginWithBodyWithResponse Authenticate with email and password
 //
 // Authenticates against organization-scoped credentials. The response contains access and
@@ -35261,6 +37563,1120 @@ func (c *ClientWithResponses) WarehousesUpdateWithResponse(ctx context.Context, 
 		return nil, err
 	}
 	return ParseWarehousesUpdateResponse(rsp)
+}
+
+// ParseAuditListResponse parses an HTTP response from a AuditListWithResponse call
+func ParseAuditListResponse(rsp *http.Response) (*AuditListResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AuditListResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AuditListEnvelope
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 429:
+		var dest TooManyRequests
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON429 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest InternalError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
+
+	}
+
+	switch {
+	case rsp.StatusCode == 400:
+		var headers AuditListResponse400Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value openapi_types.UUID
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers400 = &headers
+	case rsp.StatusCode == 401:
+		var headers AuditListResponse401Headers
+		if values := rsp.Header.Values("WWW-Authenticate"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "WWW-Authenticate", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.WWWAuthenticate = &value
+		}
+		if values := rsp.Header.Values("X-MFA-Challenge"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-MFA-Challenge", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XMFAChallenge = &value
+		}
+		if values := rsp.Header.Values("X-Password-Change-Token"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Password-Change-Token", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XPasswordChangeToken = &value
+		}
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value openapi_types.UUID
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers401 = &headers
+	case rsp.StatusCode == 403:
+		var headers AuditListResponse403Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value openapi_types.UUID
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers403 = &headers
+	case rsp.StatusCode == 429:
+		var headers AuditListResponse429Headers
+		if values := rsp.Header.Values("Retry-After"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Retry-After", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.RetryAfter = &value
+		}
+		if values := rsp.Header.Values("X-RateLimit-Limit"); len(values) > 0 {
+			var value int
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-RateLimit-Limit", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRateLimitLimit = &value
+		}
+		if values := rsp.Header.Values("X-RateLimit-Remaining"); len(values) > 0 {
+			var value int
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-RateLimit-Remaining", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRateLimitRemaining = &value
+		}
+		if values := rsp.Header.Values("X-RateLimit-Reset"); len(values) > 0 {
+			var value int
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-RateLimit-Reset", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRateLimitReset = &value
+		}
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value openapi_types.UUID
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers429 = &headers
+	case rsp.StatusCode == 500:
+		var headers AuditListResponse500Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value openapi_types.UUID
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers500 = &headers
+	case rsp.StatusCode == 503:
+		var headers AuditListResponse503Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value openapi_types.UUID
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers503 = &headers
+	}
+
+	return response, nil
+}
+
+// ParseAuditListActionsResponse parses an HTTP response from a AuditListActionsWithResponse call
+func ParseAuditListActionsResponse(rsp *http.Response) (*AuditListActionsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AuditListActionsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AuditValuesEnvelope
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 429:
+		var dest TooManyRequests
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON429 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest InternalError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
+
+	}
+
+	switch {
+	case rsp.StatusCode == 400:
+		var headers AuditListActionsResponse400Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value openapi_types.UUID
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers400 = &headers
+	case rsp.StatusCode == 401:
+		var headers AuditListActionsResponse401Headers
+		if values := rsp.Header.Values("WWW-Authenticate"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "WWW-Authenticate", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.WWWAuthenticate = &value
+		}
+		if values := rsp.Header.Values("X-MFA-Challenge"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-MFA-Challenge", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XMFAChallenge = &value
+		}
+		if values := rsp.Header.Values("X-Password-Change-Token"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Password-Change-Token", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XPasswordChangeToken = &value
+		}
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value openapi_types.UUID
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers401 = &headers
+	case rsp.StatusCode == 403:
+		var headers AuditListActionsResponse403Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value openapi_types.UUID
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers403 = &headers
+	case rsp.StatusCode == 429:
+		var headers AuditListActionsResponse429Headers
+		if values := rsp.Header.Values("Retry-After"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Retry-After", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.RetryAfter = &value
+		}
+		if values := rsp.Header.Values("X-RateLimit-Limit"); len(values) > 0 {
+			var value int
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-RateLimit-Limit", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRateLimitLimit = &value
+		}
+		if values := rsp.Header.Values("X-RateLimit-Remaining"); len(values) > 0 {
+			var value int
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-RateLimit-Remaining", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRateLimitRemaining = &value
+		}
+		if values := rsp.Header.Values("X-RateLimit-Reset"); len(values) > 0 {
+			var value int
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-RateLimit-Reset", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRateLimitReset = &value
+		}
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value openapi_types.UUID
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers429 = &headers
+	case rsp.StatusCode == 500:
+		var headers AuditListActionsResponse500Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value openapi_types.UUID
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers500 = &headers
+	case rsp.StatusCode == 503:
+		var headers AuditListActionsResponse503Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value openapi_types.UUID
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers503 = &headers
+	}
+
+	return response, nil
+}
+
+// ParseAuditListModulesResponse parses an HTTP response from a AuditListModulesWithResponse call
+func ParseAuditListModulesResponse(rsp *http.Response) (*AuditListModulesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AuditListModulesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AuditValuesEnvelope
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 429:
+		var dest TooManyRequests
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON429 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest InternalError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
+
+	}
+
+	switch {
+	case rsp.StatusCode == 400:
+		var headers AuditListModulesResponse400Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value openapi_types.UUID
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers400 = &headers
+	case rsp.StatusCode == 401:
+		var headers AuditListModulesResponse401Headers
+		if values := rsp.Header.Values("WWW-Authenticate"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "WWW-Authenticate", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.WWWAuthenticate = &value
+		}
+		if values := rsp.Header.Values("X-MFA-Challenge"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-MFA-Challenge", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XMFAChallenge = &value
+		}
+		if values := rsp.Header.Values("X-Password-Change-Token"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Password-Change-Token", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XPasswordChangeToken = &value
+		}
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value openapi_types.UUID
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers401 = &headers
+	case rsp.StatusCode == 403:
+		var headers AuditListModulesResponse403Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value openapi_types.UUID
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers403 = &headers
+	case rsp.StatusCode == 429:
+		var headers AuditListModulesResponse429Headers
+		if values := rsp.Header.Values("Retry-After"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Retry-After", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.RetryAfter = &value
+		}
+		if values := rsp.Header.Values("X-RateLimit-Limit"); len(values) > 0 {
+			var value int
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-RateLimit-Limit", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRateLimitLimit = &value
+		}
+		if values := rsp.Header.Values("X-RateLimit-Remaining"); len(values) > 0 {
+			var value int
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-RateLimit-Remaining", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRateLimitRemaining = &value
+		}
+		if values := rsp.Header.Values("X-RateLimit-Reset"); len(values) > 0 {
+			var value int
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-RateLimit-Reset", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRateLimitReset = &value
+		}
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value openapi_types.UUID
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers429 = &headers
+	case rsp.StatusCode == 500:
+		var headers AuditListModulesResponse500Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value openapi_types.UUID
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers500 = &headers
+	case rsp.StatusCode == 503:
+		var headers AuditListModulesResponse503Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value openapi_types.UUID
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers503 = &headers
+	}
+
+	return response, nil
+}
+
+// ParseAuditListPlatformEventsResponse parses an HTTP response from a AuditListPlatformEventsWithResponse call
+func ParseAuditListPlatformEventsResponse(rsp *http.Response) (*AuditListPlatformEventsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AuditListPlatformEventsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AuditListEnvelope
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 429:
+		var dest TooManyRequests
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON429 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest InternalError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
+
+	}
+
+	switch {
+	case rsp.StatusCode == 400:
+		var headers AuditListPlatformEventsResponse400Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value openapi_types.UUID
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers400 = &headers
+	case rsp.StatusCode == 401:
+		var headers AuditListPlatformEventsResponse401Headers
+		if values := rsp.Header.Values("WWW-Authenticate"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "WWW-Authenticate", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.WWWAuthenticate = &value
+		}
+		if values := rsp.Header.Values("X-MFA-Challenge"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-MFA-Challenge", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XMFAChallenge = &value
+		}
+		if values := rsp.Header.Values("X-Password-Change-Token"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Password-Change-Token", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XPasswordChangeToken = &value
+		}
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value openapi_types.UUID
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers401 = &headers
+	case rsp.StatusCode == 403:
+		var headers AuditListPlatformEventsResponse403Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value openapi_types.UUID
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers403 = &headers
+	case rsp.StatusCode == 429:
+		var headers AuditListPlatformEventsResponse429Headers
+		if values := rsp.Header.Values("Retry-After"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Retry-After", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.RetryAfter = &value
+		}
+		if values := rsp.Header.Values("X-RateLimit-Limit"); len(values) > 0 {
+			var value int
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-RateLimit-Limit", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRateLimitLimit = &value
+		}
+		if values := rsp.Header.Values("X-RateLimit-Remaining"); len(values) > 0 {
+			var value int
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-RateLimit-Remaining", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRateLimitRemaining = &value
+		}
+		if values := rsp.Header.Values("X-RateLimit-Reset"); len(values) > 0 {
+			var value int
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-RateLimit-Reset", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRateLimitReset = &value
+		}
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value openapi_types.UUID
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers429 = &headers
+	case rsp.StatusCode == 500:
+		var headers AuditListPlatformEventsResponse500Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value openapi_types.UUID
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers500 = &headers
+	case rsp.StatusCode == 503:
+		var headers AuditListPlatformEventsResponse503Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value openapi_types.UUID
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers503 = &headers
+	}
+
+	return response, nil
+}
+
+// ParseAuditGetPlatformEventResponse parses an HTTP response from a AuditGetPlatformEventWithResponse call
+func ParseAuditGetPlatformEventResponse(rsp *http.Response) (*AuditGetPlatformEventResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AuditGetPlatformEventResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AuditDetailEnvelope
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 429:
+		var dest TooManyRequests
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON429 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest InternalError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
+
+	}
+
+	switch {
+	case rsp.StatusCode == 400:
+		var headers AuditGetPlatformEventResponse400Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value openapi_types.UUID
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers400 = &headers
+	case rsp.StatusCode == 401:
+		var headers AuditGetPlatformEventResponse401Headers
+		if values := rsp.Header.Values("WWW-Authenticate"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "WWW-Authenticate", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.WWWAuthenticate = &value
+		}
+		if values := rsp.Header.Values("X-MFA-Challenge"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-MFA-Challenge", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XMFAChallenge = &value
+		}
+		if values := rsp.Header.Values("X-Password-Change-Token"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Password-Change-Token", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XPasswordChangeToken = &value
+		}
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value openapi_types.UUID
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers401 = &headers
+	case rsp.StatusCode == 403:
+		var headers AuditGetPlatformEventResponse403Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value openapi_types.UUID
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers403 = &headers
+	case rsp.StatusCode == 404:
+		var headers AuditGetPlatformEventResponse404Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value openapi_types.UUID
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers404 = &headers
+	case rsp.StatusCode == 429:
+		var headers AuditGetPlatformEventResponse429Headers
+		if values := rsp.Header.Values("Retry-After"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Retry-After", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.RetryAfter = &value
+		}
+		if values := rsp.Header.Values("X-RateLimit-Limit"); len(values) > 0 {
+			var value int
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-RateLimit-Limit", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRateLimitLimit = &value
+		}
+		if values := rsp.Header.Values("X-RateLimit-Remaining"); len(values) > 0 {
+			var value int
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-RateLimit-Remaining", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRateLimitRemaining = &value
+		}
+		if values := rsp.Header.Values("X-RateLimit-Reset"); len(values) > 0 {
+			var value int
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-RateLimit-Reset", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRateLimitReset = &value
+		}
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value openapi_types.UUID
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers429 = &headers
+	case rsp.StatusCode == 500:
+		var headers AuditGetPlatformEventResponse500Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value openapi_types.UUID
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers500 = &headers
+	case rsp.StatusCode == 503:
+		var headers AuditGetPlatformEventResponse503Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value openapi_types.UUID
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers503 = &headers
+	}
+
+	return response, nil
+}
+
+// ParseAuditGetResponse parses an HTTP response from a AuditGetWithResponse call
+func ParseAuditGetResponse(rsp *http.Response) (*AuditGetResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AuditGetResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AuditDetailEnvelope
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 429:
+		var dest TooManyRequests
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON429 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest InternalError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
+
+	}
+
+	switch {
+	case rsp.StatusCode == 400:
+		var headers AuditGetResponse400Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value openapi_types.UUID
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers400 = &headers
+	case rsp.StatusCode == 401:
+		var headers AuditGetResponse401Headers
+		if values := rsp.Header.Values("WWW-Authenticate"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "WWW-Authenticate", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.WWWAuthenticate = &value
+		}
+		if values := rsp.Header.Values("X-MFA-Challenge"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-MFA-Challenge", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XMFAChallenge = &value
+		}
+		if values := rsp.Header.Values("X-Password-Change-Token"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Password-Change-Token", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XPasswordChangeToken = &value
+		}
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value openapi_types.UUID
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers401 = &headers
+	case rsp.StatusCode == 403:
+		var headers AuditGetResponse403Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value openapi_types.UUID
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers403 = &headers
+	case rsp.StatusCode == 404:
+		var headers AuditGetResponse404Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value openapi_types.UUID
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers404 = &headers
+	case rsp.StatusCode == 429:
+		var headers AuditGetResponse429Headers
+		if values := rsp.Header.Values("Retry-After"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Retry-After", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.RetryAfter = &value
+		}
+		if values := rsp.Header.Values("X-RateLimit-Limit"); len(values) > 0 {
+			var value int
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-RateLimit-Limit", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRateLimitLimit = &value
+		}
+		if values := rsp.Header.Values("X-RateLimit-Remaining"); len(values) > 0 {
+			var value int
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-RateLimit-Remaining", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRateLimitRemaining = &value
+		}
+		if values := rsp.Header.Values("X-RateLimit-Reset"); len(values) > 0 {
+			var value int
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-RateLimit-Reset", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRateLimitReset = &value
+		}
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value openapi_types.UUID
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers429 = &headers
+	case rsp.StatusCode == 500:
+		var headers AuditGetResponse500Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value openapi_types.UUID
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers500 = &headers
+	case rsp.StatusCode == 503:
+		var headers AuditGetResponse503Headers
+		if values := rsp.Header.Values("X-Request-ID"); len(values) > 0 {
+			var value openapi_types.UUID
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			}
+			headers.XRequestID = &value
+		}
+		response.Headers503 = &headers
+	}
+
+	return response, nil
 }
 
 // ParseAuthLoginResponse parses an HTTP response from a AuthLoginWithResponse call
@@ -52916,369 +56332,402 @@ func ParseWarehousesUpdateResponse(rsp *http.Response) (*WarehousesUpdateRespons
 // const string: with thousands of chunks the chained `+` fold is several
 // times slower for the Go compiler than parsing a slice literal.
 var swaggerSpec = []string{
-	"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",
+	"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",
 }
 
 // decodeSpec returns the embedded OpenAPI spec as raw JSON bytes,
