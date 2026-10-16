@@ -25,6 +25,7 @@ import (
 
 	"backend/internal/middleware"
 	"backend/internal/platform/config"
+	"backend/internal/platform/telemetry"
 )
 
 // newLokiAuditSink accepts config.LokiSinkState (the `audit.loki` block) so the
@@ -36,9 +37,10 @@ import (
 // safe for concurrent use. It never blocks the caller for longer than a
 // channel send.
 type LokiAuditSink struct {
-	cfg    config.LokiSinkState
-	log    *zap.Logger
-	client *http.Client
+	cfg     config.LokiSinkState
+	log     *zap.Logger
+	client  *http.Client
+	metrics *telemetry.Metrics
 
 	mu      sync.Mutex
 	pending []middleware.AuditEntry
@@ -58,7 +60,7 @@ type lokiStream struct {
 // NewLokiAuditSink builds the sink. Returns nil when cfg.Enabled is false (the
 // fanout wrapper simply skips it). When Enabled but URL is empty, it degrades
 // to nil + a warning so the app still boots.
-func NewLokiAuditSink(cfg config.LokiSinkState, log *zap.Logger) *LokiAuditSink {
+func NewLokiAuditSink(cfg config.LokiSinkState, log *zap.Logger, metrics ...*telemetry.Metrics) *LokiAuditSink {
 	if log == nil {
 		log = zap.NewNop()
 	}
@@ -79,7 +81,7 @@ func NewLokiAuditSink(cfg config.LokiSinkState, log *zap.Logger) *LokiAuditSink 
 		cfg.Timeout = 3 * time.Second
 	}
 
-	return &LokiAuditSink{
+	sink := &LokiAuditSink{
 		cfg:     cfg,
 		log:     log,
 		client:  &http.Client{Timeout: cfg.Timeout},
@@ -87,6 +89,10 @@ func NewLokiAuditSink(cfg config.LokiSinkState, log *zap.Logger) *LokiAuditSink 
 		closed:  make(chan struct{}),
 		done:    make(chan struct{}),
 	}
+	if len(metrics) > 0 {
+		sink.metrics = metrics[0]
+	}
+	return sink
 }
 
 // Record buffers an entry for the next flush. It is non-blocking in the happy
@@ -196,6 +202,7 @@ func (s *LokiAuditSink) push(entries []middleware.AuditEntry) {
 
 	body, err := json.Marshal(map[string]any{"streams": streamsOut})
 	if err != nil {
+		s.observeWrite("error")
 		s.log.Warn("audit loki: marshal failed", zap.Error(err))
 		return
 	}
@@ -204,6 +211,7 @@ func (s *LokiAuditSink) push(entries []middleware.AuditEntry) {
 	defer cancel()
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, s.cfg.URL, bytes.NewReader(body))
 	if err != nil {
+		s.observeWrite("error")
 		s.log.Warn("audit loki: build request failed", zap.Error(err))
 		return
 	}
@@ -212,14 +220,24 @@ func (s *LokiAuditSink) push(entries []middleware.AuditEntry) {
 
 	resp, err := s.client.Do(req)
 	if err != nil {
+		s.observeWrite("error")
 		s.log.Warn("audit loki: push failed", zap.Error(err))
 		return
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		s.observeWrite("error")
 		s.log.Warn("audit loki: non-2xx response",
 			zap.Int("status", resp.StatusCode),
 			zap.Int("entries", len(entries)))
+		return
+	}
+	s.observeWrite("success")
+}
+
+func (s *LokiAuditSink) observeWrite(outcome string) {
+	if s != nil && s.metrics != nil {
+		s.metrics.ObserveAuditSinkWrite("loki", outcome)
 	}
 }
 
@@ -256,8 +274,8 @@ func orDash(s string) string {
 func mustJSON(e *middleware.AuditEntry) []byte {
 	b, err := json.Marshal(e)
 	if err != nil {
-		return []byte(fmt.Sprintf(`{"action":%q,"outcome":"failure","serialize_error":%q}`,
-			e.Action, err.Error()))
+		return fmt.Appendf(nil, `{"action":%q,"outcome":"failure","serialize_error":%q}`,
+			e.Action, err.Error())
 	}
 	return b
 }
