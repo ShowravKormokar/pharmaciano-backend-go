@@ -39,3 +39,10 @@ func (m *Middleware) observeAccountEmailRateLimit(bucket string) {
 	}
 	m.metrics.ObserveAccountEmailRateLimit(bucket)
 }
+
+func (m *Middleware) observeRateLimited(policy string) {
+	if m == nil || m.metrics == nil {
+		return
+	}
+	m.metrics.ObserveRateLimited(policy)
+}
