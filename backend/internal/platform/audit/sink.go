@@ -10,6 +10,7 @@ import (
 
 	"backend/internal/middleware"
 	"backend/internal/platform/db"
+	"backend/internal/platform/telemetry"
 )
 
 const insertAudit = `INSERT INTO audit_logs (
@@ -24,18 +25,23 @@ const insertAudit = `INSERT INTO audit_logs (
 // table. It is the production replacement for the nopAuditSink wired into
 // the middleware container at startup.
 type PostgresAuditSink struct {
-	db     *db.DB
-	log    *zap.Logger
-	clock  func() time.Time
+	db      *db.DB
+	log     *zap.Logger
+	clock   func() time.Time
+	metrics *telemetry.Metrics
 }
 
 // NewPostgresAuditSink builds the sink. database may be nil — in that case
 // Record is a no-op (test-friendly).
-func NewPostgresAuditSink(database *db.DB, log *zap.Logger) *PostgresAuditSink {
+func NewPostgresAuditSink(database *db.DB, log *zap.Logger, metrics ...*telemetry.Metrics) *PostgresAuditSink {
 	if log == nil {
 		log = zap.NewNop()
 	}
-	return &PostgresAuditSink{db: database, log: log, clock: time.Now}
+	sink := &PostgresAuditSink{db: database, log: log, clock: time.Now}
+	if len(metrics) > 0 {
+		sink.metrics = metrics[0]
+	}
+	return sink
 }
 
 // Record satisfies the middleware.AuditSink interface. It maps the
@@ -44,7 +50,11 @@ func NewPostgresAuditSink(database *db.DB, log *zap.Logger) *PostgresAuditSink {
 // transaction). Errors are logged and swallowed — a transient DB outage
 // must never break the request that just succeeded.
 func (s *PostgresAuditSink) Record(ctx context.Context, entry middleware.AuditEntry) {
-	if s == nil || s.db == nil {
+	if s == nil {
+		return
+	}
+	if s.db == nil {
+		s.observeWrite("skipped")
 		return
 	}
 	details, err := json.Marshal(map[string]any{
@@ -76,7 +86,16 @@ func (s *PostgresAuditSink) Record(ctx context.Context, entry middleware.AuditEn
 		details,
 	)
 	if dbErr != nil {
+		s.observeWrite("error")
 		s.log.Warn("audit write failed", zap.Error(dbErr))
+		return
+	}
+	s.observeWrite("success")
+}
+
+func (s *PostgresAuditSink) observeWrite(outcome string) {
+	if s != nil && s.metrics != nil {
+		s.metrics.ObserveAuditSinkWrite("postgres", outcome)
 	}
 }
 
