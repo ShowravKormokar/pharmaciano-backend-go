@@ -1,10 +1,10 @@
-﻿package telemetry
+package telemetry
 
 import (
+	"crypto/subtle"
 	"net/http"
 	"strconv"
 	"strings"
-	"crypto/subtle"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -56,10 +56,14 @@ type Metrics struct {
 	AuthzCacheErrors    prometheus.Counter     // count of corruption / read-error events observed in-process
 
 	// Security / rate limiting / tenant / branch
-	RateLimitedTotal       *prometheus.CounterVec // policy: ip | account_email | per_tenant | global
-	SecurityDenialsTotal   *prometheus.CounterVec // reason: tenant_mismatch | branch_scope_denied | csrf | trusted_proxy
-	TrustedProxyBlocked    *prometheus.CounterVec // reason: missing_xff | forwarded_for_untrusted
-	StepUpRequiredTotal    *prometheus.CounterVec // outcome: satisfied | denied | skipped
+	RateLimitedTotal     *prometheus.CounterVec // policy: ip | account_email | per_tenant | global
+	SecurityDenialsTotal *prometheus.CounterVec // reason: tenant_mismatch | branch_scope_denied | csrf | trusted_proxy
+	TrustedProxyBlocked  *prometheus.CounterVec // reason: missing_xff | forwarded_for_untrusted
+	StepUpRequiredTotal  *prometheus.CounterVec // outcome: satisfied | denied | skipped
+
+	// Audit uses bounded labels only; tenant IDs, event IDs and filters are never labels.
+	AuditReadRequestsTotal *prometheus.CounterVec // operation, outcome
+	AuditSinkWritesTotal   *prometheus.CounterVec // sink, outcome
 
 	// Business
 	SalesCompletedTotal    *prometheus.CounterVec
@@ -335,6 +339,20 @@ func NewMetrics() *Metrics {
 		},
 		[]string{"outcome"}, // satisfied | denied | skipped
 	)
+	m.AuditReadRequestsTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "audit_read_requests_total",
+			Help: "Audit read service operations by operation and outcome.",
+		},
+		[]string{"operation", "outcome"},
+	)
+	m.AuditSinkWritesTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "audit_sink_writes_total",
+			Help: "Audit sink write operations by sink and outcome.",
+		},
+		[]string{"sink", "outcome"},
+	)
 
 	// Sales Collector
 	m.SalesCompletedTotal = prometheus.NewCounterVec(
@@ -474,6 +492,8 @@ func NewMetrics() *Metrics {
 		m.AuthzVersionBumps, m.RBACGenerationBumps, m.AuthzCacheErrors,
 		// Security
 		m.RateLimitedTotal, m.SecurityDenialsTotal, m.TrustedProxyBlocked, m.StepUpRequiredTotal,
+		// Audit
+		m.AuditReadRequestsTotal, m.AuditSinkWritesTotal,
 		// Business / jobs / ai / mailer / storage
 		m.SalesCompletedTotal, m.PurchasesApprovedTotal, m.LowStockAlertsTotal, m.ExpiryAlertsTotal,
 		m.JobDuration, m.JobsProcessed, m.JobsFailed, m.JobQueueSize,
@@ -596,6 +616,12 @@ func (m *Metrics) IncAuthzCacheError() {
 }
 func (m *Metrics) ObserveRateLimited(policy string) {
 	m.RateLimitedTotal.WithLabelValues(policy).Inc()
+}
+func (m *Metrics) ObserveAuditRead(operation, outcome string) {
+	m.AuditReadRequestsTotal.WithLabelValues(operation, outcome).Inc()
+}
+func (m *Metrics) ObserveAuditSinkWrite(sink, outcome string) {
+	m.AuditSinkWritesTotal.WithLabelValues(sink, outcome).Inc()
 }
 func (m *Metrics) ObserveSecurityDenial(reason string) {
 	m.SecurityDenialsTotal.WithLabelValues(reason).Inc()
