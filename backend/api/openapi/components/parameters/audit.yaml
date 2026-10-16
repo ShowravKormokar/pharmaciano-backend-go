@@ -1,0 +1,129 @@
+AuditFrom:
+  name: from
+  in: query
+  required: true
+  description: Inclusive beginning of the event-time window. Must be earlier than `to`; the window cannot exceed 90 days.
+  schema:
+    type: string
+    format: date-time
+  example: '2026-10-01T00:00:00Z'
+
+AuditTo:
+  name: to
+  in: query
+  required: true
+  description: Exclusive end of the event-time window. Must be later than `from`; the window cannot exceed 90 days.
+  schema:
+    type: string
+    format: date-time
+  example: '2026-10-16T00:00:00Z'
+
+AuditCursor:
+  name: cursor
+  in: query
+  description: Opaque HMAC-signed cursor returned as `data.next_cursor`. It is bound to the current scope, filters, and time window.
+  schema:
+    type: string
+    maxLength: 1024
+
+AuditLimit:
+  name: limit
+  in: query
+  description: Maximum events to return. Defaults to 50.
+  schema:
+    type: integer
+    minimum: 1
+    maximum: 200
+    default: 50
+
+AuditUserID:
+  name: user_id
+  in: query
+  description: Filter by actor UUID.
+  schema:
+    type: string
+    format: uuid
+
+AuditModule:
+  name: module
+  in: query
+  description: Exact module filter.
+  schema:
+    type: string
+    maxLength: 60
+
+AuditAction:
+  name: action
+  in: query
+  description: Exact action filter.
+  schema:
+    type: string
+    maxLength: 40
+
+AuditEntityType:
+  name: entity_type
+  in: query
+  description: Exact affected entity type filter.
+  schema:
+    type: string
+    maxLength: 60
+
+AuditEntityID:
+  name: entity_id
+  in: query
+  description: Filter by affected entity UUID.
+  schema:
+    type: string
+    format: uuid
+
+AuditOutcomeFilter:
+  name: outcome
+  in: query
+  description: Filter by recorded operation outcome.
+  schema:
+    type: string
+    enum: [success, failure]
+
+AuditIP:
+  name: ip
+  in: query
+  description: Filter by exact IPv4 or IPv6 address.
+  schema:
+    type: string
+
+AuditSearch:
+  name: q
+  in: query
+  description: Full-text search. Must contain 3 to 120 characters.
+  schema:
+    type: string
+    minLength: 3
+    maxLength: 120
+
+AuditEventID:
+  name: id
+  in: path
+  required: true
+  description: Audit event UUID. Because the table is time-partitioned, also supply the event's `occurred_at` partition key.
+  schema:
+    type: string
+    format: uuid
+
+AuditOccurredAt:
+  name: occurred_at
+  in: query
+  required: true
+  description: RFC 3339 event occurrence timestamp and partition key. Required because event IDs are not globally unique across partitions.
+  schema:
+    type: string
+    format: date-time
+
+AuditValuesLimit:
+  name: limit
+  in: query
+  description: Maximum distinct values to return. Defaults to 100.
+  schema:
+    type: integer
+    minimum: 1
+    maximum: 500
+    default: 100

@@ -1,0 +1,134 @@
+AuditEventOutcome:
+  type: string
+  enum: [success, failure]
+
+AuditLogListItem:
+  type: object
+  required: [id, occurred_at, module, action, outcome]
+  properties:
+    id:
+      type: string
+      format: uuid
+    occurred_at:
+      type: string
+      format: date-time
+    organization_id:
+      type: string
+      format: uuid
+    branch_id:
+      type: string
+      format: uuid
+    user_id:
+      type: string
+      format: uuid
+    role_name:
+      type: string
+    session_id:
+      type: string
+      format: uuid
+    request_id:
+      type: string
+    module:
+      type: string
+    action:
+      type: string
+    entity_type:
+      type: string
+    entity_id:
+      type: string
+      format: uuid
+    outcome:
+      $ref: '#/AuditEventOutcome'
+    error_code:
+      type: string
+    duration_ms:
+      type: integer
+      format: int32
+
+AuditLogList:
+  type: object
+  required: [items, has_more]
+  properties:
+    items:
+      type: array
+      items:
+        $ref: '#/AuditLogListItem'
+    has_more:
+      type: boolean
+    next_cursor:
+      type: string
+
+AuditLogDetail:
+  allOf:
+    - $ref: '#/AuditLogListItem'
+    - type: object
+      properties:
+        ip:
+          type: string
+        browser:
+          type: string
+        os:
+          type: string
+        device:
+          type: string
+        location:
+          type: string
+        user_agent:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
+          description: Redacted event metadata. Secrets and sensitive values are removed before response.
+        before_data:
+          type: object
+          additionalProperties: true
+          description: Redacted before-state snapshot, when available.
+        after_data:
+          type: object
+          additionalProperties: true
+          description: Redacted after-state snapshot, when available.
+
+AuditValues:
+  type: object
+  required: [items]
+  properties:
+    items:
+      type: array
+      items:
+        type: string
+
+AuditListEnvelope:
+  type: object
+  required: [success, data, meta]
+  properties:
+    success:
+      type: boolean
+      const: true
+    data:
+      $ref: '#/AuditLogList'
+    meta:
+      $ref: 'common.yaml#/Meta'
+
+AuditDetailEnvelope:
+  type: object
+  required: [success, data, meta]
+  properties:
+    success:
+      type: boolean
+      const: true
+    data:
+      $ref: '#/AuditLogDetail'
+    meta:
+      $ref: 'common.yaml#/Meta'
+
+AuditValuesEnvelope:
+  type: object
+  required: [success, data, meta]
+  properties:
+    success:
+      type: boolean
+      const: true
+    data:
+      $ref: '#/AuditValues'
+    meta:
+      $ref: 'common.yaml#/Meta'

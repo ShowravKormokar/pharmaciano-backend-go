@@ -1,0 +1,235 @@
+/audit-logs:
+  get:
+    operationId: audit.list
+    summary: Search audit events
+    description: |
+      Returns a newest-first cursor-paginated page within the caller's authorized
+      organization and branch scope. Tenant and branch scope are derived from the
+      authenticated principal and cannot be selected through query parameters.
+      Search windows are mandatory, half-open (`from` inclusive, `to` exclusive),
+      and limited to 90 days. Unknown, repeated, malformed, and oversized query
+      parameters are rejected. Responses are private and not cacheable.
+
+      Requires `audit:view`. The endpoint is rate-limited by IP and authenticated
+      user. Successful reads are themselves recorded without storing query values
+      or response bodies.
+    tags: [audit]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/audit.yaml#/AuditFrom'
+      - $ref: '../components/parameters/audit.yaml#/AuditTo'
+      - $ref: '../components/parameters/audit.yaml#/AuditCursor'
+      - $ref: '../components/parameters/audit.yaml#/AuditLimit'
+      - $ref: '../components/parameters/audit.yaml#/AuditUserID'
+      - $ref: '../components/parameters/audit.yaml#/AuditModule'
+      - $ref: '../components/parameters/audit.yaml#/AuditAction'
+      - $ref: '../components/parameters/audit.yaml#/AuditEntityType'
+      - $ref: '../components/parameters/audit.yaml#/AuditEntityID'
+      - $ref: '../components/parameters/audit.yaml#/AuditOutcomeFilter'
+      - $ref: '../components/parameters/audit.yaml#/AuditIP'
+      - $ref: '../components/parameters/audit.yaml#/AuditSearch'
+    responses:
+      '200':
+        description: Authorized audit events and an optional next-page cursor.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/audit.yaml#/AuditListEnvelope'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '429':
+        $ref: '../components/responses/error.yaml#/TooManyRequests'
+      '500':
+        $ref: '../components/responses/error.yaml#/InternalError'
+      '503':
+        $ref: '../components/responses/error.yaml#/InternalError'
+
+/audit-logs/modules:
+  get:
+    operationId: audit.listModules
+    summary: List observed audit modules
+    description: |
+      Returns distinct module values visible to the caller within the requested
+      time window and authorized organization/branch scope. Requires `audit:view`.
+      The range must not exceed 90 days. Responses are private and not cacheable.
+    tags: [audit]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/audit.yaml#/AuditFrom'
+      - $ref: '../components/parameters/audit.yaml#/AuditTo'
+      - $ref: '../components/parameters/audit.yaml#/AuditValuesLimit'
+    responses:
+      '200':
+        description: Distinct module values in the authorized time window.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/audit.yaml#/AuditValuesEnvelope'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '429':
+        $ref: '../components/responses/error.yaml#/TooManyRequests'
+      '500':
+        $ref: '../components/responses/error.yaml#/InternalError'
+      '503':
+        $ref: '../components/responses/error.yaml#/InternalError'
+
+/audit-logs/actions:
+  get:
+    operationId: audit.listActions
+    summary: List observed audit actions
+    description: |
+      Returns distinct action values visible to the caller within the requested
+      time window and authorized organization/branch scope. Requires `audit:view`.
+      The range must not exceed 90 days. Responses are private and not cacheable.
+    tags: [audit]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/audit.yaml#/AuditFrom'
+      - $ref: '../components/parameters/audit.yaml#/AuditTo'
+      - $ref: '../components/parameters/audit.yaml#/AuditValuesLimit'
+    responses:
+      '200':
+        description: Distinct action values in the authorized time window.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/audit.yaml#/AuditValuesEnvelope'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '429':
+        $ref: '../components/responses/error.yaml#/TooManyRequests'
+      '500':
+        $ref: '../components/responses/error.yaml#/InternalError'
+      '503':
+        $ref: '../components/responses/error.yaml#/InternalError'
+
+/audit-logs/{id}:
+  get:
+    operationId: audit.get
+    summary: Get an audit event
+    description: |
+      Returns one event only if it is visible in the caller's authorized
+      organization/branch scope. Both the event UUID and its `occurred_at`
+      partition timestamp are required. Inaccessible and missing events are not
+      distinguishable. Details and before/after snapshots are redacted before
+      returning. Requires `audit:view`; responses are private and not cacheable.
+    tags: [audit]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/audit.yaml#/AuditEventID'
+      - $ref: '../components/parameters/audit.yaml#/AuditOccurredAt'
+    responses:
+      '200':
+        description: Redacted details for the authorized event.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/audit.yaml#/AuditDetailEnvelope'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+      '429':
+        $ref: '../components/responses/error.yaml#/TooManyRequests'
+      '500':
+        $ref: '../components/responses/error.yaml#/InternalError'
+      '503':
+        $ref: '../components/responses/error.yaml#/InternalError'
+
+/audit-logs/platform:
+  get:
+    operationId: audit.listPlatformEvents
+    summary: Search platform audit events
+    description: |
+      Returns events whose `organization_id` is NULL; this operation never
+      returns tenant-owned events. Requires `audit:view` and the SUPER_ADMIN
+      role. Filters and time window have the same limits as `GET /audit-logs`.
+      Responses are private and not cacheable.
+    tags: [audit]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/audit.yaml#/AuditFrom'
+      - $ref: '../components/parameters/audit.yaml#/AuditTo'
+      - $ref: '../components/parameters/audit.yaml#/AuditCursor'
+      - $ref: '../components/parameters/audit.yaml#/AuditLimit'
+      - $ref: '../components/parameters/audit.yaml#/AuditUserID'
+      - $ref: '../components/parameters/audit.yaml#/AuditModule'
+      - $ref: '../components/parameters/audit.yaml#/AuditAction'
+      - $ref: '../components/parameters/audit.yaml#/AuditEntityType'
+      - $ref: '../components/parameters/audit.yaml#/AuditEntityID'
+      - $ref: '../components/parameters/audit.yaml#/AuditOutcomeFilter'
+      - $ref: '../components/parameters/audit.yaml#/AuditIP'
+      - $ref: '../components/parameters/audit.yaml#/AuditSearch'
+    responses:
+      '200':
+        description: Platform-level events and an optional next-page cursor.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/audit.yaml#/AuditListEnvelope'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '429':
+        $ref: '../components/responses/error.yaml#/TooManyRequests'
+      '500':
+        $ref: '../components/responses/error.yaml#/InternalError'
+      '503':
+        $ref: '../components/responses/error.yaml#/InternalError'
+
+/audit-logs/platform/{id}:
+  get:
+    operationId: audit.getPlatformEvent
+    summary: Get a platform audit event
+    description: |
+      Returns one event only when its `organization_id` is NULL. Requires
+      `audit:view` and the SUPER_ADMIN role. Both the event UUID and its
+      `occurred_at` partition timestamp are required. Missing and inaccessible
+      events are not distinguishable. Payload data is redacted before returning.
+      Responses are private and not cacheable.
+    tags: [audit]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/audit.yaml#/AuditEventID'
+      - $ref: '../components/parameters/audit.yaml#/AuditOccurredAt'
+    responses:
+      '200':
+        description: Redacted details for the platform-level event.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/audit.yaml#/AuditDetailEnvelope'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+      '429':
+        $ref: '../components/responses/error.yaml#/TooManyRequests'
+      '500':
+        $ref: '../components/responses/error.yaml#/InternalError'
+      '503':
+        $ref: '../components/responses/error.yaml#/InternalError'
