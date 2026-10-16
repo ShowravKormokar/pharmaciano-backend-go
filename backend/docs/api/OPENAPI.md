@@ -61,7 +61,7 @@ The **split tree** is only ever consumed by Redocly for bundling. Everyone else 
 ```text
 api/
 ├── openapi/                          # THE contract tree
-│   ├── openapi.yaml                  # root: info, servers, security, 37 paths, components map
+│   ├── openapi.yaml                  # root: info, servers, security, 71 paths, components map
 │   ├── paths/
 │   │   ├── auth.yaml                 # /auth/{login,refresh,...,mfa/*} (17 endpoints)
 │   │   ├── users.yaml                # users CRUD + status + role/branch assignment (10)
@@ -69,10 +69,12 @@ api/
 │   │   ├── organizations.yaml        # organization current/id/summary (4)
 │   │   ├── warehouses.yaml           # warehouses CRUD + per-branch (6)
 │   │   ├── rbac.yaml                 # roles + permissions (8)
+│   │   ├── settings.yaml             # typed scoped settings
+│   │   ├── audit.yaml                # authorized audit event reads (6)
 │   │   └── health.yaml               # /health liveness (public)
 │   ├── components/
-│   │   ├── schemas/                  # common, auth, user, branch, organization, warehouse, rbac
-│   │   ├── parameters/               # pagination.yaml (query+header), path.yaml
+│   │   ├── schemas/                  # common, auth, user, branch, organization, warehouse, rbac, settings, audit
+│   │   ├── parameters/               # pagination.yaml, audit.yaml (query+header), path.yaml
 │   │   ├── responses/                # error.yaml (9 reusable error responses)
 │   │   ├── headers/                  # pagination.yaml (RateLimit-*, XTotalCount, Sunset…)
 │   │   ├── securitySchemes/          # bearer.yaml
