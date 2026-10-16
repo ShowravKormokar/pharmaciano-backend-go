@@ -144,6 +144,7 @@ func (m *Middleware) rateLimit(policy string, byIP bool) gin.HandlerFunc {
 		h.Set(constants.HeaderRateLimitReset, strconv.FormatInt(dec.resetUnix, 10))
 
 		if !dec.allowed {
+			m.observeRateLimited(policy)
 			m.logFor(c).Warn("rate limit exceeded",
 				zap.String("policy", policy),
 				zap.String("subject", subject),
@@ -166,7 +167,7 @@ func (m *Middleware) rateLimit(policy string, byIP bool) gin.HandlerFunc {
 
 func securityCriticalRatePolicy(policy string) bool {
 	switch policy {
-	case "login_per_ip", "login_per_email", "refresh", "reset", "auth_write":
+	case "login_per_ip", "login_per_email", "refresh", "reset", "auth_write", "audit_read", "audit_read_ip":
 		return true
 	default:
 		return false
