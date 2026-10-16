@@ -78,34 +78,64 @@ func (m *Middleware) Audit() gin.HandlerFunc {
 
 		c.Next()
 
-		ctx := c.Request.Context()
-		status := c.Writer.Status()
-
-		entry := AuditEntry{
-			RequestID:   appctx.RequestID(ctx),
-			Timestamp:   start,
-			UserID:      appctx.UserID(ctx),
-			OrgID:       appctx.OrgID(ctx),
-			BranchID:    appctx.BranchID(ctx),
-			SessionID:   appctx.SessionID(ctx),
-			RoleName:    appctx.RoleName(ctx),
-			Method:      c.Request.Method,
-			Route:       routeOf(c),
-			Path:        c.Request.URL.Path,
-			Module:      c.GetString(ginKeyAuditModule),
-			Action:      c.GetString(ginKeyAuditAction),
-			ClientIP:    c.ClientIP(),
-			UserAgent:   c.Request.UserAgent(),
-			StatusCode:  status,
-			Success:     status < 400,
-			ErrorCode:   c.GetString(ginKeyErrorCode),
-			LatencyMS:   m.now().Sub(start).Milliseconds(),
-			RequestBody: maskBodyForModule(rawBody, c.GetString(ginKeyAuditModule)),
-		}
-
-		// context.WithoutCancel keeps trace/request values for correlation while detaching from the request's (possibly already-cancelled) deadline.
-		m.audit.Record(context.WithoutCancel(ctx), entry)
+		m.recordAudit(c, start, rawBody)
 	}
+}
+
+// AuditRead records authorized GET access to sensitive read surfaces. It is
+// mounted after authentication, tenant scoping, and RBAC so the event carries
+// the effective principal and route permission; it never captures query values
+// or response bodies and cannot recurse because the sink writes directly.
+func (m *Middleware) AuditRead() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if c.Request.Method != "GET" {
+			c.Next()
+			return
+		}
+		now := m.now
+		if now == nil {
+			now = time.Now
+		}
+		start := now()
+		c.Next()
+		m.recordAudit(c, start, nil)
+	}
+}
+
+func (m *Middleware) recordAudit(c *gin.Context, start time.Time, rawBody []byte) {
+	if m == nil || m.audit == nil {
+		return
+	}
+	now := m.now
+	if now == nil {
+		now = time.Now
+	}
+	ctx := c.Request.Context()
+	status := c.Writer.Status()
+	entry := AuditEntry{
+		RequestID:   appctx.RequestID(ctx),
+		Timestamp:   start,
+		UserID:      appctx.UserID(ctx),
+		OrgID:       appctx.OrgID(ctx),
+		BranchID:    appctx.BranchID(ctx),
+		SessionID:   appctx.SessionID(ctx),
+		RoleName:    appctx.RoleName(ctx),
+		Method:      c.Request.Method,
+		Route:       routeOf(c),
+		Path:        c.Request.URL.Path,
+		Module:      c.GetString(ginKeyAuditModule),
+		Action:      c.GetString(ginKeyAuditAction),
+		ClientIP:    c.ClientIP(),
+		UserAgent:   c.Request.UserAgent(),
+		StatusCode:  status,
+		Success:     status < 400,
+		ErrorCode:   c.GetString(ginKeyErrorCode),
+		LatencyMS:   now().Sub(start).Milliseconds(),
+		RequestBody: maskBodyForModule(rawBody, c.GetString(ginKeyAuditModule)),
+	}
+
+	// Keep correlation values while detaching from the request's deadline.
+	m.audit.Record(context.WithoutCancel(ctx), entry)
 }
 
 // isJSONRequest reports whether the body is JSON we can safely parse and mask.
