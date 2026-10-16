@@ -15,6 +15,7 @@ import (
 	"go.uber.org/zap"
 
 	"backend/internal/middleware"
+	auditmodule "backend/internal/modules/audit"
 	"backend/internal/modules/auth"
 	"backend/internal/modules/branch"
 	"backend/internal/modules/masterdata"
@@ -241,6 +242,10 @@ func run() error {
 	// and the AuthzBumper port (branch assignment grants/revokes bump the epoch so
 	// stale tokens lose the old scope immediately).
 	userHandler := user.New(pg, val, pepperedHashes, rbacModule.Service, authModule.Service, authModule.Service, log)
+	auditHandler, err := auditmodule.New(pg, cfg.Pagination.CursorSigningKey, log, metrics)
+	if err != nil {
+		return fmt.Errorf("audit module init: %w", err)
+	}
 
 	// --- Middleware container ---------------------------------------------------
 	// Inject the real authenticator (auth) and authorizer (rbac) so Protected
@@ -248,8 +253,8 @@ func run() error {
 	// fanned out to the durable PostgreSQL audit_logs table (authority) and, when
 	// audit.loki.enabled, a parallel best-effort Loki stream that powers the
 	// real-time Audit dashboard. Loki failure never breaks the request path.
-	pgAudit := audit.NewPostgresAuditSink(pg, log)
-	lokiAudit := audit.NewLokiAuditSink(cfg.Audit.Loki, log)
+	pgAudit := audit.NewPostgresAuditSink(pg, log, metrics)
+	lokiAudit := audit.NewLokiAuditSink(cfg.Audit.Loki, log, metrics)
 	mw := middleware.New(cfg, log, rdb,
 		middleware.WithAuthenticator(authModule.Service),
 		// middleware.WithAuthorizer(rbacModule.Enforcer),
@@ -274,6 +279,7 @@ func run() error {
 		rbacModule,
 		authModule,
 		settings.New(pg, val, log),
+		auditHandler,
 		userHandler,
 	}
 
