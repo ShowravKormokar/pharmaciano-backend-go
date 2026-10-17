@@ -221,7 +221,6 @@ paths:
     $ref: 'paths/rbac.yaml#/~1permissions'
   /permissions/{id}:
     $ref: 'paths/rbac.yaml#/~1permissions~1{id}'
-
 # ── Components ────────────────────────────────────────────────────────────
 components:
   securitySchemes:
@@ -418,7 +417,6 @@ components:
       $ref: 'components/schemas/rbac.yaml#/PermissionListItem'
     AssignRoleRequest:
       $ref: 'components/schemas/rbac.yaml#/AssignRoleRequest'
-
   parameters:
     RequestId:
       $ref: 'components/parameters/pagination.yaml#/RequestId'

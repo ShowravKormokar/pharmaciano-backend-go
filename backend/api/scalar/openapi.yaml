@@ -23,10 +23,8 @@ info:
 
       '
 servers:
-- url: http://localhost:8080/api/v1
-  description: v1 (current)
-- url: http://localhost:8080/api/v2
-  description: v2 (future)
+- url: http://localhost:8080
+  description: Local
 security:
 - bearerAuth: []
 tags:
