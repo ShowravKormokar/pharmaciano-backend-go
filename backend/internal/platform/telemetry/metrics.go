@@ -91,6 +91,20 @@ type Metrics struct {
 	StorageOpsTotal   *prometheus.CounterVec
 	StorageOpDuration *prometheus.HistogramVec
 	StorageBytesTotal *prometheus.CounterVec
+
+	// Backup
+	BackupRunsTotal             *prometheus.CounterVec   // state transition: trigger, type, status
+	BackupRunDuration           *prometheus.HistogramVec // actual execution duration: trigger, type, status
+	BackupVerificationsTotal    *prometheus.CounterVec   // verification_type, status
+	BackupVerificationDuration  *prometheus.HistogramVec // verification_type, status
+	BackupOperationsTotal       *prometheus.CounterVec   // operation, outcome
+	BackupOperationDuration     *prometheus.HistogramVec // operation
+	BackupEncryptionTotal       *prometheus.CounterVec   // operation, outcome
+	BackupArtifactsDeletedTotal *prometheus.CounterVec   // outcome
+	BackupLegalHoldsTotal       *prometheus.CounterVec   // outcome
+	BackupStorageOpsTotal       *prometheus.CounterVec   // driver, op, outcome
+	BackupStorageOpDuration     *prometheus.HistogramVec // driver, op
+	BackupStorageBytesTotal     *prometheus.CounterVec   // driver, op
 }
 
 // New Matrics registers all collectors on fresh registry
@@ -476,6 +490,72 @@ func NewMetrics() *Metrics {
 		[]string{"driver", "op"},
 	)
 
+	// Backup collectors
+	m.BackupRunsTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{Name: "backup_runs_total", Help: "Backup run state transitions by trigger, type and status."},
+		[]string{"trigger", "type", "status"},
+	)
+	m.BackupRunDuration = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "backup_run_duration_seconds",
+			Help:    "Backup run duration by trigger, type and outcome.",
+			Buckets: []float64{0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 30, 60, 300, 900, 1800},
+		},
+		[]string{"trigger", "type", "status"},
+	)
+	m.BackupVerificationsTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{Name: "backup_verifications_total", Help: "Backup verification state transitions by type and status."},
+		[]string{"verification_type", "status"},
+	)
+	m.BackupVerificationDuration = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "backup_verification_duration_seconds",
+			Help:    "Backup verification duration by type and outcome.",
+			Buckets: []float64{0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 30, 60, 300, 600, 1200},
+		},
+		[]string{"verification_type", "status"},
+	)
+	m.BackupOperationsTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{Name: "backup_operations_total", Help: "Backup pipeline operations by operation and outcome."},
+		[]string{"operation", "outcome"},
+	)
+	m.BackupOperationDuration = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "backup_operation_duration_seconds",
+			Help:    "Backup pipeline operation latency.",
+			Buckets: []float64{0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 30, 60, 300, 900, 1800},
+		},
+		[]string{"operation"},
+	)
+	m.BackupEncryptionTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{Name: "backup_encryption_total", Help: "Backup encryption operations by operation and outcome."},
+		[]string{"operation", "outcome"},
+	)
+	m.BackupArtifactsDeletedTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{Name: "backup_artifacts_deleted_total", Help: "Backup artifact deletions by outcome."},
+		[]string{"outcome"},
+	)
+	m.BackupLegalHoldsTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{Name: "backup_legal_holds_total", Help: "Backup legal hold add/release events by outcome."},
+		[]string{"outcome"},
+	)
+	m.BackupStorageOpsTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{Name: "backup_storage_ops_total", Help: "Backup storage operations by driver, op and outcome."},
+		[]string{"driver", "op", "outcome"},
+	)
+	m.BackupStorageOpDuration = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "backup_storage_op_duration_seconds",
+			Help:    "Backup storage operation latency by driver and op.",
+			Buckets: []float64{0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5},
+		},
+		[]string{"driver", "op"},
+	)
+	m.BackupStorageBytesTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{Name: "backup_storage_bytes_total", Help: "Backup artifact bytes moved through the file store."},
+		[]string{"driver", "op"},
+	)
+
 	reg.MustRegister(
 		m.HTTPRequestsTotal, m.HTTPRequestDuration, m.HTTPResponseSize, m.HTTPInFlight,
 		m.DBQueryDuration, m.DBQueriesTotal,
@@ -500,6 +580,12 @@ func NewMetrics() *Metrics {
 		m.AICallsTotal, m.AICallDuration, m.AITokensUsed, m.AICostUSD,
 		m.MailSendTotal, m.MailSendDuration,
 		m.StorageOpsTotal, m.StorageOpDuration, m.StorageBytesTotal,
+		// Backup
+		m.BackupRunsTotal, m.BackupRunDuration, m.BackupVerificationsTotal,
+		m.BackupVerificationDuration, m.BackupOperationsTotal, m.BackupOperationDuration,
+		m.BackupEncryptionTotal,
+		m.BackupArtifactsDeletedTotal, m.BackupLegalHoldsTotal,
+		m.BackupStorageOpsTotal, m.BackupStorageOpDuration, m.BackupStorageBytesTotal,
 	)
 
 	return m
@@ -709,4 +795,55 @@ func (m *Metrics) AddStorageBytes(driver, op string, n int64) {
 		return
 	}
 	m.StorageBytesTotal.WithLabelValues(driver, op).Add(float64(n))
+}
+
+// Backup convenience methods — keep label discipline in one place.
+
+func (m *Metrics) ObserveBackupRunDuration(trigger, typ, status string, dur time.Duration) {
+	m.BackupRunDuration.WithLabelValues(trigger, typ, status).Observe(dur.Seconds())
+}
+
+func (m *Metrics) CountBackupRun(trigger, typ, status string) {
+	m.BackupRunsTotal.WithLabelValues(trigger, typ, status).Inc()
+}
+
+func (m *Metrics) ObserveBackupVerificationDuration(verifyType, status string, dur time.Duration) {
+	m.BackupVerificationDuration.WithLabelValues(verifyType, status).Observe(dur.Seconds())
+}
+
+func (m *Metrics) CountBackupVerification(verifyType, status string) {
+	m.BackupVerificationsTotal.WithLabelValues(verifyType, status).Inc()
+}
+
+func (m *Metrics) ObserveBackupOperation(operation, outcome string, dur time.Duration) {
+	m.BackupOperationsTotal.WithLabelValues(operation, outcome).Inc()
+	m.BackupOperationDuration.WithLabelValues(operation).Observe(dur.Seconds())
+}
+
+func (m *Metrics) ObserveBackupEncryption(operation, outcome string) {
+	m.BackupEncryptionTotal.WithLabelValues(operation, outcome).Inc()
+}
+
+func (m *Metrics) ObserveBackupArtifactDeleted(outcome string) {
+	m.BackupArtifactsDeletedTotal.WithLabelValues(outcome).Inc()
+}
+
+func (m *Metrics) ObserveBackupLegalHold(outcome string) {
+	m.BackupLegalHoldsTotal.WithLabelValues(outcome).Inc()
+}
+
+func (m *Metrics) ObserveBackupStorageOp(driver, op string, dur time.Duration, err error) {
+	outcome := "success"
+	if err != nil {
+		outcome = "error"
+	}
+	m.BackupStorageOpsTotal.WithLabelValues(driver, op, outcome).Inc()
+	m.BackupStorageOpDuration.WithLabelValues(driver, op).Observe(dur.Seconds())
+}
+
+func (m *Metrics) AddBackupStorageBytes(driver, op string, n int64) {
+	if n <= 0 {
+		return
+	}
+	m.BackupStorageBytesTotal.WithLabelValues(driver, op).Add(float64(n))
 }
