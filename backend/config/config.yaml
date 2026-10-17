@@ -248,7 +248,7 @@ storage:
     - application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
 
 backup:
-  enabled: true
+  enabled: false
   schedule: "0 2 * * *"
   local_path: ./data/backups
   retention_days: 30
