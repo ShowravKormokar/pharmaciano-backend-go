@@ -100,7 +100,7 @@ type SecurityConfig struct {
 	// It rejects state-changing requests whose Origin/Referer is not on the CORS
 	// allowlist, providing the "validate the expected origin/site policy" layer on
 	// top of SameSite cookies. Defaults to enabled; set to false to disable.
-	OriginCheck          struct {
+	OriginCheck struct {
 		Enabled bool `mapstructure:"enabled"`
 	} `mapstructure:"origin_check"`
 }
@@ -350,6 +350,8 @@ type MailerConfig struct {
 }
 
 type BackupConfig struct {
+	// Enabled is rejected by validation until the backup worker and secure
+	// artifact lifecycle are available. The remaining fields are legacy config.
 	Enabled       bool   `mapstructure:"enabled"`
 	Schedule      string `mapstructure:"schedule"`
 	LocalPath     string `mapstructure:"local_path"`
