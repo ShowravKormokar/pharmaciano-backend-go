@@ -4,6 +4,12 @@ This runbook covers the PostgreSQL database used by the Compose `postgres`
 service. The repository does not currently provide an automated backup command;
 these procedures use standard PostgreSQL tools.
 
+> **Production limitation:** the application Backup module is not enabled. The
+> local commands below create plaintext dumps and are only for disposable local
+> development/test data. Do not run them against production or copy their output
+> to persistent/off-host storage. Use the database provider's managed encrypted
+> backup/PITR service until the Backup contract's production gates are complete.
+
 ## Backup Policy
 
 Production should have daily full backups, more frequent recovery data or WAL
@@ -14,23 +20,20 @@ sensitive production secrets.
 
 ## Logical Backup from Docker
 
-Run from `backend/deployments/docker/` and keep dumps outside the repository:
+Run from `backend/deployments/docker/` only against disposable local data. Keep
+the temporary dump outside the repository:
 
 ```powershell
-New-Item -ItemType Directory -Force .\backups | Out-Null
-docker exec pharmaciano-postgres pg_dump -U pharmaciano -d pharmaciano -Fc > .\backups\pharmaciano-$(Get-Date -Format yyyyMMdd-HHmmss).dump
-```
-
-For a reviewable SQL export:
-
-```powershell
-docker exec pharmaciano-postgres pg_dump -U pharmaciano -d pharmaciano --no-owner --no-privileges > .\backups\pharmaciano.sql
+$BackupDir = Join-Path $env:TEMP "pharmaciano-backups"
+New-Item -ItemType Directory -Force $BackupDir | Out-Null
+$BackupFile = Join-Path $BackupDir "pharmaciano-$(Get-Date -Format yyyyMMdd-HHmmss).dump"
+docker exec pharmaciano-postgres pg_dump -U pharmaciano -d pharmaciano -Fc > $BackupFile
 ```
 
 Confirm that the archive exists and is non-empty:
 
 ```powershell
-Get-Item .\backups\*.dump | Select-Object Name,Length,LastWriteTime
+Get-Item (Join-Path $BackupDir "*.dump") | Select-Object Name,Length,LastWriteTime
 docker exec pharmaciano-postgres pg_dump --version
 ```
 
@@ -49,11 +52,14 @@ docker exec pharmaciano-postgres createdb -U pharmaciano pharmaciano_restore
 Get-Content .\backups\pharmaciano.sql | docker exec -i pharmaciano-postgres psql -U pharmaciano -d pharmaciano_restore
 ```
 
-For a custom-format archive, use a mounted file or native `pg_restore` for large
-files. A small PowerShell stream is:
+For a custom-format archive, copy the file into the disposable PostgreSQL
+container and run native `pg_restore`. Avoid PowerShell text pipelines for
+binary dump data:
 
 ```powershell
-Get-Content .\backups\pharmaciano-latest.dump -AsByteStream | docker exec -i pharmaciano-postgres pg_restore -U pharmaciano -d pharmaciano_restore --clean --if-exists --no-owner
+docker cp $BackupFile pharmaciano-postgres:/tmp/pharmaciano-restore.dump
+docker exec pharmaciano-postgres pg_restore -U pharmaciano -d pharmaciano_restore --clean --if-exists --no-owner /tmp/pharmaciano-restore.dump
+docker exec pharmaciano-postgres rm -f /tmp/pharmaciano-restore.dump
 ```
 
 ## Full Restore Procedure
