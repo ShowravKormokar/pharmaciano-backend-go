@@ -104,3 +104,81 @@ func (m *Metrics) RecordAITokens(provider, endpoint, direction string, count int
 func (m *Metrics) RecordAICost(provider, endpoint string, usd float64) {
 	m.AICostUSD.WithLabelValues(provider, endpoint).Add(usd)
 }
+
+// TraceBackupOperation wraps a backup pipeline step (pg_dump, encryption,
+// storage put/open/delete, verification) with a span and operation-level
+// Prometheus metrics. It does not record a backup-run transition.
+func (m *Metrics) TraceBackupOperation(
+	ctx context.Context,
+	operation string,
+	trigger string,
+	typ string,
+	attrs []attribute.KeyValue,
+	fn func(ctx context.Context) error,
+) error {
+	allAttrs := append([]attribute.KeyValue{
+		AttrBackupOperation.String(operation),
+		AttrBackupTrigger.String(trigger),
+		AttrBackupType.String(typ),
+	}, attrs...)
+	ctx, span := StartSpan(ctx, "backup."+operation, allAttrs...)
+	start := time.Now()
+	err := fn(ctx)
+	dur := time.Since(start)
+	EndSpan(span, err)
+	outcome := "success"
+	if err != nil {
+		outcome = "error"
+	}
+	m.ObserveBackupOperation(operation, outcome, dur)
+	return err
+}
+
+// TraceBackupVerification wraps an integrity or restore-drill verification
+// with a span + matching Prometheus metric.
+func (m *Metrics) TraceBackupVerification(
+	ctx context.Context,
+	verifyType string,
+	attrs []attribute.KeyValue,
+	fn func(ctx context.Context) error,
+) error {
+	allAttrs := append([]attribute.KeyValue{
+		AttrBackupVerifyType.String(verifyType),
+		AttrBackupOperation.String("verification"),
+	}, attrs...)
+	ctx, span := StartSpan(ctx, "backup.verify."+verifyType, allAttrs...)
+	start := time.Now()
+	err := fn(ctx)
+	dur := time.Since(start)
+	EndSpan(span, err)
+
+	status := "succeeded"
+	if err != nil {
+		status = "failed"
+	}
+	m.ObserveBackupVerificationDuration(verifyType, status, dur)
+	return err
+}
+
+// TraceBackupStorageOp wraps a backup storage operation with a span +
+// matching Prometheus metric.
+func (m *Metrics) TraceBackupStorageOp(
+	ctx context.Context,
+	driver string,
+	op string,
+	attrs []attribute.KeyValue,
+	fn func(ctx context.Context) error,
+) error {
+	allAttrs := append([]attribute.KeyValue{
+		AttrStorageDriver.String(driver),
+		AttrStorageOp.String(op),
+		AttrBackupOperation.String("storage"),
+	}, attrs...)
+	ctx, span := StartSpan(ctx, "backup.storage."+op, allAttrs...)
+	start := time.Now()
+	err := fn(ctx)
+	dur := time.Since(start)
+	EndSpan(span, err)
+	m.ObserveBackupStorageOp(driver, op, dur, err)
+	return err
+}
