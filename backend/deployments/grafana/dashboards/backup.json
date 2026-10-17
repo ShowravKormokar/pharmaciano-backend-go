@@ -1,0 +1,204 @@
+{
+  "uid": "pharmaciano-backup",
+  "title": "Backup Module",
+  "description": "Backup automation is intentionally unavailable until the durable worker, encryption, private artifact storage, step-up authorization, and recovery controls are implemented. Metrics may be absent; do not interpret an empty dashboard as healthy backup coverage.",
+  "tags": ["pharmaciano", "backup", "recovery"],
+  "timezone": "browser",
+  "editable": true,
+  "refresh": "30s",
+  "time": { "from": "now-6h", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "name": "DS_PROMETHEUS",
+        "type": "datasource",
+        "query": "prometheus",
+        "current": { "text": "Prometheus", "value": "Prometheus" }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "title": "Backup Run State Transitions (per min)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "short" } },
+      "targets": [
+        {
+          "expr": "sum(rate(backup_runs_total[5m])) by (status, trigger) * 60",
+          "legendFormat": "{{ status }} ({{ trigger }})",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Runs Started (last 6h)",
+      "type": "stat",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "short" } },
+      "targets": [
+        {
+          "expr": "sum(increase(backup_runs_total{status=\"in_progress\"}[6h]))",
+          "legendFormat": "started",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Backup Run Duration (p95)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "s" } },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(backup_run_duration_seconds_bucket[5m])) by (le, trigger, type))",
+          "legendFormat": "{{ trigger }} {{ type }}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Backup Run Duration (p50)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "s" } },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum(rate(backup_run_duration_seconds_bucket[5m])) by (le, trigger, type))",
+          "legendFormat": "{{ trigger }} {{ type }}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Backup Verifications (per min)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "short" } },
+      "targets": [
+        {
+          "expr": "sum(rate(backup_verifications_total[5m])) by (verification_type, status) * 60",
+          "legendFormat": "{{ verification_type }}: {{ status }}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Backup Verification Duration (p95)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "s" } },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(backup_verification_duration_seconds_bucket[5m])) by (le, verification_type))",
+          "legendFormat": "{{ verification_type }}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Backup Encryption Operations",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "short" } },
+      "targets": [
+        {
+          "expr": "sum(rate(backup_encryption_total[5m])) by (operation, outcome) * 60",
+          "legendFormat": "{{ operation }}: {{ outcome }}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Backup Storage Operations",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "short" } },
+      "targets": [
+        {
+          "expr": "sum(rate(backup_storage_ops_total[5m])) by (driver, op, outcome) * 60",
+          "legendFormat": "{{ driver }} {{ op }}: {{ outcome }}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Backup Storage Bytes",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 32 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "bytes" } },
+      "targets": [
+        {
+          "expr": "sum(rate(backup_storage_bytes_total[5m])) by (driver, op)",
+          "legendFormat": "{{ driver }} {{ op }}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Backup Storage Op Duration (p95)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 32 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "s" } },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(backup_storage_op_duration_seconds_bucket[5m])) by (le, driver, op))",
+          "legendFormat": "{{ driver }} {{ op }}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Artifacts Deleted",
+      "type": "stat",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 40 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "short" } },
+      "targets": [
+        {
+          "expr": "sum(rate(backup_artifacts_deleted_total[5m])) by (outcome) * 60",
+          "legendFormat": "{{ outcome }}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Legal Hold Events",
+      "type": "stat",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 40 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "short" } },
+      "targets": [
+        {
+          "expr": "sum(rate(backup_legal_holds_total[5m])) by (outcome) * 60",
+          "legendFormat": "{{ outcome }}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Backup API Request Rate",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 48 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "reqps" } },
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total{route=~\"/api/v1/backups.*\"}[1m])) by (method, status)",
+          "legendFormat": "{{ method }} {{ status }}",
+          "refId": "A"
+        }
+      ]
+    }
+  ]
+}

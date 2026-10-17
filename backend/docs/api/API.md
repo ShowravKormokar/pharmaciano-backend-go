@@ -106,9 +106,9 @@ Applied in order at the Gin router level. Each route below declares the **middle
 | `tenant` | Tenant Scope | Inject `organization_id` + `branch_id` from JWT claims. |
 | `rbac` | RBAC Enforce | Casbin check `{sub, obj, act}` against user permissions. |
 | `super_admin` | Super Admin Only | Reject if role ≠ `SUPER_ADMIN`. |
-| `mfa_required` | MFA Guard | For sensitive actions (backup restore, super-admin ops). |
+| `mfa_required` | Recent-verification guard | **Not implemented yet.** Must validate a short-lived session-bound MFA/password step-up proof before high-risk Backup download, deletion, or verification routes are registered. MFA completed at login alone is not a step-up proof. |
 | `idempotency` | Idempotency Store | Deduplicate on `Idempotency-Key`, TTL 24 h. |
-| `audit` | Audit Log Writer | Async write to Asynq queue. |
+| `audit` | Audit Log Writer | Records through the configured audit sink; worker-originated Backup lifecycle events require explicit domain audit records because no HTTP middleware is present. |
 | `validate` | DTO Validation | go-playground/validator + custom rules. |
 
 ### Standard chain
@@ -148,7 +148,7 @@ Two layers:
 | `rate_export` | Any `/export` route | **5 req/hour** | 3600 s | `user_id` |
 | `rate_ai` | `POST /ai/*` | **20 req/hour** | 3600 s | `organization_id` |
 | `rate_broadcast` | `POST /notifications/broadcast` | **10 req/hour** | 3600 s | `organization_id` |
-| `rate_backup` | `POST /backups/*` | **10 req/day` | 86400 s | `organization_id` |
+| `rate_backup` | Manual Backup mutation routes | **10 req/day** | 86400 s | `user_id` (the current authenticated limiter subject) |
 | `rate_ws_connect` | `GET /ws` (upgrade) | **10 connect/min** | 60 s | `user_id` |
 
 Every `429` carries: `Retry-After`, `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`.
@@ -759,15 +759,9 @@ SUPER_ADMIN and users with `audit:view`. Cursor pagination.
 
 ## 7.29 Backup
 
-`super_admin` + `mfa_required` on all write routes.
+**Status: unavailable.** The repository contains backup metadata and route scaffolding, but no composed API module, durable worker/scheduler, authenticated encryption pipeline, private backup artifact store, step-up proof, or safe retention/deletion workflow. `backup.enabled=true` is rejected during config validation, and there are no `/api/v1/backups` endpoints in the published OpenAPI document. Do not treat the existing database backup runbook as application-managed backup capability.
 
-| Method & Path | Rate | Permission | Description |
-|---|---|---|---|
-| `POST /api/v1/backups/run` | `rate_backup` | `backup:run` | Trigger backup. Body: `{type: full\|incremental}`. |
-| `GET  /api/v1/backups` | `rate_auth_read` | `backup:view` | List history. `?status=&type=&from=&to=`. |
-| `GET  /api/v1/backups/{id}` | `rate_auth_read` | `backup:view` | Detail. |
-| `POST /api/v1/backups/{id}/restore` | `rate_backup` | `backup:restore` | Trigger restore. High-risk; extra confirmation token required. |
-| `GET  /api/v1/backups/{id}/download` | `rate_backup` | `backup:view` | Signed URL. |
+The intended system-scoped API and recovery requirements are specified in [`docs/adr/BACKUP_CONTRACT.md`](../adr/BACKUP_CONTRACT.md). Publish routes only after the complete worker, encryption, storage, authorization, audit, and restore-verification gates there pass. Live restore must remain outside the routine HTTP API.
 
 ---
 
@@ -813,7 +807,7 @@ Minimum notice: **180 days** before removal.
 
 ## Appendix D — Async response
 
-For long-running actions (imports, exports, backups, AI):  
+For long-running actions that are implemented and enabled (for example imports, exports, backups, or AI):
 HTTP/1.1 202 Accepted  
 ```json
 Location: /api/v1/reports/jobs/01H9XZ...  
