@@ -24,4 +24,14 @@ const (
 	AttrBranchID  = attribute.Key("app.branch_id")
 	AttrUserID    = attribute.Key("app.user_id")
 	AttrRequestID = attribute.Key("app.request_id")
+
+	// Backup module attributes.
+	AttrBackupOperation = attribute.Key("backup.operation") // pg_dump | encryption | storage | verification | restore_drill
+	AttrBackupOutcome   = attribute.Key("backup.outcome")   // success | error | rejected
+	AttrBackupTrigger   = attribute.Key("backup.trigger")   // manual | scheduled
+	AttrBackupStatus    = attribute.Key("backup.status")    // queued | in_progress | succeeded | failed | cancelled | expired
+	AttrBackupType      = attribute.Key("backup.type")      // full
+	AttrBackupVerifyType = attribute.Key("backup.verification_type") // integrity | restore_drill
+	AttrStorageDriver   = attribute.Key("storage.driver")   // local | s3
+	AttrStorageOp       = attribute.Key("storage.op")       // put | open | head | delete | download_auth
 )
