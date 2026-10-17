@@ -236,6 +236,14 @@ func (c *Config) Validate() error {
 		errs.add("mailer.driver %q invalid (want: noop|disabled)", c.Mailer.Driver)
 	}
 
+	// Backup routes and workers are intentionally not operational yet. Reject
+	// enablement instead of allowing configuration to imply a recovery
+	// capability that has no durable worker, encryption pipeline, or safe
+	// artifact lifecycle.
+	if c.Backup.Enabled {
+		errs.add("backup.enabled cannot be true: the durable worker, authenticated encryption, private artifact storage, step-up authorization, and lifecycle controls are not implemented")
+	}
+
 	// Rate limit
 	if c.RateLimit.Enabled {
 		for name, p := range c.RateLimit.Policies {
