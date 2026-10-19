@@ -1,0 +1,262 @@
+# ---------------------------------------------------------------------------
+# Organization-owned Brand catalog. Mirrors internal/modules/brand/routes.go.
+# ---------------------------------------------------------------------------
+
+/brands:
+  post:
+    operationId: brands.create
+    summary: Create a brand
+    security:
+      - bearerAuth: []
+    description: |
+      Creates an organization-owned brand. The organization comes from the
+      authenticated principal, and manufacturer_id must reference an active
+      manufacturer in that organization. Requires brands:create.
+    tags: [brands]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/IdempotencyKey'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/brand.yaml#/CreateBrandRequest'
+          examples:
+            basic:
+              value:
+                code: ACME-001
+                name: Acme Paracetamol
+                manufacturer_id: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                country_of_origin: Bangladesh
+                is_active: true
+    responses:
+      '201':
+        description: Brand created.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [success, data, meta]
+              properties:
+                success:
+                  type: boolean
+                  const: true
+                data:
+                  $ref: '../components/schemas/brand.yaml#/Brand'
+                meta:
+                  $ref: '../components/schemas/common.yaml#/Meta'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+      '409':
+        $ref: '../components/responses/error.yaml#/Conflict'
+      '429':
+        $ref: '../components/responses/error.yaml#/TooManyRequests'
+      '500':
+        $ref: '../components/responses/error.yaml#/InternalError'
+  get:
+    operationId: brands.list
+    summary: List brands
+    security:
+      - bearerAuth: []
+    description: |
+      Returns a tenant-scoped, paginated brand list. Filters are combined
+      conjunctively. Results are ordered by the requested allow-listed fields
+      (`code`, `name`, `created_at`, `is_active`, or `id`) with an id
+      tie-breaker. Requires brands:view.
+    tags: [brands]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/Page'
+      - $ref: '../components/parameters/pagination.yaml#/Limit'
+      - $ref: '../components/parameters/pagination.yaml#/Sort'
+      - name: manufacturer_id
+        in: query
+        description: Filter by an organization-owned manufacturer.
+        schema:
+          type: string
+          format: uuid
+      - name: q
+        in: query
+        description: Case-insensitive match in brand name or code (maximum 200 characters).
+        schema:
+          type: string
+          maxLength: 200
+      - name: is_active
+        in: query
+        description: Filter by active state.
+        schema:
+          type: boolean
+    responses:
+      '200':
+        description: Paginated tenant-scoped brand list.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [success, data, pagination, meta]
+              properties:
+                success:
+                  type: boolean
+                  const: true
+                data:
+                  type: array
+                  items:
+                    $ref: '../components/schemas/brand.yaml#/Brand'
+                pagination:
+                  $ref: '../components/schemas/common.yaml#/PaginationMeta'
+                meta:
+                  $ref: '../components/schemas/common.yaml#/Meta'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '429':
+        $ref: '../components/responses/error.yaml#/TooManyRequests'
+      '500':
+        $ref: '../components/responses/error.yaml#/InternalError'
+
+/brands/{id}:
+  get:
+    operationId: brands.get
+    summary: Get a brand
+    security:
+      - bearerAuth: []
+    description: Requires brands:view. Cross-organization IDs are reported as not found.
+    tags: [brands]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - name: id
+        in: path
+        required: true
+        description: Brand UUID.
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: Brand profile.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [success, data, meta]
+              properties:
+                success:
+                  type: boolean
+                  const: true
+                data:
+                  $ref: '../components/schemas/brand.yaml#/Brand'
+                meta:
+                  $ref: '../components/schemas/common.yaml#/Meta'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+      '429':
+        $ref: '../components/responses/error.yaml#/TooManyRequests'
+      '500':
+        $ref: '../components/responses/error.yaml#/InternalError'
+  patch:
+    operationId: brands.update
+    summary: Update a brand
+    security:
+      - bearerAuth: []
+    description: |
+      Applies a partial update. Brand code and organization ownership are
+      immutable. Requires brands:update.
+    tags: [brands]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/IdempotencyKey'
+      - name: id
+        in: path
+        required: true
+        description: Brand UUID.
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/brand.yaml#/UpdateBrandRequest'
+    responses:
+      '200':
+        description: Updated brand.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [success, data, meta]
+              properties:
+                success:
+                  type: boolean
+                  const: true
+                data:
+                  $ref: '../components/schemas/brand.yaml#/Brand'
+                meta:
+                  $ref: '../components/schemas/common.yaml#/Meta'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+      '409':
+        $ref: '../components/responses/error.yaml#/Conflict'
+      '429':
+        $ref: '../components/responses/error.yaml#/TooManyRequests'
+      '500':
+        $ref: '../components/responses/error.yaml#/InternalError'
+  delete:
+    operationId: brands.delete
+    summary: Soft-delete a brand
+    security:
+      - bearerAuth: []
+    description: |
+      Soft-deletes an unused brand. If medicines reference it, the API returns
+      409 and recommends deactivation instead. Requires brands:delete.
+    tags: [brands]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/IdempotencyKey'
+      - name: id
+        in: path
+        required: true
+        description: Brand UUID.
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '204':
+        description: Brand soft-deleted.
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+      '409':
+        $ref: '../components/responses/error.yaml#/Conflict'
+      '429':
+        $ref: '../components/responses/error.yaml#/TooManyRequests'
+      '500':
+        $ref: '../components/responses/error.yaml#/InternalError'

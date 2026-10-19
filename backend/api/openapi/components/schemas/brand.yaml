@@ -1,0 +1,76 @@
+# ---------------------------------------------------------------------------
+# Organization-owned brand catalog — mirrors internal/modules/brand/dto.go.
+# ---------------------------------------------------------------------------
+
+CreateBrandRequest:
+  type: object
+  required: [code, name, manufacturer_id]
+  properties:
+    code:
+      type: string
+      minLength: 1
+      maxLength: 40
+      description: Unique within the organization. Immutable after creation.
+    name:
+      type: string
+      minLength: 1
+      maxLength: 200
+    manufacturer_id:
+      type: string
+      format: uuid
+      description: Must identify an active manufacturer owned by this organization.
+    country_of_origin:
+      type: [string, 'null']
+      maxLength: 100
+    description:
+      type: [string, 'null']
+    is_active:
+      type: [boolean, 'null']
+      default: true
+
+UpdateBrandRequest:
+  type: object
+  description: Every field is optional. Code and organization ownership are immutable.
+  properties:
+    name:
+      type: string
+      minLength: 1
+      maxLength: 200
+    manufacturer_id:
+      type: string
+      format: uuid
+      description: Cannot be reassigned while medicines reference this brand.
+    country_of_origin:
+      type: [string, 'null']
+      maxLength: 100
+    description:
+      type: [string, 'null']
+    is_active:
+      type: boolean
+
+Brand:
+  type: object
+  required: [id, code, name, manufacturer_id, is_active, created_at, updated_at]
+  properties:
+    id:
+      type: string
+      format: uuid
+    code:
+      type: string
+    name:
+      type: string
+    manufacturer_id:
+      type: string
+      format: uuid
+    country_of_origin:
+      type: [string, 'null']
+    description:
+      type: [string, 'null']
+    is_active:
+      type: boolean
+    created_at:
+      type: string
+      format: date-time
+    updated_at:
+      type: string
+      format: date-time
