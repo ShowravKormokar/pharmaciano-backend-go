@@ -18,6 +18,7 @@ import (
 	auditmodule "backend/internal/modules/audit"
 	"backend/internal/modules/auth"
 	"backend/internal/modules/branch"
+	"backend/internal/modules/brand"
 	"backend/internal/modules/masterdata"
 	"backend/internal/modules/organization"
 	"backend/internal/modules/rbac"
@@ -275,6 +276,7 @@ func run() error {
 		organization.New(pg, val, log),
 		branch.New(pg, val, log),
 		masterdata.New(pg, val, log),
+		brand.New(pg, val, log),
 		warehouse.New(pg, val, log),
 		rbacModule,
 		authModule,
