@@ -152,6 +152,8 @@ This is not copy-ready until the actual migration has been inspected. Do not inv
 - Do not create a duplicate `brands` table.
 - Do not rename existing columns for stylistic preference.
 - Never edit migrations that may have run.
+- Migration `000024_brand_tenant_ownership` adds organization ownership and a tenant-safe manufacturer FK to the formerly global Brand/Manufacturer tables. It deliberately aborts if either catalog already has rows; production rollout must provide an explicit, reviewed ownership mapping instead of silently assigning legacy rows.
+- Its down migration also refuses to discard tenant ownership while either catalog contains rows; restore such deployments with a reviewed forward migration.
 - Add a new migration only for a verified missing constraint/index/column.
 - Check existing data before adding uniqueness constraints.
 - Preserve existing `manufacturer_id` nullability and FK behavior unless a reviewed migration explicitly changes them.
