@@ -38,6 +38,16 @@ func TestAPIDocsServeAllAuditReadOperations(t *testing.T) {
 		"operationId: audit.get",
 		"operationId: audit.listPlatformEvents",
 		"operationId: audit.getPlatformEvent",
+		"  /brands:",
+		"  /brands/{id}:",
+		"operationId: brands.create",
+		"operationId: brands.list",
+		"operationId: brands.get",
+		"operationId: brands.update",
+		"operationId: brands.delete",
+		"CreateBrandRequest:",
+		"UpdateBrandRequest:",
+		"Brand:",
 	} {
 		if !strings.Contains(spec, expected) {
 			t.Errorf("served OpenAPI spec is missing %q", expected)
