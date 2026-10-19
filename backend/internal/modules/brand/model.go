@@ -1,4 +1,4 @@
-﻿package brand
+package brand
 
 import (
 	"github.com/google/uuid"
@@ -9,10 +9,11 @@ import (
 // Brand represents a pharmaceutical brand in the existing brands table.
 type Brand struct {
 	common.BaseModel
-	Code            string    `db:"code" json:"code"`
-	Name            string    `db:"name" json:"name"`
-	ManufacturerID  uuid.UUID `db:"manufacturer_id" json:"manufacturer_id"`
-	CountryOfOrigin *string   `db:"country_of_origin" json:"country_of_origin,omitempty"`
-	Description     *string   `db:"description" json:"description,omitempty"`
-	IsActive        bool      `db:"is_active" json:"is_active"`
+	OrganizationID  uuid.UUID `db:"organization_id"`
+	Code            string    `db:"code"`
+	Name            string    `db:"name"`
+	ManufacturerID  uuid.UUID `db:"manufacturer_id"`
+	CountryOfOrigin *string   `db:"country_of_origin"`
+	Description     *string   `db:"description"`
+	IsActive        bool      `db:"is_active"`
 }
