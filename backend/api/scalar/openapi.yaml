@@ -23,8 +23,10 @@ info:
 
       '
 servers:
-- url: http://localhost:8080
-  description: Local
+- url: http://localhost:8080/api/v1
+  description: v1 (current)
+- url: http://localhost:8080/api/v2
+  description: v2 (future)
 security:
 - bearerAuth: []
 tags:
@@ -40,6 +42,8 @@ tags:
   description: Tenant identity and settings.
 - name: warehouses
   description: Inventory storage locations.
+- name: brands
+  description: Organization-owned commercial medicine brands.
 - name: masterdata
   description: Central reference catalogues shared across organizations.
 - name: rbac
@@ -18354,6 +18358,3869 @@ paths:
                     meta:
                       request_id: f47ac10b-58cc-4372-a567-0e02b2c3d479
                       timestamp: '2026-09-14T16:00:00Z'
+  /brands:
+    post:
+      operationId: brands.create
+      summary: Create a brand
+      security:
+      - bearerAuth: []
+      description: 'Creates an organization-owned brand. The organization comes from the
+
+        authenticated principal, and manufacturer_id must reference an active
+
+        manufacturer in that organization. Requires brands:create.
+
+        '
+      tags:
+      - brands
+      parameters:
+      - name: X-Request-ID
+        in: header
+        description: Caller-supplied correlation id. If omitted the server mints one and returns it.
+        required: false
+        schema:
+          type: string
+          format: uuid
+      - name: Idempotency-Key
+        in: header
+        description: 'Optional idempotency key for safe retry of mutating requests (POST/PATCH/PUT/DELETE).
+
+          The server stores the request+response keyed by this header for the configured TTL; a second
+
+          request with the same key and body returns the cached response. A second request with a
+
+          *different* body yields `409 IDEMPOTENCY_KEY_CONFLICT`.
+
+          '
+        required: false
+        schema:
+          type: string
+          maxLength: 128
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - code
+              - name
+              - manufacturer_id
+              properties:
+                code:
+                  type: string
+                  minLength: 1
+                  maxLength: 40
+                  description: Unique within the organization. Immutable after creation.
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 200
+                manufacturer_id:
+                  type: string
+                  format: uuid
+                  description: Must identify an active manufacturer owned by this organization.
+                country_of_origin:
+                  type:
+                  - string
+                  - 'null'
+                  maxLength: 100
+                description:
+                  type:
+                  - string
+                  - 'null'
+                is_active:
+                  type:
+                  - boolean
+                  - 'null'
+                  default: true
+            examples:
+              basic:
+                value:
+                  code: ACME-001
+                  name: Acme Paracetamol
+                  manufacturer_id: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                  country_of_origin: Bangladesh
+                  is_active: true
+      responses:
+        '201':
+          description: Brand created.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - data
+                - meta
+                properties:
+                  success:
+                    type: boolean
+                    const: true
+                  data:
+                    type: object
+                    required:
+                    - id
+                    - code
+                    - name
+                    - manufacturer_id
+                    - is_active
+                    - created_at
+                    - updated_at
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      code:
+                        type: string
+                      name:
+                        type: string
+                      manufacturer_id:
+                        type: string
+                        format: uuid
+                      country_of_origin:
+                        type:
+                        - string
+                        - 'null'
+                      description:
+                        type:
+                        - string
+                        - 'null'
+                      is_active:
+                        type: boolean
+                      created_at:
+                        type: string
+                        format: date-time
+                      updated_at:
+                        type: string
+                        format: date-time
+                  meta:
+                    type: object
+                    required:
+                    - request_id
+                    - timestamp
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                        description: Correlates a response to its request; echoed in the X-Request-ID header.
+                        example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp:
+                        type: string
+                        format: date-time
+                        description: Server time the response was produced, RFC 3339 UTC.
+                        example: 2026-09-14 16:00:00+00:00
+                      version:
+                        type: string
+                        description: API version tag of the responding surface, e.g. "v1".
+                        example: v1
+        '400':
+          description: 'The request was malformed: invalid JSON, a failed validation rule, an unparsable
+
+            UUID, or invalid query params. `error.code` distinguishes: VALIDATION_ERROR,
+
+            INVALID_UUID, INVALID_CURSOR, INVALID_QUERY.
+
+            '
+          headers:
+            X-Request-ID:
+              description: Correlates a response to its request; mirrors meta.request_id.
+              schema:
+                type: string
+                format: uuid
+                example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - error
+                - meta
+                properties:
+                  success:
+                    type: boolean
+                    const: false
+                  error:
+                    type: object
+                    required:
+                    - code
+                    - message
+                    properties:
+                      code:
+                        type: string
+                        description: Stable machine-readable error code. See docs/api/API.md catalogue.
+                        example: VALIDATION_ERROR
+                      message:
+                        type: string
+                        description: Short, human-readable summary. Never branch client logic on this free text.
+                        example: request validation failed
+                      details:
+                        type: array
+                        description: Field-level failures, present only for validation-style errors.
+                        items:
+                          type: object
+                          required:
+                          - field
+                          - rule
+                          properties:
+                            field:
+                              type: string
+                              description: JSON path of the offending field, dot-separated for nested fields.
+                              example: email
+                            rule:
+                              type: string
+                              description: The validation rule that failed (go-playground/validator tag).
+                              example: email
+                            message:
+                              type: string
+                              description: Human-readable explanation of the failure.
+                              example: must be a valid email address
+                            value:
+                              description: The rejected value (omitted when it would be unsafe to echo).
+                              example: not-an-email
+                  meta:
+                    type: object
+                    required:
+                    - request_id
+                    - timestamp
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                        description: Correlates a response to its request; echoed in the X-Request-ID header.
+                        example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp:
+                        type: string
+                        format: date-time
+                        description: Server time the response was produced, RFC 3339 UTC.
+                        example: 2026-09-14 16:00:00+00:00
+                      version:
+                        type: string
+                        description: API version tag of the responding surface, e.g. "v1".
+                        example: v1
+                description: Uniform error envelope. Success is always false; the payload lives under error.
+              examples:
+                validation:
+                  summary: A field failed its validation rule.
+                  value:
+                    success: false
+                    error:
+                      code: VALIDATION_ERROR
+                      message: request validation failed
+                      details:
+                      - field: email
+                        rule: email
+                        message: must be a valid email address
+                        value: not-an-email
+                    meta:
+                      request_id: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp: '2026-09-14T16:00:00Z'
+        '401':
+          description: 'Missing/invalid credentials. Codes: UNAUTHENTICATED, INVALID_CREDENTIALS, TOKEN_EXPIRED,
+
+            TOKEN_INVALID, TOKEN_REUSE_DETECTED. Two special non-fatal 401 codes (MFA_REQUIRED,
+
+            PASSWORD_CHANGE_REQUIRED) carry a single-use token in a header for the next stage — see
+
+            the bearerAuth description. Neither issues a session.
+
+            '
+          headers:
+            WWW-Authenticate:
+              description: Challenge indicating the scheme and error type.
+              schema:
+                type: string
+                example: Bearer realm="pharmaciano", error="invalid_token"
+            X-MFA-Challenge:
+              description: Present only when error.code is MFA_REQUIRED. Redeem at POST /auth/mfa/verify.
+              schema:
+                type: string
+            X-Password-Change-Token:
+              description: Present only when error.code is PASSWORD_CHANGE_REQUIRED. Redeem at POST /auth/password/force-change.
+              schema:
+                type: string
+            X-Request-ID:
+              description: Correlates a response to its request; mirrors meta.request_id.
+              schema:
+                type: string
+                format: uuid
+                example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - error
+                - meta
+                properties:
+                  success:
+                    type: boolean
+                    const: false
+                  error:
+                    type: object
+                    required:
+                    - code
+                    - message
+                    properties:
+                      code:
+                        type: string
+                        description: Stable machine-readable error code. See docs/api/API.md catalogue.
+                        example: VALIDATION_ERROR
+                      message:
+                        type: string
+                        description: Short, human-readable summary. Never branch client logic on this free text.
+                        example: request validation failed
+                      details:
+                        type: array
+                        description: Field-level failures, present only for validation-style errors.
+                        items:
+                          type: object
+                          required:
+                          - field
+                          - rule
+                          properties:
+                            field:
+                              type: string
+                              description: JSON path of the offending field, dot-separated for nested fields.
+                              example: email
+                            rule:
+                              type: string
+                              description: The validation rule that failed (go-playground/validator tag).
+                              example: email
+                            message:
+                              type: string
+                              description: Human-readable explanation of the failure.
+                              example: must be a valid email address
+                            value:
+                              description: The rejected value (omitted when it would be unsafe to echo).
+                              example: not-an-email
+                  meta:
+                    type: object
+                    required:
+                    - request_id
+                    - timestamp
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                        description: Correlates a response to its request; echoed in the X-Request-ID header.
+                        example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp:
+                        type: string
+                        format: date-time
+                        description: Server time the response was produced, RFC 3339 UTC.
+                        example: 2026-09-14 16:00:00+00:00
+                      version:
+                        type: string
+                        description: API version tag of the responding surface, e.g. "v1".
+                        example: v1
+                description: Uniform error envelope. Success is always false; the payload lives under error.
+              examples:
+                invalid-credentials:
+                  summary: Login failed because the email/password pair did not match.
+                  value:
+                    success: false
+                    error:
+                      code: INVALID_CREDENTIALS
+                      message: invalid email or password
+                    meta:
+                      request_id: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp: '2026-09-14T16:00:00Z'
+        '403':
+          description: 'The caller is not permitted to act on the target. Codes: FORBIDDEN, ACCOUNT_INACTIVE,
+
+            ACCOUNT_SUSPENDED, BRANCH_SCOPE_DENIED, TENANT_SCOPE_DENIED, CROSS_ORIGIN_REQUEST.
+
+            '
+          headers:
+            X-Request-ID:
+              description: Correlates a response to its request; mirrors meta.request_id.
+              schema:
+                type: string
+                format: uuid
+                example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - error
+                - meta
+                properties:
+                  success:
+                    type: boolean
+                    const: false
+                  error:
+                    type: object
+                    required:
+                    - code
+                    - message
+                    properties:
+                      code:
+                        type: string
+                        description: Stable machine-readable error code. See docs/api/API.md catalogue.
+                        example: VALIDATION_ERROR
+                      message:
+                        type: string
+                        description: Short, human-readable summary. Never branch client logic on this free text.
+                        example: request validation failed
+                      details:
+                        type: array
+                        description: Field-level failures, present only for validation-style errors.
+                        items:
+                          type: object
+                          required:
+                          - field
+                          - rule
+                          properties:
+                            field:
+                              type: string
+                              description: JSON path of the offending field, dot-separated for nested fields.
+                              example: email
+                            rule:
+                              type: string
+                              description: The validation rule that failed (go-playground/validator tag).
+                              example: email
+                            message:
+                              type: string
+                              description: Human-readable explanation of the failure.
+                              example: must be a valid email address
+                            value:
+                              description: The rejected value (omitted when it would be unsafe to echo).
+                              example: not-an-email
+                  meta:
+                    type: object
+                    required:
+                    - request_id
+                    - timestamp
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                        description: Correlates a response to its request; echoed in the X-Request-ID header.
+                        example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp:
+                        type: string
+                        format: date-time
+                        description: Server time the response was produced, RFC 3339 UTC.
+                        example: 2026-09-14 16:00:00+00:00
+                      version:
+                        type: string
+                        description: API version tag of the responding surface, e.g. "v1".
+                        example: v1
+                description: Uniform error envelope. Success is always false; the payload lives under error.
+              examples:
+                forbidden:
+                  summary: The caller lacks the required RBAC permission on the target.
+                  value:
+                    success: false
+                    error:
+                      code: FORBIDDEN
+                      message: you do not have permission to perform this action
+                    meta:
+                      request_id: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp: '2026-09-14T16:00:00Z'
+        '404':
+          description: The referenced resource does not exist (code NOT_FOUND).
+          headers:
+            X-Request-ID:
+              description: Correlates a response to its request; mirrors meta.request_id.
+              schema:
+                type: string
+                format: uuid
+                example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - error
+                - meta
+                properties:
+                  success:
+                    type: boolean
+                    const: false
+                  error:
+                    type: object
+                    required:
+                    - code
+                    - message
+                    properties:
+                      code:
+                        type: string
+                        description: Stable machine-readable error code. See docs/api/API.md catalogue.
+                        example: VALIDATION_ERROR
+                      message:
+                        type: string
+                        description: Short, human-readable summary. Never branch client logic on this free text.
+                        example: request validation failed
+                      details:
+                        type: array
+                        description: Field-level failures, present only for validation-style errors.
+                        items:
+                          type: object
+                          required:
+                          - field
+                          - rule
+                          properties:
+                            field:
+                              type: string
+                              description: JSON path of the offending field, dot-separated for nested fields.
+                              example: email
+                            rule:
+                              type: string
+                              description: The validation rule that failed (go-playground/validator tag).
+                              example: email
+                            message:
+                              type: string
+                              description: Human-readable explanation of the failure.
+                              example: must be a valid email address
+                            value:
+                              description: The rejected value (omitted when it would be unsafe to echo).
+                              example: not-an-email
+                  meta:
+                    type: object
+                    required:
+                    - request_id
+                    - timestamp
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                        description: Correlates a response to its request; echoed in the X-Request-ID header.
+                        example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp:
+                        type: string
+                        format: date-time
+                        description: Server time the response was produced, RFC 3339 UTC.
+                        example: 2026-09-14 16:00:00+00:00
+                      version:
+                        type: string
+                        description: API version tag of the responding surface, e.g. "v1".
+                        example: v1
+                description: Uniform error envelope. Success is always false; the payload lives under error.
+              examples:
+                not-found:
+                  summary: The resource does not exist.
+                  value:
+                    success: false
+                    error:
+                      code: NOT_FOUND
+                      message: resource not found
+                    meta:
+                      request_id: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp: '2026-09-14T16:00:00Z'
+        '409':
+          description: 'The request conflicts with current state. Codes: ALREADY_EXISTS, CONFLICT,
+
+            IDEMPOTENCY_KEY_CONFLICT, STATE_TRANSITION_DENIED.
+
+            '
+          headers:
+            X-Request-ID:
+              description: Correlates a response to its request; mirrors meta.request_id.
+              schema:
+                type: string
+                format: uuid
+                example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - error
+                - meta
+                properties:
+                  success:
+                    type: boolean
+                    const: false
+                  error:
+                    type: object
+                    required:
+                    - code
+                    - message
+                    properties:
+                      code:
+                        type: string
+                        description: Stable machine-readable error code. See docs/api/API.md catalogue.
+                        example: VALIDATION_ERROR
+                      message:
+                        type: string
+                        description: Short, human-readable summary. Never branch client logic on this free text.
+                        example: request validation failed
+                      details:
+                        type: array
+                        description: Field-level failures, present only for validation-style errors.
+                        items:
+                          type: object
+                          required:
+                          - field
+                          - rule
+                          properties:
+                            field:
+                              type: string
+                              description: JSON path of the offending field, dot-separated for nested fields.
+                              example: email
+                            rule:
+                              type: string
+                              description: The validation rule that failed (go-playground/validator tag).
+                              example: email
+                            message:
+                              type: string
+                              description: Human-readable explanation of the failure.
+                              example: must be a valid email address
+                            value:
+                              description: The rejected value (omitted when it would be unsafe to echo).
+                              example: not-an-email
+                  meta:
+                    type: object
+                    required:
+                    - request_id
+                    - timestamp
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                        description: Correlates a response to its request; echoed in the X-Request-ID header.
+                        example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp:
+                        type: string
+                        format: date-time
+                        description: Server time the response was produced, RFC 3339 UTC.
+                        example: 2026-09-14 16:00:00+00:00
+                      version:
+                        type: string
+                        description: API version tag of the responding surface, e.g. "v1".
+                        example: v1
+                description: Uniform error envelope. Success is always false; the payload lives under error.
+              examples:
+                already-exists:
+                  summary: A unique code/name was already taken (e.g. duplicate branch code).
+                  value:
+                    success: false
+                    error:
+                      code: ALREADY_EXISTS
+                      message: a resource with this code already exists
+                    meta:
+                      request_id: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp: '2026-09-14T16:00:00Z'
+                idempotency:
+                  summary: The same Idempotency-Key was reused with a different body.
+                  value:
+                    success: false
+                    error:
+                      code: IDEMPOTENCY_KEY_CONFLICT
+                      message: the same Idempotency-Key was used with a different request body
+                    meta:
+                      request_id: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp: '2026-09-14T16:00:00Z'
+        '429':
+          description: 'Rate limit exceeded (HTTP 429). Codes: RATE_LIMITED, TOO_MANY_SESSIONS, AI_COST_CAP_EXCEEDED.
+
+            Respect Retry-After before retrying.
+
+            '
+          headers:
+            Retry-After:
+              description: 'Seconds to wait before retrying. Present on 403 (Locked) and 429 (rate limited).
+
+                Integer seconds, HTTP-date, or a bare duration in seconds.
+
+                '
+              schema:
+                type: string
+                example: '120'
+            X-RateLimit-Limit:
+              description: Max requests allowed in the current window.
+              schema:
+                type: integer
+                example: 100
+            X-RateLimit-Remaining:
+              description: Requests remaining in the current window.
+              schema:
+                type: integer
+                example: 99
+            X-RateLimit-Reset:
+              description: Epoch seconds when the window resets.
+              schema:
+                type: integer
+                example: 1694700000
+            X-Request-ID:
+              description: Correlates a response to its request; mirrors meta.request_id.
+              schema:
+                type: string
+                format: uuid
+                example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - error
+                - meta
+                properties:
+                  success:
+                    type: boolean
+                    const: false
+                  error:
+                    type: object
+                    required:
+                    - code
+                    - message
+                    properties:
+                      code:
+                        type: string
+                        description: Stable machine-readable error code. See docs/api/API.md catalogue.
+                        example: VALIDATION_ERROR
+                      message:
+                        type: string
+                        description: Short, human-readable summary. Never branch client logic on this free text.
+                        example: request validation failed
+                      details:
+                        type: array
+                        description: Field-level failures, present only for validation-style errors.
+                        items:
+                          type: object
+                          required:
+                          - field
+                          - rule
+                          properties:
+                            field:
+                              type: string
+                              description: JSON path of the offending field, dot-separated for nested fields.
+                              example: email
+                            rule:
+                              type: string
+                              description: The validation rule that failed (go-playground/validator tag).
+                              example: email
+                            message:
+                              type: string
+                              description: Human-readable explanation of the failure.
+                              example: must be a valid email address
+                            value:
+                              description: The rejected value (omitted when it would be unsafe to echo).
+                              example: not-an-email
+                  meta:
+                    type: object
+                    required:
+                    - request_id
+                    - timestamp
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                        description: Correlates a response to its request; echoed in the X-Request-ID header.
+                        example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp:
+                        type: string
+                        format: date-time
+                        description: Server time the response was produced, RFC 3339 UTC.
+                        example: 2026-09-14 16:00:00+00:00
+                      version:
+                        type: string
+                        description: API version tag of the responding surface, e.g. "v1".
+                        example: v1
+                description: Uniform error envelope. Success is always false; the payload lives under error.
+              examples:
+                rate-limited:
+                  summary: Too many requests; back off until the Retry-After header expires.
+                  value:
+                    success: false
+                    error:
+                      code: RATE_LIMITED
+                      message: rate limit exceeded
+                    meta:
+                      request_id: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp: '2026-09-14T16:00:00Z'
+        '500':
+          description: 'An unexpected server error (HTTP 500+). The body is deliberately generic (INTERNAL_ERROR) —
+
+            the real cause is only ever in the server logs, never on the wire. Also covers 501..504
+
+            (DATABASE_ERROR, UPSTREAM_ERROR, SERVICE_UNAVAILABLE, TIMEOUT, etc.) per the mapper.
+
+            '
+          headers:
+            X-Request-ID:
+              description: Correlates a response to its request; mirrors meta.request_id.
+              schema:
+                type: string
+                format: uuid
+                example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - error
+                - meta
+                properties:
+                  success:
+                    type: boolean
+                    const: false
+                  error:
+                    type: object
+                    required:
+                    - code
+                    - message
+                    properties:
+                      code:
+                        type: string
+                        description: Stable machine-readable error code. See docs/api/API.md catalogue.
+                        example: VALIDATION_ERROR
+                      message:
+                        type: string
+                        description: Short, human-readable summary. Never branch client logic on this free text.
+                        example: request validation failed
+                      details:
+                        type: array
+                        description: Field-level failures, present only for validation-style errors.
+                        items:
+                          type: object
+                          required:
+                          - field
+                          - rule
+                          properties:
+                            field:
+                              type: string
+                              description: JSON path of the offending field, dot-separated for nested fields.
+                              example: email
+                            rule:
+                              type: string
+                              description: The validation rule that failed (go-playground/validator tag).
+                              example: email
+                            message:
+                              type: string
+                              description: Human-readable explanation of the failure.
+                              example: must be a valid email address
+                            value:
+                              description: The rejected value (omitted when it would be unsafe to echo).
+                              example: not-an-email
+                  meta:
+                    type: object
+                    required:
+                    - request_id
+                    - timestamp
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                        description: Correlates a response to its request; echoed in the X-Request-ID header.
+                        example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp:
+                        type: string
+                        format: date-time
+                        description: Server time the response was produced, RFC 3339 UTC.
+                        example: 2026-09-14 16:00:00+00:00
+                      version:
+                        type: string
+                        description: API version tag of the responding surface, e.g. "v1".
+                        example: v1
+                description: Uniform error envelope. Success is always false; the payload lives under error.
+    get:
+      operationId: brands.list
+      summary: List brands
+      security:
+      - bearerAuth: []
+      description: 'Returns a tenant-scoped, paginated brand list. Filters are combined
+
+        conjunctively. Results are ordered by the requested allow-listed fields
+
+        (`code`, `name`, `created_at`, `is_active`, or `id`) with an id
+
+        tie-breaker. Requires brands:view.
+
+        '
+      tags:
+      - brands
+      parameters:
+      - name: X-Request-ID
+        in: header
+        description: Caller-supplied correlation id. If omitted the server mints one and returns it.
+        required: false
+        schema:
+          type: string
+          format: uuid
+      - name: page
+        in: query
+        description: Page number, 1-based (offset pagination). Default 1.
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+          example: 1
+      - name: limit
+        in: query
+        description: Page size, clamped into [1,100]. Default 20.
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+          example: 20
+      - name: sort
+        in: query
+        description: 'Comma-separated sort keys. Prefix with `-` for descending. At most 5 fields.
+
+          Example: `-created_at,name`. Which fields are allowed is endpoint-specific.
+
+          '
+        schema:
+          type: string
+          example: -created_at,name
+      - name: manufacturer_id
+        in: query
+        description: Filter by an organization-owned manufacturer.
+        schema:
+          type: string
+          format: uuid
+      - name: q
+        in: query
+        description: Case-insensitive match in brand name or code (maximum 200 characters).
+        schema:
+          type: string
+          maxLength: 200
+      - name: is_active
+        in: query
+        description: Filter by active state.
+        schema:
+          type: boolean
+      responses:
+        '200':
+          description: Paginated tenant-scoped brand list.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - data
+                - pagination
+                - meta
+                properties:
+                  success:
+                    type: boolean
+                    const: true
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                      - id
+                      - code
+                      - name
+                      - manufacturer_id
+                      - is_active
+                      - created_at
+                      - updated_at
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        code:
+                          type: string
+                        name:
+                          type: string
+                        manufacturer_id:
+                          type: string
+                          format: uuid
+                        country_of_origin:
+                          type:
+                          - string
+                          - 'null'
+                        description:
+                          type:
+                          - string
+                          - 'null'
+                        is_active:
+                          type: boolean
+                        created_at:
+                          type: string
+                          format: date-time
+                        updated_at:
+                          type: string
+                          format: date-time
+                  pagination:
+                    type: object
+                    required:
+                    - limit
+                    properties:
+                      page:
+                        type: integer
+                        description: Current page, 1-based (offset pagination).
+                        example: 1
+                      limit:
+                        type: integer
+                        description: Page size actually applied, clamped into [1,100].
+                        example: 20
+                      total:
+                        type: integer
+                        format: int64
+                        description: Total number of records matching the query.
+                        example: 142
+                      total_pages:
+                        type: integer
+                        description: Total pages (offset pagination only).
+                        example: 8
+                      next_cursor:
+                        type: string
+                        description: Opaque, HMAC-signed cursor for the next page (cursor pagination only).
+                        example: eyJ0IjoiMjAyNi0wOS0xMVRUMTA6...
+                      prev_cursor:
+                        type: string
+                        description: Opaque, HMAC-signed cursor for the previous page (cursor pagination only).
+                      has_more:
+                        type: boolean
+                        description: Whether another page exists.
+                        example: true
+                  meta:
+                    type: object
+                    required:
+                    - request_id
+                    - timestamp
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                        description: Correlates a response to its request; echoed in the X-Request-ID header.
+                        example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp:
+                        type: string
+                        format: date-time
+                        description: Server time the response was produced, RFC 3339 UTC.
+                        example: 2026-09-14 16:00:00+00:00
+                      version:
+                        type: string
+                        description: API version tag of the responding surface, e.g. "v1".
+                        example: v1
+        '400':
+          description: 'The request was malformed: invalid JSON, a failed validation rule, an unparsable
+
+            UUID, or invalid query params. `error.code` distinguishes: VALIDATION_ERROR,
+
+            INVALID_UUID, INVALID_CURSOR, INVALID_QUERY.
+
+            '
+          headers:
+            X-Request-ID:
+              description: Correlates a response to its request; mirrors meta.request_id.
+              schema:
+                type: string
+                format: uuid
+                example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - error
+                - meta
+                properties:
+                  success:
+                    type: boolean
+                    const: false
+                  error:
+                    type: object
+                    required:
+                    - code
+                    - message
+                    properties:
+                      code:
+                        type: string
+                        description: Stable machine-readable error code. See docs/api/API.md catalogue.
+                        example: VALIDATION_ERROR
+                      message:
+                        type: string
+                        description: Short, human-readable summary. Never branch client logic on this free text.
+                        example: request validation failed
+                      details:
+                        type: array
+                        description: Field-level failures, present only for validation-style errors.
+                        items:
+                          type: object
+                          required:
+                          - field
+                          - rule
+                          properties:
+                            field:
+                              type: string
+                              description: JSON path of the offending field, dot-separated for nested fields.
+                              example: email
+                            rule:
+                              type: string
+                              description: The validation rule that failed (go-playground/validator tag).
+                              example: email
+                            message:
+                              type: string
+                              description: Human-readable explanation of the failure.
+                              example: must be a valid email address
+                            value:
+                              description: The rejected value (omitted when it would be unsafe to echo).
+                              example: not-an-email
+                  meta:
+                    type: object
+                    required:
+                    - request_id
+                    - timestamp
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                        description: Correlates a response to its request; echoed in the X-Request-ID header.
+                        example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp:
+                        type: string
+                        format: date-time
+                        description: Server time the response was produced, RFC 3339 UTC.
+                        example: 2026-09-14 16:00:00+00:00
+                      version:
+                        type: string
+                        description: API version tag of the responding surface, e.g. "v1".
+                        example: v1
+                description: Uniform error envelope. Success is always false; the payload lives under error.
+              examples:
+                validation:
+                  summary: A field failed its validation rule.
+                  value:
+                    success: false
+                    error:
+                      code: VALIDATION_ERROR
+                      message: request validation failed
+                      details:
+                      - field: email
+                        rule: email
+                        message: must be a valid email address
+                        value: not-an-email
+                    meta:
+                      request_id: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp: '2026-09-14T16:00:00Z'
+        '401':
+          description: 'Missing/invalid credentials. Codes: UNAUTHENTICATED, INVALID_CREDENTIALS, TOKEN_EXPIRED,
+
+            TOKEN_INVALID, TOKEN_REUSE_DETECTED. Two special non-fatal 401 codes (MFA_REQUIRED,
+
+            PASSWORD_CHANGE_REQUIRED) carry a single-use token in a header for the next stage — see
+
+            the bearerAuth description. Neither issues a session.
+
+            '
+          headers:
+            WWW-Authenticate:
+              description: Challenge indicating the scheme and error type.
+              schema:
+                type: string
+                example: Bearer realm="pharmaciano", error="invalid_token"
+            X-MFA-Challenge:
+              description: Present only when error.code is MFA_REQUIRED. Redeem at POST /auth/mfa/verify.
+              schema:
+                type: string
+            X-Password-Change-Token:
+              description: Present only when error.code is PASSWORD_CHANGE_REQUIRED. Redeem at POST /auth/password/force-change.
+              schema:
+                type: string
+            X-Request-ID:
+              description: Correlates a response to its request; mirrors meta.request_id.
+              schema:
+                type: string
+                format: uuid
+                example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - error
+                - meta
+                properties:
+                  success:
+                    type: boolean
+                    const: false
+                  error:
+                    type: object
+                    required:
+                    - code
+                    - message
+                    properties:
+                      code:
+                        type: string
+                        description: Stable machine-readable error code. See docs/api/API.md catalogue.
+                        example: VALIDATION_ERROR
+                      message:
+                        type: string
+                        description: Short, human-readable summary. Never branch client logic on this free text.
+                        example: request validation failed
+                      details:
+                        type: array
+                        description: Field-level failures, present only for validation-style errors.
+                        items:
+                          type: object
+                          required:
+                          - field
+                          - rule
+                          properties:
+                            field:
+                              type: string
+                              description: JSON path of the offending field, dot-separated for nested fields.
+                              example: email
+                            rule:
+                              type: string
+                              description: The validation rule that failed (go-playground/validator tag).
+                              example: email
+                            message:
+                              type: string
+                              description: Human-readable explanation of the failure.
+                              example: must be a valid email address
+                            value:
+                              description: The rejected value (omitted when it would be unsafe to echo).
+                              example: not-an-email
+                  meta:
+                    type: object
+                    required:
+                    - request_id
+                    - timestamp
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                        description: Correlates a response to its request; echoed in the X-Request-ID header.
+                        example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp:
+                        type: string
+                        format: date-time
+                        description: Server time the response was produced, RFC 3339 UTC.
+                        example: 2026-09-14 16:00:00+00:00
+                      version:
+                        type: string
+                        description: API version tag of the responding surface, e.g. "v1".
+                        example: v1
+                description: Uniform error envelope. Success is always false; the payload lives under error.
+              examples:
+                invalid-credentials:
+                  summary: Login failed because the email/password pair did not match.
+                  value:
+                    success: false
+                    error:
+                      code: INVALID_CREDENTIALS
+                      message: invalid email or password
+                    meta:
+                      request_id: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp: '2026-09-14T16:00:00Z'
+        '403':
+          description: 'The caller is not permitted to act on the target. Codes: FORBIDDEN, ACCOUNT_INACTIVE,
+
+            ACCOUNT_SUSPENDED, BRANCH_SCOPE_DENIED, TENANT_SCOPE_DENIED, CROSS_ORIGIN_REQUEST.
+
+            '
+          headers:
+            X-Request-ID:
+              description: Correlates a response to its request; mirrors meta.request_id.
+              schema:
+                type: string
+                format: uuid
+                example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - error
+                - meta
+                properties:
+                  success:
+                    type: boolean
+                    const: false
+                  error:
+                    type: object
+                    required:
+                    - code
+                    - message
+                    properties:
+                      code:
+                        type: string
+                        description: Stable machine-readable error code. See docs/api/API.md catalogue.
+                        example: VALIDATION_ERROR
+                      message:
+                        type: string
+                        description: Short, human-readable summary. Never branch client logic on this free text.
+                        example: request validation failed
+                      details:
+                        type: array
+                        description: Field-level failures, present only for validation-style errors.
+                        items:
+                          type: object
+                          required:
+                          - field
+                          - rule
+                          properties:
+                            field:
+                              type: string
+                              description: JSON path of the offending field, dot-separated for nested fields.
+                              example: email
+                            rule:
+                              type: string
+                              description: The validation rule that failed (go-playground/validator tag).
+                              example: email
+                            message:
+                              type: string
+                              description: Human-readable explanation of the failure.
+                              example: must be a valid email address
+                            value:
+                              description: The rejected value (omitted when it would be unsafe to echo).
+                              example: not-an-email
+                  meta:
+                    type: object
+                    required:
+                    - request_id
+                    - timestamp
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                        description: Correlates a response to its request; echoed in the X-Request-ID header.
+                        example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp:
+                        type: string
+                        format: date-time
+                        description: Server time the response was produced, RFC 3339 UTC.
+                        example: 2026-09-14 16:00:00+00:00
+                      version:
+                        type: string
+                        description: API version tag of the responding surface, e.g. "v1".
+                        example: v1
+                description: Uniform error envelope. Success is always false; the payload lives under error.
+              examples:
+                forbidden:
+                  summary: The caller lacks the required RBAC permission on the target.
+                  value:
+                    success: false
+                    error:
+                      code: FORBIDDEN
+                      message: you do not have permission to perform this action
+                    meta:
+                      request_id: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp: '2026-09-14T16:00:00Z'
+        '429':
+          description: 'Rate limit exceeded (HTTP 429). Codes: RATE_LIMITED, TOO_MANY_SESSIONS, AI_COST_CAP_EXCEEDED.
+
+            Respect Retry-After before retrying.
+
+            '
+          headers:
+            Retry-After:
+              description: 'Seconds to wait before retrying. Present on 403 (Locked) and 429 (rate limited).
+
+                Integer seconds, HTTP-date, or a bare duration in seconds.
+
+                '
+              schema:
+                type: string
+                example: '120'
+            X-RateLimit-Limit:
+              description: Max requests allowed in the current window.
+              schema:
+                type: integer
+                example: 100
+            X-RateLimit-Remaining:
+              description: Requests remaining in the current window.
+              schema:
+                type: integer
+                example: 99
+            X-RateLimit-Reset:
+              description: Epoch seconds when the window resets.
+              schema:
+                type: integer
+                example: 1694700000
+            X-Request-ID:
+              description: Correlates a response to its request; mirrors meta.request_id.
+              schema:
+                type: string
+                format: uuid
+                example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - error
+                - meta
+                properties:
+                  success:
+                    type: boolean
+                    const: false
+                  error:
+                    type: object
+                    required:
+                    - code
+                    - message
+                    properties:
+                      code:
+                        type: string
+                        description: Stable machine-readable error code. See docs/api/API.md catalogue.
+                        example: VALIDATION_ERROR
+                      message:
+                        type: string
+                        description: Short, human-readable summary. Never branch client logic on this free text.
+                        example: request validation failed
+                      details:
+                        type: array
+                        description: Field-level failures, present only for validation-style errors.
+                        items:
+                          type: object
+                          required:
+                          - field
+                          - rule
+                          properties:
+                            field:
+                              type: string
+                              description: JSON path of the offending field, dot-separated for nested fields.
+                              example: email
+                            rule:
+                              type: string
+                              description: The validation rule that failed (go-playground/validator tag).
+                              example: email
+                            message:
+                              type: string
+                              description: Human-readable explanation of the failure.
+                              example: must be a valid email address
+                            value:
+                              description: The rejected value (omitted when it would be unsafe to echo).
+                              example: not-an-email
+                  meta:
+                    type: object
+                    required:
+                    - request_id
+                    - timestamp
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                        description: Correlates a response to its request; echoed in the X-Request-ID header.
+                        example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp:
+                        type: string
+                        format: date-time
+                        description: Server time the response was produced, RFC 3339 UTC.
+                        example: 2026-09-14 16:00:00+00:00
+                      version:
+                        type: string
+                        description: API version tag of the responding surface, e.g. "v1".
+                        example: v1
+                description: Uniform error envelope. Success is always false; the payload lives under error.
+              examples:
+                rate-limited:
+                  summary: Too many requests; back off until the Retry-After header expires.
+                  value:
+                    success: false
+                    error:
+                      code: RATE_LIMITED
+                      message: rate limit exceeded
+                    meta:
+                      request_id: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp: '2026-09-14T16:00:00Z'
+        '500':
+          description: 'An unexpected server error (HTTP 500+). The body is deliberately generic (INTERNAL_ERROR) —
+
+            the real cause is only ever in the server logs, never on the wire. Also covers 501..504
+
+            (DATABASE_ERROR, UPSTREAM_ERROR, SERVICE_UNAVAILABLE, TIMEOUT, etc.) per the mapper.
+
+            '
+          headers:
+            X-Request-ID:
+              description: Correlates a response to its request; mirrors meta.request_id.
+              schema:
+                type: string
+                format: uuid
+                example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - error
+                - meta
+                properties:
+                  success:
+                    type: boolean
+                    const: false
+                  error:
+                    type: object
+                    required:
+                    - code
+                    - message
+                    properties:
+                      code:
+                        type: string
+                        description: Stable machine-readable error code. See docs/api/API.md catalogue.
+                        example: VALIDATION_ERROR
+                      message:
+                        type: string
+                        description: Short, human-readable summary. Never branch client logic on this free text.
+                        example: request validation failed
+                      details:
+                        type: array
+                        description: Field-level failures, present only for validation-style errors.
+                        items:
+                          type: object
+                          required:
+                          - field
+                          - rule
+                          properties:
+                            field:
+                              type: string
+                              description: JSON path of the offending field, dot-separated for nested fields.
+                              example: email
+                            rule:
+                              type: string
+                              description: The validation rule that failed (go-playground/validator tag).
+                              example: email
+                            message:
+                              type: string
+                              description: Human-readable explanation of the failure.
+                              example: must be a valid email address
+                            value:
+                              description: The rejected value (omitted when it would be unsafe to echo).
+                              example: not-an-email
+                  meta:
+                    type: object
+                    required:
+                    - request_id
+                    - timestamp
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                        description: Correlates a response to its request; echoed in the X-Request-ID header.
+                        example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp:
+                        type: string
+                        format: date-time
+                        description: Server time the response was produced, RFC 3339 UTC.
+                        example: 2026-09-14 16:00:00+00:00
+                      version:
+                        type: string
+                        description: API version tag of the responding surface, e.g. "v1".
+                        example: v1
+                description: Uniform error envelope. Success is always false; the payload lives under error.
+  /brands/{id}:
+    get:
+      operationId: brands.get
+      summary: Get a brand
+      security:
+      - bearerAuth: []
+      description: Requires brands:view. Cross-organization IDs are reported as not found.
+      tags:
+      - brands
+      parameters:
+      - name: X-Request-ID
+        in: header
+        description: Caller-supplied correlation id. If omitted the server mints one and returns it.
+        required: false
+        schema:
+          type: string
+          format: uuid
+      - name: id
+        in: path
+        required: true
+        description: Brand UUID.
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Brand profile.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - data
+                - meta
+                properties:
+                  success:
+                    type: boolean
+                    const: true
+                  data:
+                    type: object
+                    required:
+                    - id
+                    - code
+                    - name
+                    - manufacturer_id
+                    - is_active
+                    - created_at
+                    - updated_at
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      code:
+                        type: string
+                      name:
+                        type: string
+                      manufacturer_id:
+                        type: string
+                        format: uuid
+                      country_of_origin:
+                        type:
+                        - string
+                        - 'null'
+                      description:
+                        type:
+                        - string
+                        - 'null'
+                      is_active:
+                        type: boolean
+                      created_at:
+                        type: string
+                        format: date-time
+                      updated_at:
+                        type: string
+                        format: date-time
+                  meta:
+                    type: object
+                    required:
+                    - request_id
+                    - timestamp
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                        description: Correlates a response to its request; echoed in the X-Request-ID header.
+                        example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp:
+                        type: string
+                        format: date-time
+                        description: Server time the response was produced, RFC 3339 UTC.
+                        example: 2026-09-14 16:00:00+00:00
+                      version:
+                        type: string
+                        description: API version tag of the responding surface, e.g. "v1".
+                        example: v1
+        '400':
+          description: 'The request was malformed: invalid JSON, a failed validation rule, an unparsable
+
+            UUID, or invalid query params. `error.code` distinguishes: VALIDATION_ERROR,
+
+            INVALID_UUID, INVALID_CURSOR, INVALID_QUERY.
+
+            '
+          headers:
+            X-Request-ID:
+              description: Correlates a response to its request; mirrors meta.request_id.
+              schema:
+                type: string
+                format: uuid
+                example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - error
+                - meta
+                properties:
+                  success:
+                    type: boolean
+                    const: false
+                  error:
+                    type: object
+                    required:
+                    - code
+                    - message
+                    properties:
+                      code:
+                        type: string
+                        description: Stable machine-readable error code. See docs/api/API.md catalogue.
+                        example: VALIDATION_ERROR
+                      message:
+                        type: string
+                        description: Short, human-readable summary. Never branch client logic on this free text.
+                        example: request validation failed
+                      details:
+                        type: array
+                        description: Field-level failures, present only for validation-style errors.
+                        items:
+                          type: object
+                          required:
+                          - field
+                          - rule
+                          properties:
+                            field:
+                              type: string
+                              description: JSON path of the offending field, dot-separated for nested fields.
+                              example: email
+                            rule:
+                              type: string
+                              description: The validation rule that failed (go-playground/validator tag).
+                              example: email
+                            message:
+                              type: string
+                              description: Human-readable explanation of the failure.
+                              example: must be a valid email address
+                            value:
+                              description: The rejected value (omitted when it would be unsafe to echo).
+                              example: not-an-email
+                  meta:
+                    type: object
+                    required:
+                    - request_id
+                    - timestamp
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                        description: Correlates a response to its request; echoed in the X-Request-ID header.
+                        example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp:
+                        type: string
+                        format: date-time
+                        description: Server time the response was produced, RFC 3339 UTC.
+                        example: 2026-09-14 16:00:00+00:00
+                      version:
+                        type: string
+                        description: API version tag of the responding surface, e.g. "v1".
+                        example: v1
+                description: Uniform error envelope. Success is always false; the payload lives under error.
+              examples:
+                validation:
+                  summary: A field failed its validation rule.
+                  value:
+                    success: false
+                    error:
+                      code: VALIDATION_ERROR
+                      message: request validation failed
+                      details:
+                      - field: email
+                        rule: email
+                        message: must be a valid email address
+                        value: not-an-email
+                    meta:
+                      request_id: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp: '2026-09-14T16:00:00Z'
+        '401':
+          description: 'Missing/invalid credentials. Codes: UNAUTHENTICATED, INVALID_CREDENTIALS, TOKEN_EXPIRED,
+
+            TOKEN_INVALID, TOKEN_REUSE_DETECTED. Two special non-fatal 401 codes (MFA_REQUIRED,
+
+            PASSWORD_CHANGE_REQUIRED) carry a single-use token in a header for the next stage — see
+
+            the bearerAuth description. Neither issues a session.
+
+            '
+          headers:
+            WWW-Authenticate:
+              description: Challenge indicating the scheme and error type.
+              schema:
+                type: string
+                example: Bearer realm="pharmaciano", error="invalid_token"
+            X-MFA-Challenge:
+              description: Present only when error.code is MFA_REQUIRED. Redeem at POST /auth/mfa/verify.
+              schema:
+                type: string
+            X-Password-Change-Token:
+              description: Present only when error.code is PASSWORD_CHANGE_REQUIRED. Redeem at POST /auth/password/force-change.
+              schema:
+                type: string
+            X-Request-ID:
+              description: Correlates a response to its request; mirrors meta.request_id.
+              schema:
+                type: string
+                format: uuid
+                example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - error
+                - meta
+                properties:
+                  success:
+                    type: boolean
+                    const: false
+                  error:
+                    type: object
+                    required:
+                    - code
+                    - message
+                    properties:
+                      code:
+                        type: string
+                        description: Stable machine-readable error code. See docs/api/API.md catalogue.
+                        example: VALIDATION_ERROR
+                      message:
+                        type: string
+                        description: Short, human-readable summary. Never branch client logic on this free text.
+                        example: request validation failed
+                      details:
+                        type: array
+                        description: Field-level failures, present only for validation-style errors.
+                        items:
+                          type: object
+                          required:
+                          - field
+                          - rule
+                          properties:
+                            field:
+                              type: string
+                              description: JSON path of the offending field, dot-separated for nested fields.
+                              example: email
+                            rule:
+                              type: string
+                              description: The validation rule that failed (go-playground/validator tag).
+                              example: email
+                            message:
+                              type: string
+                              description: Human-readable explanation of the failure.
+                              example: must be a valid email address
+                            value:
+                              description: The rejected value (omitted when it would be unsafe to echo).
+                              example: not-an-email
+                  meta:
+                    type: object
+                    required:
+                    - request_id
+                    - timestamp
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                        description: Correlates a response to its request; echoed in the X-Request-ID header.
+                        example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp:
+                        type: string
+                        format: date-time
+                        description: Server time the response was produced, RFC 3339 UTC.
+                        example: 2026-09-14 16:00:00+00:00
+                      version:
+                        type: string
+                        description: API version tag of the responding surface, e.g. "v1".
+                        example: v1
+                description: Uniform error envelope. Success is always false; the payload lives under error.
+              examples:
+                invalid-credentials:
+                  summary: Login failed because the email/password pair did not match.
+                  value:
+                    success: false
+                    error:
+                      code: INVALID_CREDENTIALS
+                      message: invalid email or password
+                    meta:
+                      request_id: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp: '2026-09-14T16:00:00Z'
+        '403':
+          description: 'The caller is not permitted to act on the target. Codes: FORBIDDEN, ACCOUNT_INACTIVE,
+
+            ACCOUNT_SUSPENDED, BRANCH_SCOPE_DENIED, TENANT_SCOPE_DENIED, CROSS_ORIGIN_REQUEST.
+
+            '
+          headers:
+            X-Request-ID:
+              description: Correlates a response to its request; mirrors meta.request_id.
+              schema:
+                type: string
+                format: uuid
+                example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - error
+                - meta
+                properties:
+                  success:
+                    type: boolean
+                    const: false
+                  error:
+                    type: object
+                    required:
+                    - code
+                    - message
+                    properties:
+                      code:
+                        type: string
+                        description: Stable machine-readable error code. See docs/api/API.md catalogue.
+                        example: VALIDATION_ERROR
+                      message:
+                        type: string
+                        description: Short, human-readable summary. Never branch client logic on this free text.
+                        example: request validation failed
+                      details:
+                        type: array
+                        description: Field-level failures, present only for validation-style errors.
+                        items:
+                          type: object
+                          required:
+                          - field
+                          - rule
+                          properties:
+                            field:
+                              type: string
+                              description: JSON path of the offending field, dot-separated for nested fields.
+                              example: email
+                            rule:
+                              type: string
+                              description: The validation rule that failed (go-playground/validator tag).
+                              example: email
+                            message:
+                              type: string
+                              description: Human-readable explanation of the failure.
+                              example: must be a valid email address
+                            value:
+                              description: The rejected value (omitted when it would be unsafe to echo).
+                              example: not-an-email
+                  meta:
+                    type: object
+                    required:
+                    - request_id
+                    - timestamp
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                        description: Correlates a response to its request; echoed in the X-Request-ID header.
+                        example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp:
+                        type: string
+                        format: date-time
+                        description: Server time the response was produced, RFC 3339 UTC.
+                        example: 2026-09-14 16:00:00+00:00
+                      version:
+                        type: string
+                        description: API version tag of the responding surface, e.g. "v1".
+                        example: v1
+                description: Uniform error envelope. Success is always false; the payload lives under error.
+              examples:
+                forbidden:
+                  summary: The caller lacks the required RBAC permission on the target.
+                  value:
+                    success: false
+                    error:
+                      code: FORBIDDEN
+                      message: you do not have permission to perform this action
+                    meta:
+                      request_id: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp: '2026-09-14T16:00:00Z'
+        '404':
+          description: The referenced resource does not exist (code NOT_FOUND).
+          headers:
+            X-Request-ID:
+              description: Correlates a response to its request; mirrors meta.request_id.
+              schema:
+                type: string
+                format: uuid
+                example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - error
+                - meta
+                properties:
+                  success:
+                    type: boolean
+                    const: false
+                  error:
+                    type: object
+                    required:
+                    - code
+                    - message
+                    properties:
+                      code:
+                        type: string
+                        description: Stable machine-readable error code. See docs/api/API.md catalogue.
+                        example: VALIDATION_ERROR
+                      message:
+                        type: string
+                        description: Short, human-readable summary. Never branch client logic on this free text.
+                        example: request validation failed
+                      details:
+                        type: array
+                        description: Field-level failures, present only for validation-style errors.
+                        items:
+                          type: object
+                          required:
+                          - field
+                          - rule
+                          properties:
+                            field:
+                              type: string
+                              description: JSON path of the offending field, dot-separated for nested fields.
+                              example: email
+                            rule:
+                              type: string
+                              description: The validation rule that failed (go-playground/validator tag).
+                              example: email
+                            message:
+                              type: string
+                              description: Human-readable explanation of the failure.
+                              example: must be a valid email address
+                            value:
+                              description: The rejected value (omitted when it would be unsafe to echo).
+                              example: not-an-email
+                  meta:
+                    type: object
+                    required:
+                    - request_id
+                    - timestamp
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                        description: Correlates a response to its request; echoed in the X-Request-ID header.
+                        example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp:
+                        type: string
+                        format: date-time
+                        description: Server time the response was produced, RFC 3339 UTC.
+                        example: 2026-09-14 16:00:00+00:00
+                      version:
+                        type: string
+                        description: API version tag of the responding surface, e.g. "v1".
+                        example: v1
+                description: Uniform error envelope. Success is always false; the payload lives under error.
+              examples:
+                not-found:
+                  summary: The resource does not exist.
+                  value:
+                    success: false
+                    error:
+                      code: NOT_FOUND
+                      message: resource not found
+                    meta:
+                      request_id: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp: '2026-09-14T16:00:00Z'
+        '429':
+          description: 'Rate limit exceeded (HTTP 429). Codes: RATE_LIMITED, TOO_MANY_SESSIONS, AI_COST_CAP_EXCEEDED.
+
+            Respect Retry-After before retrying.
+
+            '
+          headers:
+            Retry-After:
+              description: 'Seconds to wait before retrying. Present on 403 (Locked) and 429 (rate limited).
+
+                Integer seconds, HTTP-date, or a bare duration in seconds.
+
+                '
+              schema:
+                type: string
+                example: '120'
+            X-RateLimit-Limit:
+              description: Max requests allowed in the current window.
+              schema:
+                type: integer
+                example: 100
+            X-RateLimit-Remaining:
+              description: Requests remaining in the current window.
+              schema:
+                type: integer
+                example: 99
+            X-RateLimit-Reset:
+              description: Epoch seconds when the window resets.
+              schema:
+                type: integer
+                example: 1694700000
+            X-Request-ID:
+              description: Correlates a response to its request; mirrors meta.request_id.
+              schema:
+                type: string
+                format: uuid
+                example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - error
+                - meta
+                properties:
+                  success:
+                    type: boolean
+                    const: false
+                  error:
+                    type: object
+                    required:
+                    - code
+                    - message
+                    properties:
+                      code:
+                        type: string
+                        description: Stable machine-readable error code. See docs/api/API.md catalogue.
+                        example: VALIDATION_ERROR
+                      message:
+                        type: string
+                        description: Short, human-readable summary. Never branch client logic on this free text.
+                        example: request validation failed
+                      details:
+                        type: array
+                        description: Field-level failures, present only for validation-style errors.
+                        items:
+                          type: object
+                          required:
+                          - field
+                          - rule
+                          properties:
+                            field:
+                              type: string
+                              description: JSON path of the offending field, dot-separated for nested fields.
+                              example: email
+                            rule:
+                              type: string
+                              description: The validation rule that failed (go-playground/validator tag).
+                              example: email
+                            message:
+                              type: string
+                              description: Human-readable explanation of the failure.
+                              example: must be a valid email address
+                            value:
+                              description: The rejected value (omitted when it would be unsafe to echo).
+                              example: not-an-email
+                  meta:
+                    type: object
+                    required:
+                    - request_id
+                    - timestamp
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                        description: Correlates a response to its request; echoed in the X-Request-ID header.
+                        example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp:
+                        type: string
+                        format: date-time
+                        description: Server time the response was produced, RFC 3339 UTC.
+                        example: 2026-09-14 16:00:00+00:00
+                      version:
+                        type: string
+                        description: API version tag of the responding surface, e.g. "v1".
+                        example: v1
+                description: Uniform error envelope. Success is always false; the payload lives under error.
+              examples:
+                rate-limited:
+                  summary: Too many requests; back off until the Retry-After header expires.
+                  value:
+                    success: false
+                    error:
+                      code: RATE_LIMITED
+                      message: rate limit exceeded
+                    meta:
+                      request_id: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp: '2026-09-14T16:00:00Z'
+        '500':
+          description: 'An unexpected server error (HTTP 500+). The body is deliberately generic (INTERNAL_ERROR) —
+
+            the real cause is only ever in the server logs, never on the wire. Also covers 501..504
+
+            (DATABASE_ERROR, UPSTREAM_ERROR, SERVICE_UNAVAILABLE, TIMEOUT, etc.) per the mapper.
+
+            '
+          headers:
+            X-Request-ID:
+              description: Correlates a response to its request; mirrors meta.request_id.
+              schema:
+                type: string
+                format: uuid
+                example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - error
+                - meta
+                properties:
+                  success:
+                    type: boolean
+                    const: false
+                  error:
+                    type: object
+                    required:
+                    - code
+                    - message
+                    properties:
+                      code:
+                        type: string
+                        description: Stable machine-readable error code. See docs/api/API.md catalogue.
+                        example: VALIDATION_ERROR
+                      message:
+                        type: string
+                        description: Short, human-readable summary. Never branch client logic on this free text.
+                        example: request validation failed
+                      details:
+                        type: array
+                        description: Field-level failures, present only for validation-style errors.
+                        items:
+                          type: object
+                          required:
+                          - field
+                          - rule
+                          properties:
+                            field:
+                              type: string
+                              description: JSON path of the offending field, dot-separated for nested fields.
+                              example: email
+                            rule:
+                              type: string
+                              description: The validation rule that failed (go-playground/validator tag).
+                              example: email
+                            message:
+                              type: string
+                              description: Human-readable explanation of the failure.
+                              example: must be a valid email address
+                            value:
+                              description: The rejected value (omitted when it would be unsafe to echo).
+                              example: not-an-email
+                  meta:
+                    type: object
+                    required:
+                    - request_id
+                    - timestamp
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                        description: Correlates a response to its request; echoed in the X-Request-ID header.
+                        example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp:
+                        type: string
+                        format: date-time
+                        description: Server time the response was produced, RFC 3339 UTC.
+                        example: 2026-09-14 16:00:00+00:00
+                      version:
+                        type: string
+                        description: API version tag of the responding surface, e.g. "v1".
+                        example: v1
+                description: Uniform error envelope. Success is always false; the payload lives under error.
+    patch:
+      operationId: brands.update
+      summary: Update a brand
+      security:
+      - bearerAuth: []
+      description: 'Applies a partial update. Brand code and organization ownership are
+
+        immutable. Requires brands:update.
+
+        '
+      tags:
+      - brands
+      parameters:
+      - name: X-Request-ID
+        in: header
+        description: Caller-supplied correlation id. If omitted the server mints one and returns it.
+        required: false
+        schema:
+          type: string
+          format: uuid
+      - name: Idempotency-Key
+        in: header
+        description: 'Optional idempotency key for safe retry of mutating requests (POST/PATCH/PUT/DELETE).
+
+          The server stores the request+response keyed by this header for the configured TTL; a second
+
+          request with the same key and body returns the cached response. A second request with a
+
+          *different* body yields `409 IDEMPOTENCY_KEY_CONFLICT`.
+
+          '
+        required: false
+        schema:
+          type: string
+          maxLength: 128
+      - name: id
+        in: path
+        required: true
+        description: Brand UUID.
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Every field is optional. Code and organization ownership are immutable.
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 200
+                manufacturer_id:
+                  type: string
+                  format: uuid
+                  description: Cannot be reassigned while medicines reference this brand.
+                country_of_origin:
+                  type:
+                  - string
+                  - 'null'
+                  maxLength: 100
+                description:
+                  type:
+                  - string
+                  - 'null'
+                is_active:
+                  type: boolean
+      responses:
+        '200':
+          description: Updated brand.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - data
+                - meta
+                properties:
+                  success:
+                    type: boolean
+                    const: true
+                  data:
+                    type: object
+                    required:
+                    - id
+                    - code
+                    - name
+                    - manufacturer_id
+                    - is_active
+                    - created_at
+                    - updated_at
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      code:
+                        type: string
+                      name:
+                        type: string
+                      manufacturer_id:
+                        type: string
+                        format: uuid
+                      country_of_origin:
+                        type:
+                        - string
+                        - 'null'
+                      description:
+                        type:
+                        - string
+                        - 'null'
+                      is_active:
+                        type: boolean
+                      created_at:
+                        type: string
+                        format: date-time
+                      updated_at:
+                        type: string
+                        format: date-time
+                  meta:
+                    type: object
+                    required:
+                    - request_id
+                    - timestamp
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                        description: Correlates a response to its request; echoed in the X-Request-ID header.
+                        example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp:
+                        type: string
+                        format: date-time
+                        description: Server time the response was produced, RFC 3339 UTC.
+                        example: 2026-09-14 16:00:00+00:00
+                      version:
+                        type: string
+                        description: API version tag of the responding surface, e.g. "v1".
+                        example: v1
+        '400':
+          description: 'The request was malformed: invalid JSON, a failed validation rule, an unparsable
+
+            UUID, or invalid query params. `error.code` distinguishes: VALIDATION_ERROR,
+
+            INVALID_UUID, INVALID_CURSOR, INVALID_QUERY.
+
+            '
+          headers:
+            X-Request-ID:
+              description: Correlates a response to its request; mirrors meta.request_id.
+              schema:
+                type: string
+                format: uuid
+                example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - error
+                - meta
+                properties:
+                  success:
+                    type: boolean
+                    const: false
+                  error:
+                    type: object
+                    required:
+                    - code
+                    - message
+                    properties:
+                      code:
+                        type: string
+                        description: Stable machine-readable error code. See docs/api/API.md catalogue.
+                        example: VALIDATION_ERROR
+                      message:
+                        type: string
+                        description: Short, human-readable summary. Never branch client logic on this free text.
+                        example: request validation failed
+                      details:
+                        type: array
+                        description: Field-level failures, present only for validation-style errors.
+                        items:
+                          type: object
+                          required:
+                          - field
+                          - rule
+                          properties:
+                            field:
+                              type: string
+                              description: JSON path of the offending field, dot-separated for nested fields.
+                              example: email
+                            rule:
+                              type: string
+                              description: The validation rule that failed (go-playground/validator tag).
+                              example: email
+                            message:
+                              type: string
+                              description: Human-readable explanation of the failure.
+                              example: must be a valid email address
+                            value:
+                              description: The rejected value (omitted when it would be unsafe to echo).
+                              example: not-an-email
+                  meta:
+                    type: object
+                    required:
+                    - request_id
+                    - timestamp
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                        description: Correlates a response to its request; echoed in the X-Request-ID header.
+                        example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp:
+                        type: string
+                        format: date-time
+                        description: Server time the response was produced, RFC 3339 UTC.
+                        example: 2026-09-14 16:00:00+00:00
+                      version:
+                        type: string
+                        description: API version tag of the responding surface, e.g. "v1".
+                        example: v1
+                description: Uniform error envelope. Success is always false; the payload lives under error.
+              examples:
+                validation:
+                  summary: A field failed its validation rule.
+                  value:
+                    success: false
+                    error:
+                      code: VALIDATION_ERROR
+                      message: request validation failed
+                      details:
+                      - field: email
+                        rule: email
+                        message: must be a valid email address
+                        value: not-an-email
+                    meta:
+                      request_id: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp: '2026-09-14T16:00:00Z'
+        '401':
+          description: 'Missing/invalid credentials. Codes: UNAUTHENTICATED, INVALID_CREDENTIALS, TOKEN_EXPIRED,
+
+            TOKEN_INVALID, TOKEN_REUSE_DETECTED. Two special non-fatal 401 codes (MFA_REQUIRED,
+
+            PASSWORD_CHANGE_REQUIRED) carry a single-use token in a header for the next stage — see
+
+            the bearerAuth description. Neither issues a session.
+
+            '
+          headers:
+            WWW-Authenticate:
+              description: Challenge indicating the scheme and error type.
+              schema:
+                type: string
+                example: Bearer realm="pharmaciano", error="invalid_token"
+            X-MFA-Challenge:
+              description: Present only when error.code is MFA_REQUIRED. Redeem at POST /auth/mfa/verify.
+              schema:
+                type: string
+            X-Password-Change-Token:
+              description: Present only when error.code is PASSWORD_CHANGE_REQUIRED. Redeem at POST /auth/password/force-change.
+              schema:
+                type: string
+            X-Request-ID:
+              description: Correlates a response to its request; mirrors meta.request_id.
+              schema:
+                type: string
+                format: uuid
+                example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - error
+                - meta
+                properties:
+                  success:
+                    type: boolean
+                    const: false
+                  error:
+                    type: object
+                    required:
+                    - code
+                    - message
+                    properties:
+                      code:
+                        type: string
+                        description: Stable machine-readable error code. See docs/api/API.md catalogue.
+                        example: VALIDATION_ERROR
+                      message:
+                        type: string
+                        description: Short, human-readable summary. Never branch client logic on this free text.
+                        example: request validation failed
+                      details:
+                        type: array
+                        description: Field-level failures, present only for validation-style errors.
+                        items:
+                          type: object
+                          required:
+                          - field
+                          - rule
+                          properties:
+                            field:
+                              type: string
+                              description: JSON path of the offending field, dot-separated for nested fields.
+                              example: email
+                            rule:
+                              type: string
+                              description: The validation rule that failed (go-playground/validator tag).
+                              example: email
+                            message:
+                              type: string
+                              description: Human-readable explanation of the failure.
+                              example: must be a valid email address
+                            value:
+                              description: The rejected value (omitted when it would be unsafe to echo).
+                              example: not-an-email
+                  meta:
+                    type: object
+                    required:
+                    - request_id
+                    - timestamp
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                        description: Correlates a response to its request; echoed in the X-Request-ID header.
+                        example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp:
+                        type: string
+                        format: date-time
+                        description: Server time the response was produced, RFC 3339 UTC.
+                        example: 2026-09-14 16:00:00+00:00
+                      version:
+                        type: string
+                        description: API version tag of the responding surface, e.g. "v1".
+                        example: v1
+                description: Uniform error envelope. Success is always false; the payload lives under error.
+              examples:
+                invalid-credentials:
+                  summary: Login failed because the email/password pair did not match.
+                  value:
+                    success: false
+                    error:
+                      code: INVALID_CREDENTIALS
+                      message: invalid email or password
+                    meta:
+                      request_id: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp: '2026-09-14T16:00:00Z'
+        '403':
+          description: 'The caller is not permitted to act on the target. Codes: FORBIDDEN, ACCOUNT_INACTIVE,
+
+            ACCOUNT_SUSPENDED, BRANCH_SCOPE_DENIED, TENANT_SCOPE_DENIED, CROSS_ORIGIN_REQUEST.
+
+            '
+          headers:
+            X-Request-ID:
+              description: Correlates a response to its request; mirrors meta.request_id.
+              schema:
+                type: string
+                format: uuid
+                example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - error
+                - meta
+                properties:
+                  success:
+                    type: boolean
+                    const: false
+                  error:
+                    type: object
+                    required:
+                    - code
+                    - message
+                    properties:
+                      code:
+                        type: string
+                        description: Stable machine-readable error code. See docs/api/API.md catalogue.
+                        example: VALIDATION_ERROR
+                      message:
+                        type: string
+                        description: Short, human-readable summary. Never branch client logic on this free text.
+                        example: request validation failed
+                      details:
+                        type: array
+                        description: Field-level failures, present only for validation-style errors.
+                        items:
+                          type: object
+                          required:
+                          - field
+                          - rule
+                          properties:
+                            field:
+                              type: string
+                              description: JSON path of the offending field, dot-separated for nested fields.
+                              example: email
+                            rule:
+                              type: string
+                              description: The validation rule that failed (go-playground/validator tag).
+                              example: email
+                            message:
+                              type: string
+                              description: Human-readable explanation of the failure.
+                              example: must be a valid email address
+                            value:
+                              description: The rejected value (omitted when it would be unsafe to echo).
+                              example: not-an-email
+                  meta:
+                    type: object
+                    required:
+                    - request_id
+                    - timestamp
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                        description: Correlates a response to its request; echoed in the X-Request-ID header.
+                        example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp:
+                        type: string
+                        format: date-time
+                        description: Server time the response was produced, RFC 3339 UTC.
+                        example: 2026-09-14 16:00:00+00:00
+                      version:
+                        type: string
+                        description: API version tag of the responding surface, e.g. "v1".
+                        example: v1
+                description: Uniform error envelope. Success is always false; the payload lives under error.
+              examples:
+                forbidden:
+                  summary: The caller lacks the required RBAC permission on the target.
+                  value:
+                    success: false
+                    error:
+                      code: FORBIDDEN
+                      message: you do not have permission to perform this action
+                    meta:
+                      request_id: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp: '2026-09-14T16:00:00Z'
+        '404':
+          description: The referenced resource does not exist (code NOT_FOUND).
+          headers:
+            X-Request-ID:
+              description: Correlates a response to its request; mirrors meta.request_id.
+              schema:
+                type: string
+                format: uuid
+                example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - error
+                - meta
+                properties:
+                  success:
+                    type: boolean
+                    const: false
+                  error:
+                    type: object
+                    required:
+                    - code
+                    - message
+                    properties:
+                      code:
+                        type: string
+                        description: Stable machine-readable error code. See docs/api/API.md catalogue.
+                        example: VALIDATION_ERROR
+                      message:
+                        type: string
+                        description: Short, human-readable summary. Never branch client logic on this free text.
+                        example: request validation failed
+                      details:
+                        type: array
+                        description: Field-level failures, present only for validation-style errors.
+                        items:
+                          type: object
+                          required:
+                          - field
+                          - rule
+                          properties:
+                            field:
+                              type: string
+                              description: JSON path of the offending field, dot-separated for nested fields.
+                              example: email
+                            rule:
+                              type: string
+                              description: The validation rule that failed (go-playground/validator tag).
+                              example: email
+                            message:
+                              type: string
+                              description: Human-readable explanation of the failure.
+                              example: must be a valid email address
+                            value:
+                              description: The rejected value (omitted when it would be unsafe to echo).
+                              example: not-an-email
+                  meta:
+                    type: object
+                    required:
+                    - request_id
+                    - timestamp
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                        description: Correlates a response to its request; echoed in the X-Request-ID header.
+                        example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp:
+                        type: string
+                        format: date-time
+                        description: Server time the response was produced, RFC 3339 UTC.
+                        example: 2026-09-14 16:00:00+00:00
+                      version:
+                        type: string
+                        description: API version tag of the responding surface, e.g. "v1".
+                        example: v1
+                description: Uniform error envelope. Success is always false; the payload lives under error.
+              examples:
+                not-found:
+                  summary: The resource does not exist.
+                  value:
+                    success: false
+                    error:
+                      code: NOT_FOUND
+                      message: resource not found
+                    meta:
+                      request_id: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp: '2026-09-14T16:00:00Z'
+        '409':
+          description: 'The request conflicts with current state. Codes: ALREADY_EXISTS, CONFLICT,
+
+            IDEMPOTENCY_KEY_CONFLICT, STATE_TRANSITION_DENIED.
+
+            '
+          headers:
+            X-Request-ID:
+              description: Correlates a response to its request; mirrors meta.request_id.
+              schema:
+                type: string
+                format: uuid
+                example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - error
+                - meta
+                properties:
+                  success:
+                    type: boolean
+                    const: false
+                  error:
+                    type: object
+                    required:
+                    - code
+                    - message
+                    properties:
+                      code:
+                        type: string
+                        description: Stable machine-readable error code. See docs/api/API.md catalogue.
+                        example: VALIDATION_ERROR
+                      message:
+                        type: string
+                        description: Short, human-readable summary. Never branch client logic on this free text.
+                        example: request validation failed
+                      details:
+                        type: array
+                        description: Field-level failures, present only for validation-style errors.
+                        items:
+                          type: object
+                          required:
+                          - field
+                          - rule
+                          properties:
+                            field:
+                              type: string
+                              description: JSON path of the offending field, dot-separated for nested fields.
+                              example: email
+                            rule:
+                              type: string
+                              description: The validation rule that failed (go-playground/validator tag).
+                              example: email
+                            message:
+                              type: string
+                              description: Human-readable explanation of the failure.
+                              example: must be a valid email address
+                            value:
+                              description: The rejected value (omitted when it would be unsafe to echo).
+                              example: not-an-email
+                  meta:
+                    type: object
+                    required:
+                    - request_id
+                    - timestamp
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                        description: Correlates a response to its request; echoed in the X-Request-ID header.
+                        example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp:
+                        type: string
+                        format: date-time
+                        description: Server time the response was produced, RFC 3339 UTC.
+                        example: 2026-09-14 16:00:00+00:00
+                      version:
+                        type: string
+                        description: API version tag of the responding surface, e.g. "v1".
+                        example: v1
+                description: Uniform error envelope. Success is always false; the payload lives under error.
+              examples:
+                already-exists:
+                  summary: A unique code/name was already taken (e.g. duplicate branch code).
+                  value:
+                    success: false
+                    error:
+                      code: ALREADY_EXISTS
+                      message: a resource with this code already exists
+                    meta:
+                      request_id: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp: '2026-09-14T16:00:00Z'
+                idempotency:
+                  summary: The same Idempotency-Key was reused with a different body.
+                  value:
+                    success: false
+                    error:
+                      code: IDEMPOTENCY_KEY_CONFLICT
+                      message: the same Idempotency-Key was used with a different request body
+                    meta:
+                      request_id: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp: '2026-09-14T16:00:00Z'
+        '429':
+          description: 'Rate limit exceeded (HTTP 429). Codes: RATE_LIMITED, TOO_MANY_SESSIONS, AI_COST_CAP_EXCEEDED.
+
+            Respect Retry-After before retrying.
+
+            '
+          headers:
+            Retry-After:
+              description: 'Seconds to wait before retrying. Present on 403 (Locked) and 429 (rate limited).
+
+                Integer seconds, HTTP-date, or a bare duration in seconds.
+
+                '
+              schema:
+                type: string
+                example: '120'
+            X-RateLimit-Limit:
+              description: Max requests allowed in the current window.
+              schema:
+                type: integer
+                example: 100
+            X-RateLimit-Remaining:
+              description: Requests remaining in the current window.
+              schema:
+                type: integer
+                example: 99
+            X-RateLimit-Reset:
+              description: Epoch seconds when the window resets.
+              schema:
+                type: integer
+                example: 1694700000
+            X-Request-ID:
+              description: Correlates a response to its request; mirrors meta.request_id.
+              schema:
+                type: string
+                format: uuid
+                example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - error
+                - meta
+                properties:
+                  success:
+                    type: boolean
+                    const: false
+                  error:
+                    type: object
+                    required:
+                    - code
+                    - message
+                    properties:
+                      code:
+                        type: string
+                        description: Stable machine-readable error code. See docs/api/API.md catalogue.
+                        example: VALIDATION_ERROR
+                      message:
+                        type: string
+                        description: Short, human-readable summary. Never branch client logic on this free text.
+                        example: request validation failed
+                      details:
+                        type: array
+                        description: Field-level failures, present only for validation-style errors.
+                        items:
+                          type: object
+                          required:
+                          - field
+                          - rule
+                          properties:
+                            field:
+                              type: string
+                              description: JSON path of the offending field, dot-separated for nested fields.
+                              example: email
+                            rule:
+                              type: string
+                              description: The validation rule that failed (go-playground/validator tag).
+                              example: email
+                            message:
+                              type: string
+                              description: Human-readable explanation of the failure.
+                              example: must be a valid email address
+                            value:
+                              description: The rejected value (omitted when it would be unsafe to echo).
+                              example: not-an-email
+                  meta:
+                    type: object
+                    required:
+                    - request_id
+                    - timestamp
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                        description: Correlates a response to its request; echoed in the X-Request-ID header.
+                        example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp:
+                        type: string
+                        format: date-time
+                        description: Server time the response was produced, RFC 3339 UTC.
+                        example: 2026-09-14 16:00:00+00:00
+                      version:
+                        type: string
+                        description: API version tag of the responding surface, e.g. "v1".
+                        example: v1
+                description: Uniform error envelope. Success is always false; the payload lives under error.
+              examples:
+                rate-limited:
+                  summary: Too many requests; back off until the Retry-After header expires.
+                  value:
+                    success: false
+                    error:
+                      code: RATE_LIMITED
+                      message: rate limit exceeded
+                    meta:
+                      request_id: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp: '2026-09-14T16:00:00Z'
+        '500':
+          description: 'An unexpected server error (HTTP 500+). The body is deliberately generic (INTERNAL_ERROR) —
+
+            the real cause is only ever in the server logs, never on the wire. Also covers 501..504
+
+            (DATABASE_ERROR, UPSTREAM_ERROR, SERVICE_UNAVAILABLE, TIMEOUT, etc.) per the mapper.
+
+            '
+          headers:
+            X-Request-ID:
+              description: Correlates a response to its request; mirrors meta.request_id.
+              schema:
+                type: string
+                format: uuid
+                example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - error
+                - meta
+                properties:
+                  success:
+                    type: boolean
+                    const: false
+                  error:
+                    type: object
+                    required:
+                    - code
+                    - message
+                    properties:
+                      code:
+                        type: string
+                        description: Stable machine-readable error code. See docs/api/API.md catalogue.
+                        example: VALIDATION_ERROR
+                      message:
+                        type: string
+                        description: Short, human-readable summary. Never branch client logic on this free text.
+                        example: request validation failed
+                      details:
+                        type: array
+                        description: Field-level failures, present only for validation-style errors.
+                        items:
+                          type: object
+                          required:
+                          - field
+                          - rule
+                          properties:
+                            field:
+                              type: string
+                              description: JSON path of the offending field, dot-separated for nested fields.
+                              example: email
+                            rule:
+                              type: string
+                              description: The validation rule that failed (go-playground/validator tag).
+                              example: email
+                            message:
+                              type: string
+                              description: Human-readable explanation of the failure.
+                              example: must be a valid email address
+                            value:
+                              description: The rejected value (omitted when it would be unsafe to echo).
+                              example: not-an-email
+                  meta:
+                    type: object
+                    required:
+                    - request_id
+                    - timestamp
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                        description: Correlates a response to its request; echoed in the X-Request-ID header.
+                        example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp:
+                        type: string
+                        format: date-time
+                        description: Server time the response was produced, RFC 3339 UTC.
+                        example: 2026-09-14 16:00:00+00:00
+                      version:
+                        type: string
+                        description: API version tag of the responding surface, e.g. "v1".
+                        example: v1
+                description: Uniform error envelope. Success is always false; the payload lives under error.
+    delete:
+      operationId: brands.delete
+      summary: Soft-delete a brand
+      security:
+      - bearerAuth: []
+      description: 'Soft-deletes an unused brand. If medicines reference it, the API returns
+
+        409 and recommends deactivation instead. Requires brands:delete.
+
+        '
+      tags:
+      - brands
+      parameters:
+      - name: X-Request-ID
+        in: header
+        description: Caller-supplied correlation id. If omitted the server mints one and returns it.
+        required: false
+        schema:
+          type: string
+          format: uuid
+      - name: Idempotency-Key
+        in: header
+        description: 'Optional idempotency key for safe retry of mutating requests (POST/PATCH/PUT/DELETE).
+
+          The server stores the request+response keyed by this header for the configured TTL; a second
+
+          request with the same key and body returns the cached response. A second request with a
+
+          *different* body yields `409 IDEMPOTENCY_KEY_CONFLICT`.
+
+          '
+        required: false
+        schema:
+          type: string
+          maxLength: 128
+      - name: id
+        in: path
+        required: true
+        description: Brand UUID.
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '204':
+          description: Brand soft-deleted.
+        '400':
+          description: 'The request was malformed: invalid JSON, a failed validation rule, an unparsable
+
+            UUID, or invalid query params. `error.code` distinguishes: VALIDATION_ERROR,
+
+            INVALID_UUID, INVALID_CURSOR, INVALID_QUERY.
+
+            '
+          headers:
+            X-Request-ID:
+              description: Correlates a response to its request; mirrors meta.request_id.
+              schema:
+                type: string
+                format: uuid
+                example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - error
+                - meta
+                properties:
+                  success:
+                    type: boolean
+                    const: false
+                  error:
+                    type: object
+                    required:
+                    - code
+                    - message
+                    properties:
+                      code:
+                        type: string
+                        description: Stable machine-readable error code. See docs/api/API.md catalogue.
+                        example: VALIDATION_ERROR
+                      message:
+                        type: string
+                        description: Short, human-readable summary. Never branch client logic on this free text.
+                        example: request validation failed
+                      details:
+                        type: array
+                        description: Field-level failures, present only for validation-style errors.
+                        items:
+                          type: object
+                          required:
+                          - field
+                          - rule
+                          properties:
+                            field:
+                              type: string
+                              description: JSON path of the offending field, dot-separated for nested fields.
+                              example: email
+                            rule:
+                              type: string
+                              description: The validation rule that failed (go-playground/validator tag).
+                              example: email
+                            message:
+                              type: string
+                              description: Human-readable explanation of the failure.
+                              example: must be a valid email address
+                            value:
+                              description: The rejected value (omitted when it would be unsafe to echo).
+                              example: not-an-email
+                  meta:
+                    type: object
+                    required:
+                    - request_id
+                    - timestamp
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                        description: Correlates a response to its request; echoed in the X-Request-ID header.
+                        example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp:
+                        type: string
+                        format: date-time
+                        description: Server time the response was produced, RFC 3339 UTC.
+                        example: 2026-09-14 16:00:00+00:00
+                      version:
+                        type: string
+                        description: API version tag of the responding surface, e.g. "v1".
+                        example: v1
+                description: Uniform error envelope. Success is always false; the payload lives under error.
+              examples:
+                validation:
+                  summary: A field failed its validation rule.
+                  value:
+                    success: false
+                    error:
+                      code: VALIDATION_ERROR
+                      message: request validation failed
+                      details:
+                      - field: email
+                        rule: email
+                        message: must be a valid email address
+                        value: not-an-email
+                    meta:
+                      request_id: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp: '2026-09-14T16:00:00Z'
+        '401':
+          description: 'Missing/invalid credentials. Codes: UNAUTHENTICATED, INVALID_CREDENTIALS, TOKEN_EXPIRED,
+
+            TOKEN_INVALID, TOKEN_REUSE_DETECTED. Two special non-fatal 401 codes (MFA_REQUIRED,
+
+            PASSWORD_CHANGE_REQUIRED) carry a single-use token in a header for the next stage — see
+
+            the bearerAuth description. Neither issues a session.
+
+            '
+          headers:
+            WWW-Authenticate:
+              description: Challenge indicating the scheme and error type.
+              schema:
+                type: string
+                example: Bearer realm="pharmaciano", error="invalid_token"
+            X-MFA-Challenge:
+              description: Present only when error.code is MFA_REQUIRED. Redeem at POST /auth/mfa/verify.
+              schema:
+                type: string
+            X-Password-Change-Token:
+              description: Present only when error.code is PASSWORD_CHANGE_REQUIRED. Redeem at POST /auth/password/force-change.
+              schema:
+                type: string
+            X-Request-ID:
+              description: Correlates a response to its request; mirrors meta.request_id.
+              schema:
+                type: string
+                format: uuid
+                example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - error
+                - meta
+                properties:
+                  success:
+                    type: boolean
+                    const: false
+                  error:
+                    type: object
+                    required:
+                    - code
+                    - message
+                    properties:
+                      code:
+                        type: string
+                        description: Stable machine-readable error code. See docs/api/API.md catalogue.
+                        example: VALIDATION_ERROR
+                      message:
+                        type: string
+                        description: Short, human-readable summary. Never branch client logic on this free text.
+                        example: request validation failed
+                      details:
+                        type: array
+                        description: Field-level failures, present only for validation-style errors.
+                        items:
+                          type: object
+                          required:
+                          - field
+                          - rule
+                          properties:
+                            field:
+                              type: string
+                              description: JSON path of the offending field, dot-separated for nested fields.
+                              example: email
+                            rule:
+                              type: string
+                              description: The validation rule that failed (go-playground/validator tag).
+                              example: email
+                            message:
+                              type: string
+                              description: Human-readable explanation of the failure.
+                              example: must be a valid email address
+                            value:
+                              description: The rejected value (omitted when it would be unsafe to echo).
+                              example: not-an-email
+                  meta:
+                    type: object
+                    required:
+                    - request_id
+                    - timestamp
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                        description: Correlates a response to its request; echoed in the X-Request-ID header.
+                        example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp:
+                        type: string
+                        format: date-time
+                        description: Server time the response was produced, RFC 3339 UTC.
+                        example: 2026-09-14 16:00:00+00:00
+                      version:
+                        type: string
+                        description: API version tag of the responding surface, e.g. "v1".
+                        example: v1
+                description: Uniform error envelope. Success is always false; the payload lives under error.
+              examples:
+                invalid-credentials:
+                  summary: Login failed because the email/password pair did not match.
+                  value:
+                    success: false
+                    error:
+                      code: INVALID_CREDENTIALS
+                      message: invalid email or password
+                    meta:
+                      request_id: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp: '2026-09-14T16:00:00Z'
+        '403':
+          description: 'The caller is not permitted to act on the target. Codes: FORBIDDEN, ACCOUNT_INACTIVE,
+
+            ACCOUNT_SUSPENDED, BRANCH_SCOPE_DENIED, TENANT_SCOPE_DENIED, CROSS_ORIGIN_REQUEST.
+
+            '
+          headers:
+            X-Request-ID:
+              description: Correlates a response to its request; mirrors meta.request_id.
+              schema:
+                type: string
+                format: uuid
+                example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - error
+                - meta
+                properties:
+                  success:
+                    type: boolean
+                    const: false
+                  error:
+                    type: object
+                    required:
+                    - code
+                    - message
+                    properties:
+                      code:
+                        type: string
+                        description: Stable machine-readable error code. See docs/api/API.md catalogue.
+                        example: VALIDATION_ERROR
+                      message:
+                        type: string
+                        description: Short, human-readable summary. Never branch client logic on this free text.
+                        example: request validation failed
+                      details:
+                        type: array
+                        description: Field-level failures, present only for validation-style errors.
+                        items:
+                          type: object
+                          required:
+                          - field
+                          - rule
+                          properties:
+                            field:
+                              type: string
+                              description: JSON path of the offending field, dot-separated for nested fields.
+                              example: email
+                            rule:
+                              type: string
+                              description: The validation rule that failed (go-playground/validator tag).
+                              example: email
+                            message:
+                              type: string
+                              description: Human-readable explanation of the failure.
+                              example: must be a valid email address
+                            value:
+                              description: The rejected value (omitted when it would be unsafe to echo).
+                              example: not-an-email
+                  meta:
+                    type: object
+                    required:
+                    - request_id
+                    - timestamp
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                        description: Correlates a response to its request; echoed in the X-Request-ID header.
+                        example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp:
+                        type: string
+                        format: date-time
+                        description: Server time the response was produced, RFC 3339 UTC.
+                        example: 2026-09-14 16:00:00+00:00
+                      version:
+                        type: string
+                        description: API version tag of the responding surface, e.g. "v1".
+                        example: v1
+                description: Uniform error envelope. Success is always false; the payload lives under error.
+              examples:
+                forbidden:
+                  summary: The caller lacks the required RBAC permission on the target.
+                  value:
+                    success: false
+                    error:
+                      code: FORBIDDEN
+                      message: you do not have permission to perform this action
+                    meta:
+                      request_id: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp: '2026-09-14T16:00:00Z'
+        '404':
+          description: The referenced resource does not exist (code NOT_FOUND).
+          headers:
+            X-Request-ID:
+              description: Correlates a response to its request; mirrors meta.request_id.
+              schema:
+                type: string
+                format: uuid
+                example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - error
+                - meta
+                properties:
+                  success:
+                    type: boolean
+                    const: false
+                  error:
+                    type: object
+                    required:
+                    - code
+                    - message
+                    properties:
+                      code:
+                        type: string
+                        description: Stable machine-readable error code. See docs/api/API.md catalogue.
+                        example: VALIDATION_ERROR
+                      message:
+                        type: string
+                        description: Short, human-readable summary. Never branch client logic on this free text.
+                        example: request validation failed
+                      details:
+                        type: array
+                        description: Field-level failures, present only for validation-style errors.
+                        items:
+                          type: object
+                          required:
+                          - field
+                          - rule
+                          properties:
+                            field:
+                              type: string
+                              description: JSON path of the offending field, dot-separated for nested fields.
+                              example: email
+                            rule:
+                              type: string
+                              description: The validation rule that failed (go-playground/validator tag).
+                              example: email
+                            message:
+                              type: string
+                              description: Human-readable explanation of the failure.
+                              example: must be a valid email address
+                            value:
+                              description: The rejected value (omitted when it would be unsafe to echo).
+                              example: not-an-email
+                  meta:
+                    type: object
+                    required:
+                    - request_id
+                    - timestamp
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                        description: Correlates a response to its request; echoed in the X-Request-ID header.
+                        example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp:
+                        type: string
+                        format: date-time
+                        description: Server time the response was produced, RFC 3339 UTC.
+                        example: 2026-09-14 16:00:00+00:00
+                      version:
+                        type: string
+                        description: API version tag of the responding surface, e.g. "v1".
+                        example: v1
+                description: Uniform error envelope. Success is always false; the payload lives under error.
+              examples:
+                not-found:
+                  summary: The resource does not exist.
+                  value:
+                    success: false
+                    error:
+                      code: NOT_FOUND
+                      message: resource not found
+                    meta:
+                      request_id: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp: '2026-09-14T16:00:00Z'
+        '409':
+          description: 'The request conflicts with current state. Codes: ALREADY_EXISTS, CONFLICT,
+
+            IDEMPOTENCY_KEY_CONFLICT, STATE_TRANSITION_DENIED.
+
+            '
+          headers:
+            X-Request-ID:
+              description: Correlates a response to its request; mirrors meta.request_id.
+              schema:
+                type: string
+                format: uuid
+                example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - error
+                - meta
+                properties:
+                  success:
+                    type: boolean
+                    const: false
+                  error:
+                    type: object
+                    required:
+                    - code
+                    - message
+                    properties:
+                      code:
+                        type: string
+                        description: Stable machine-readable error code. See docs/api/API.md catalogue.
+                        example: VALIDATION_ERROR
+                      message:
+                        type: string
+                        description: Short, human-readable summary. Never branch client logic on this free text.
+                        example: request validation failed
+                      details:
+                        type: array
+                        description: Field-level failures, present only for validation-style errors.
+                        items:
+                          type: object
+                          required:
+                          - field
+                          - rule
+                          properties:
+                            field:
+                              type: string
+                              description: JSON path of the offending field, dot-separated for nested fields.
+                              example: email
+                            rule:
+                              type: string
+                              description: The validation rule that failed (go-playground/validator tag).
+                              example: email
+                            message:
+                              type: string
+                              description: Human-readable explanation of the failure.
+                              example: must be a valid email address
+                            value:
+                              description: The rejected value (omitted when it would be unsafe to echo).
+                              example: not-an-email
+                  meta:
+                    type: object
+                    required:
+                    - request_id
+                    - timestamp
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                        description: Correlates a response to its request; echoed in the X-Request-ID header.
+                        example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp:
+                        type: string
+                        format: date-time
+                        description: Server time the response was produced, RFC 3339 UTC.
+                        example: 2026-09-14 16:00:00+00:00
+                      version:
+                        type: string
+                        description: API version tag of the responding surface, e.g. "v1".
+                        example: v1
+                description: Uniform error envelope. Success is always false; the payload lives under error.
+              examples:
+                already-exists:
+                  summary: A unique code/name was already taken (e.g. duplicate branch code).
+                  value:
+                    success: false
+                    error:
+                      code: ALREADY_EXISTS
+                      message: a resource with this code already exists
+                    meta:
+                      request_id: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp: '2026-09-14T16:00:00Z'
+                idempotency:
+                  summary: The same Idempotency-Key was reused with a different body.
+                  value:
+                    success: false
+                    error:
+                      code: IDEMPOTENCY_KEY_CONFLICT
+                      message: the same Idempotency-Key was used with a different request body
+                    meta:
+                      request_id: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp: '2026-09-14T16:00:00Z'
+        '429':
+          description: 'Rate limit exceeded (HTTP 429). Codes: RATE_LIMITED, TOO_MANY_SESSIONS, AI_COST_CAP_EXCEEDED.
+
+            Respect Retry-After before retrying.
+
+            '
+          headers:
+            Retry-After:
+              description: 'Seconds to wait before retrying. Present on 403 (Locked) and 429 (rate limited).
+
+                Integer seconds, HTTP-date, or a bare duration in seconds.
+
+                '
+              schema:
+                type: string
+                example: '120'
+            X-RateLimit-Limit:
+              description: Max requests allowed in the current window.
+              schema:
+                type: integer
+                example: 100
+            X-RateLimit-Remaining:
+              description: Requests remaining in the current window.
+              schema:
+                type: integer
+                example: 99
+            X-RateLimit-Reset:
+              description: Epoch seconds when the window resets.
+              schema:
+                type: integer
+                example: 1694700000
+            X-Request-ID:
+              description: Correlates a response to its request; mirrors meta.request_id.
+              schema:
+                type: string
+                format: uuid
+                example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - error
+                - meta
+                properties:
+                  success:
+                    type: boolean
+                    const: false
+                  error:
+                    type: object
+                    required:
+                    - code
+                    - message
+                    properties:
+                      code:
+                        type: string
+                        description: Stable machine-readable error code. See docs/api/API.md catalogue.
+                        example: VALIDATION_ERROR
+                      message:
+                        type: string
+                        description: Short, human-readable summary. Never branch client logic on this free text.
+                        example: request validation failed
+                      details:
+                        type: array
+                        description: Field-level failures, present only for validation-style errors.
+                        items:
+                          type: object
+                          required:
+                          - field
+                          - rule
+                          properties:
+                            field:
+                              type: string
+                              description: JSON path of the offending field, dot-separated for nested fields.
+                              example: email
+                            rule:
+                              type: string
+                              description: The validation rule that failed (go-playground/validator tag).
+                              example: email
+                            message:
+                              type: string
+                              description: Human-readable explanation of the failure.
+                              example: must be a valid email address
+                            value:
+                              description: The rejected value (omitted when it would be unsafe to echo).
+                              example: not-an-email
+                  meta:
+                    type: object
+                    required:
+                    - request_id
+                    - timestamp
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                        description: Correlates a response to its request; echoed in the X-Request-ID header.
+                        example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp:
+                        type: string
+                        format: date-time
+                        description: Server time the response was produced, RFC 3339 UTC.
+                        example: 2026-09-14 16:00:00+00:00
+                      version:
+                        type: string
+                        description: API version tag of the responding surface, e.g. "v1".
+                        example: v1
+                description: Uniform error envelope. Success is always false; the payload lives under error.
+              examples:
+                rate-limited:
+                  summary: Too many requests; back off until the Retry-After header expires.
+                  value:
+                    success: false
+                    error:
+                      code: RATE_LIMITED
+                      message: rate limit exceeded
+                    meta:
+                      request_id: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp: '2026-09-14T16:00:00Z'
+        '500':
+          description: 'An unexpected server error (HTTP 500+). The body is deliberately generic (INTERNAL_ERROR) —
+
+            the real cause is only ever in the server logs, never on the wire. Also covers 501..504
+
+            (DATABASE_ERROR, UPSTREAM_ERROR, SERVICE_UNAVAILABLE, TIMEOUT, etc.) per the mapper.
+
+            '
+          headers:
+            X-Request-ID:
+              description: Correlates a response to its request; mirrors meta.request_id.
+              schema:
+                type: string
+                format: uuid
+                example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - error
+                - meta
+                properties:
+                  success:
+                    type: boolean
+                    const: false
+                  error:
+                    type: object
+                    required:
+                    - code
+                    - message
+                    properties:
+                      code:
+                        type: string
+                        description: Stable machine-readable error code. See docs/api/API.md catalogue.
+                        example: VALIDATION_ERROR
+                      message:
+                        type: string
+                        description: Short, human-readable summary. Never branch client logic on this free text.
+                        example: request validation failed
+                      details:
+                        type: array
+                        description: Field-level failures, present only for validation-style errors.
+                        items:
+                          type: object
+                          required:
+                          - field
+                          - rule
+                          properties:
+                            field:
+                              type: string
+                              description: JSON path of the offending field, dot-separated for nested fields.
+                              example: email
+                            rule:
+                              type: string
+                              description: The validation rule that failed (go-playground/validator tag).
+                              example: email
+                            message:
+                              type: string
+                              description: Human-readable explanation of the failure.
+                              example: must be a valid email address
+                            value:
+                              description: The rejected value (omitted when it would be unsafe to echo).
+                              example: not-an-email
+                  meta:
+                    type: object
+                    required:
+                    - request_id
+                    - timestamp
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                        description: Correlates a response to its request; echoed in the X-Request-ID header.
+                        example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp:
+                        type: string
+                        format: date-time
+                        description: Server time the response was produced, RFC 3339 UTC.
+                        example: 2026-09-14 16:00:00+00:00
+                      version:
+                        type: string
+                        description: API version tag of the responding surface, e.g. "v1".
+                        example: v1
+                description: Uniform error envelope. Success is always false; the payload lives under error.
   /settings:
     get:
       operationId: settings.list
@@ -78039,6 +81906,100 @@ components:
         is_main:
           type: boolean
         created_at:
+          type: string
+          format: date-time
+    CreateBrandRequest:
+      type: object
+      required:
+      - code
+      - name
+      - manufacturer_id
+      properties:
+        code:
+          type: string
+          minLength: 1
+          maxLength: 40
+          description: Unique within the organization. Immutable after creation.
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        manufacturer_id:
+          type: string
+          format: uuid
+          description: Must identify an active manufacturer owned by this organization.
+        country_of_origin:
+          type:
+          - string
+          - 'null'
+          maxLength: 100
+        description:
+          type:
+          - string
+          - 'null'
+        is_active:
+          type:
+          - boolean
+          - 'null'
+          default: true
+    UpdateBrandRequest:
+      type: object
+      description: Every field is optional. Code and organization ownership are immutable.
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        manufacturer_id:
+          type: string
+          format: uuid
+          description: Cannot be reassigned while medicines reference this brand.
+        country_of_origin:
+          type:
+          - string
+          - 'null'
+          maxLength: 100
+        description:
+          type:
+          - string
+          - 'null'
+        is_active:
+          type: boolean
+    Brand:
+      type: object
+      required:
+      - id
+      - code
+      - name
+      - manufacturer_id
+      - is_active
+      - created_at
+      - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        code:
+          type: string
+        name:
+          type: string
+        manufacturer_id:
+          type: string
+          format: uuid
+        country_of_origin:
+          type:
+          - string
+          - 'null'
+        description:
+          type:
+          - string
+          - 'null'
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
           type: string
           format: date-time
     WarehouseListItem:

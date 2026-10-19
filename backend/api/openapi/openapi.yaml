@@ -68,6 +68,8 @@ tags:
     description: Tenant identity and settings.
   - name: warehouses
     description: Inventory storage locations.
+  - name: brands
+    description: Organization-owned commercial medicine brands.
   - name: masterdata
     description: Central reference catalogues shared across organizations.
   - name: rbac
@@ -149,6 +151,10 @@ paths:
     $ref: 'paths/warehouses.yaml#/~1warehouses'
   /warehouses/{id}:
     $ref: 'paths/warehouses.yaml#/~1warehouses~1{id}'
+  /brands:
+    $ref: 'paths/brands.yaml#/~1brands'
+  /brands/{id}:
+    $ref: 'paths/brands.yaml#/~1brands~1{id}'
   /settings:
     $ref: 'paths/settings.yaml#/~1settings'
   /settings/bulk:
@@ -323,6 +329,12 @@ components:
       $ref: 'components/schemas/warehouse.yaml#/UpdateWarehouseRequest'
     Warehouse:
       $ref: 'components/schemas/warehouse.yaml#/Warehouse'
+    CreateBrandRequest:
+      $ref: 'components/schemas/brand.yaml#/CreateBrandRequest'
+    UpdateBrandRequest:
+      $ref: 'components/schemas/brand.yaml#/UpdateBrandRequest'
+    Brand:
+      $ref: 'components/schemas/brand.yaml#/Brand'
     WarehouseListItem:
       $ref: 'components/schemas/warehouse.yaml#/WarehouseListItem'
     # masterdata
