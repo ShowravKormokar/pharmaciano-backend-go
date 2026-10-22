@@ -1,0 +1,14 @@
+DROP INDEX IF EXISTS ix_sale_items_variant;
+DROP INDEX IF EXISTS ix_purchase_items_variant;
+DROP INDEX IF EXISTS ix_inventory_batches_variant;
+DROP INDEX IF EXISTS ix_medicine_barcodes_med_barcode_id;
+DROP INDEX IF EXISTS ix_medicine_variants_med_name_id;
+DROP INDEX IF EXISTS ix_medicines_active_name_id;
+DROP INDEX IF EXISTS ix_medicines_generic_name_id;
+DROP INDEX IF EXISTS ix_medicines_category_name_id;
+DROP INDEX IF EXISTS ix_medicines_brand_name_id;
+DROP INDEX IF EXISTS ix_medicines_updated_id;
+DROP INDEX IF EXISTS ix_medicines_created_id;
+DROP INDEX IF EXISTS ix_medicines_name_id;
+DROP INDEX IF EXISTS ix_medicines_sku_id;
+DROP INDEX IF EXISTS ix_medicines_display_key_id;
