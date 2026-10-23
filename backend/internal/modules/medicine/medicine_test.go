@@ -1,1 +1,1 @@
-﻿package medicine
+package medicine
