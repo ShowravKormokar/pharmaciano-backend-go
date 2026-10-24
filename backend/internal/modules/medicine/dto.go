@@ -241,6 +241,16 @@ type CreateMedicineRequest struct {
 
 	// IsActive defaults to TRUE in the schema when omitted.
 	IsActive *bool `json:"is_active" validate:"omitempty"`
+
+	// InitialVariants are the package variants that are created together with
+	// the medicine, in the same transaction (contract §8, §10).
+	//
+	// They are optional: a variant can also be added later through
+	// POST /api/v1/medicines/{id}/variants. The inline form exists because a
+	// product that is not sellable without its packages is the normal case,
+	// and a half-created product — a medicine with no package identity — is
+	// not a usable catalogue entry.
+	InitialVariants []CreateMedicineVariantRequest `json:"initial_variants" validate:"omitempty,dive"`
 }
 
 // UpdateMedicineRequest is the body of PATCH /api/v1/medicines/{id}.
@@ -385,6 +395,15 @@ type ListMedicinesQuery struct {
 	// SKU and barcode.
 	Q *string `form:"q" validate:"omitempty,max=200"`
 
+	// Cursor switches the endpoint from offset pagination to keyset
+	// pagination. It is the opaque, signed continuation token of the previous
+	// page; a request without it returns the first offset page together with
+	// the total count.
+	//
+	// The token is bound to the tenant and to the filter set, so a cursor
+	// issued for one query is rejected by another (contract §8.2).
+	Cursor string `form:"cursor" validate:"omitempty,max=512"`
+
 	categoryID *uuid.UUID
 	brandID    *uuid.UUID
 	genericID  *uuid.UUID
@@ -499,6 +518,12 @@ type SearchMedicinesQuery struct {
 
 	// Q is the required search term.
 	Q *string `form:"q" validate:"omitempty,max=200"`
+
+	// Cursor is the opaque, signed continuation token of the previous page.
+	// Search is always keyset paginated: a search result set is unbounded, so
+	// an offset page would make the database count rows it throws away
+	// (contract §8.2).
+	Cursor string `form:"cursor" validate:"omitempty,max=512"`
 
 	normalized string
 }
