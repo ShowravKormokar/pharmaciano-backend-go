@@ -120,6 +120,36 @@ func (e BulkUpdateRequestScope) Valid() bool {
 	}
 }
 
+// Defines values for CreateMedicineBarcodeRequestBarcodeType.
+const (
+	CreateMedicineBarcodeRequestBarcodeTypeCODE128 CreateMedicineBarcodeRequestBarcodeType = "CODE128"
+	CreateMedicineBarcodeRequestBarcodeTypeEAN13   CreateMedicineBarcodeRequestBarcodeType = "EAN13"
+	CreateMedicineBarcodeRequestBarcodeTypeEAN8    CreateMedicineBarcodeRequestBarcodeType = "EAN8"
+	CreateMedicineBarcodeRequestBarcodeTypeOTHER   CreateMedicineBarcodeRequestBarcodeType = "OTHER"
+	CreateMedicineBarcodeRequestBarcodeTypeQR      CreateMedicineBarcodeRequestBarcodeType = "QR"
+	CreateMedicineBarcodeRequestBarcodeTypeUPC     CreateMedicineBarcodeRequestBarcodeType = "UPC"
+)
+
+// Valid indicates whether the value is a known member of the CreateMedicineBarcodeRequestBarcodeType enum.
+func (e CreateMedicineBarcodeRequestBarcodeType) Valid() bool {
+	switch e {
+	case CreateMedicineBarcodeRequestBarcodeTypeCODE128:
+		return true
+	case CreateMedicineBarcodeRequestBarcodeTypeEAN13:
+		return true
+	case CreateMedicineBarcodeRequestBarcodeTypeEAN8:
+		return true
+	case CreateMedicineBarcodeRequestBarcodeTypeOTHER:
+		return true
+	case CreateMedicineBarcodeRequestBarcodeTypeQR:
+		return true
+	case CreateMedicineBarcodeRequestBarcodeTypeUPC:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for CreateProfileInputGender.
 const (
 	CreateProfileInputGenderFemale CreateProfileInputGender = "female"
@@ -204,6 +234,36 @@ const (
 func (e ListEnvelopeSuccess) Valid() bool {
 	switch e {
 	case ListEnvelopeSuccessTrue:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for MedicineBarcodeResponseBarcodeType.
+const (
+	MedicineBarcodeResponseBarcodeTypeCODE128 MedicineBarcodeResponseBarcodeType = "CODE128"
+	MedicineBarcodeResponseBarcodeTypeEAN13   MedicineBarcodeResponseBarcodeType = "EAN13"
+	MedicineBarcodeResponseBarcodeTypeEAN8    MedicineBarcodeResponseBarcodeType = "EAN8"
+	MedicineBarcodeResponseBarcodeTypeOTHER   MedicineBarcodeResponseBarcodeType = "OTHER"
+	MedicineBarcodeResponseBarcodeTypeQR      MedicineBarcodeResponseBarcodeType = "QR"
+	MedicineBarcodeResponseBarcodeTypeUPC     MedicineBarcodeResponseBarcodeType = "UPC"
+)
+
+// Valid indicates whether the value is a known member of the MedicineBarcodeResponseBarcodeType enum.
+func (e MedicineBarcodeResponseBarcodeType) Valid() bool {
+	switch e {
+	case MedicineBarcodeResponseBarcodeTypeCODE128:
+		return true
+	case MedicineBarcodeResponseBarcodeTypeEAN13:
+		return true
+	case MedicineBarcodeResponseBarcodeTypeEAN8:
+		return true
+	case MedicineBarcodeResponseBarcodeTypeOTHER:
+		return true
+	case MedicineBarcodeResponseBarcodeTypeQR:
+		return true
+	case MedicineBarcodeResponseBarcodeTypeUPC:
 		return true
 	default:
 		return false
@@ -1152,6 +1212,171 @@ func (e MasterdataUnitTypesUpdate200JSONResponseBodySuccess) Valid() bool {
 	}
 }
 
+// Defines values for MedicinesList200JSONResponseBodySuccess.
+const (
+	MedicinesList200JSONResponseBodySuccessTrue MedicinesList200JSONResponseBodySuccess = true
+)
+
+// Valid indicates whether the value is a known member of the MedicinesList200JSONResponseBodySuccess enum.
+func (e MedicinesList200JSONResponseBodySuccess) Valid() bool {
+	switch e {
+	case MedicinesList200JSONResponseBodySuccessTrue:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for MedicinesCreate201JSONResponseBodySuccess.
+const (
+	MedicinesCreate201JSONResponseBodySuccessTrue MedicinesCreate201JSONResponseBodySuccess = true
+)
+
+// Valid indicates whether the value is a known member of the MedicinesCreate201JSONResponseBodySuccess enum.
+func (e MedicinesCreate201JSONResponseBodySuccess) Valid() bool {
+	switch e {
+	case MedicinesCreate201JSONResponseBodySuccessTrue:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for MedicinesLookup200JSONResponseBodySuccess.
+const (
+	MedicinesLookup200JSONResponseBodySuccessTrue MedicinesLookup200JSONResponseBodySuccess = true
+)
+
+// Valid indicates whether the value is a known member of the MedicinesLookup200JSONResponseBodySuccess enum.
+func (e MedicinesLookup200JSONResponseBodySuccess) Valid() bool {
+	switch e {
+	case MedicinesLookup200JSONResponseBodySuccessTrue:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for MedicinesSearch200JSONResponseBodySuccess.
+const (
+	MedicinesSearch200JSONResponseBodySuccessTrue MedicinesSearch200JSONResponseBodySuccess = true
+)
+
+// Valid indicates whether the value is a known member of the MedicinesSearch200JSONResponseBodySuccess enum.
+func (e MedicinesSearch200JSONResponseBodySuccess) Valid() bool {
+	switch e {
+	case MedicinesSearch200JSONResponseBodySuccessTrue:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for MedicinesGet200JSONResponseBodySuccess.
+const (
+	MedicinesGet200JSONResponseBodySuccessTrue MedicinesGet200JSONResponseBodySuccess = true
+)
+
+// Valid indicates whether the value is a known member of the MedicinesGet200JSONResponseBodySuccess enum.
+func (e MedicinesGet200JSONResponseBodySuccess) Valid() bool {
+	switch e {
+	case MedicinesGet200JSONResponseBodySuccessTrue:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for MedicinesUpdate200JSONResponseBodySuccess.
+const (
+	MedicinesUpdate200JSONResponseBodySuccessTrue MedicinesUpdate200JSONResponseBodySuccess = true
+)
+
+// Valid indicates whether the value is a known member of the MedicinesUpdate200JSONResponseBodySuccess enum.
+func (e MedicinesUpdate200JSONResponseBodySuccess) Valid() bool {
+	switch e {
+	case MedicinesUpdate200JSONResponseBodySuccessTrue:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for MedicinesListBarcodes200JSONResponseBodySuccess.
+const (
+	MedicinesListBarcodes200JSONResponseBodySuccessTrue MedicinesListBarcodes200JSONResponseBodySuccess = true
+)
+
+// Valid indicates whether the value is a known member of the MedicinesListBarcodes200JSONResponseBodySuccess enum.
+func (e MedicinesListBarcodes200JSONResponseBodySuccess) Valid() bool {
+	switch e {
+	case MedicinesListBarcodes200JSONResponseBodySuccessTrue:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for MedicinesCreateBarcode201JSONResponseBodySuccess.
+const (
+	MedicinesCreateBarcode201JSONResponseBodySuccessTrue MedicinesCreateBarcode201JSONResponseBodySuccess = true
+)
+
+// Valid indicates whether the value is a known member of the MedicinesCreateBarcode201JSONResponseBodySuccess enum.
+func (e MedicinesCreateBarcode201JSONResponseBodySuccess) Valid() bool {
+	switch e {
+	case MedicinesCreateBarcode201JSONResponseBodySuccessTrue:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for MedicinesListVariants200JSONResponseBodySuccess.
+const (
+	MedicinesListVariants200JSONResponseBodySuccessTrue MedicinesListVariants200JSONResponseBodySuccess = true
+)
+
+// Valid indicates whether the value is a known member of the MedicinesListVariants200JSONResponseBodySuccess enum.
+func (e MedicinesListVariants200JSONResponseBodySuccess) Valid() bool {
+	switch e {
+	case MedicinesListVariants200JSONResponseBodySuccessTrue:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for MedicinesCreateVariant201JSONResponseBodySuccess.
+const (
+	MedicinesCreateVariant201JSONResponseBodySuccessTrue MedicinesCreateVariant201JSONResponseBodySuccess = true
+)
+
+// Valid indicates whether the value is a known member of the MedicinesCreateVariant201JSONResponseBodySuccess enum.
+func (e MedicinesCreateVariant201JSONResponseBodySuccess) Valid() bool {
+	switch e {
+	case MedicinesCreateVariant201JSONResponseBodySuccessTrue:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for MedicinesUpdateVariant200JSONResponseBodySuccess.
+const (
+	MedicinesUpdateVariant200JSONResponseBodySuccessTrue MedicinesUpdateVariant200JSONResponseBodySuccess = true
+)
+
+// Valid indicates whether the value is a known member of the MedicinesUpdateVariant200JSONResponseBodySuccess enum.
+func (e MedicinesUpdateVariant200JSONResponseBodySuccess) Valid() bool {
+	switch e {
+	case MedicinesUpdateVariant200JSONResponseBodySuccessTrue:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for OpsReadyz200JSONResponseBodyStatus.
 const (
 	OpsReadyz200JSONResponseBodyStatusOk OpsReadyz200JSONResponseBodyStatus = "ok"
@@ -1505,6 +1730,120 @@ type CreateGenericMedicineRequest struct {
 	TherapeuticClassId *openapi_types.UUID `json:"therapeutic_class_id,omitempty"`
 }
 
+// CreateMedicineBarcodeRequest defines model for CreateMedicineBarcodeRequest.
+type CreateMedicineBarcodeRequest struct {
+	// Barcode Exact identifier. Unique among non-deleted rows.
+	Barcode     string                                   `json:"barcode"`
+	BarcodeType *CreateMedicineBarcodeRequestBarcodeType `json:"barcode_type,omitempty"`
+	IsPrimary   *bool                                    `json:"is_primary,omitempty"`
+
+	// VariantId The variant the barcode identifies; it must belong to the same medicine.
+	VariantId *openapi_types.UUID `json:"variant_id,omitempty"`
+}
+
+// CreateMedicineBarcodeRequestBarcodeType defines model for CreateMedicineBarcodeRequest.BarcodeType.
+type CreateMedicineBarcodeRequestBarcodeType string
+
+// CreateMedicineRequest defines model for CreateMedicineRequest.
+type CreateMedicineRequest struct {
+	// Barcode Optional medicine-level barcode. The authoritative identifiers are the
+	// variant barcodes below.
+	Barcode *string `json:"barcode,omitempty"`
+
+	// BrandId The brand of the product. It is required and it carries the tenant
+	// scope: the catalogue row belongs to the organization that owns the
+	// brand. Write-once.
+	BrandId openapi_types.UUID `json:"brand_id"`
+
+	// CategoryId Product category. Required.
+	CategoryId      openapi_types.UUID `json:"category_id"`
+	CountryOfOrigin *string            `json:"country_of_origin,omitempty"`
+	Description     *string            `json:"description,omitempty"`
+
+	// DisplayName Label used on receipts and pick lists.
+	DisplayName  *string             `json:"display_name,omitempty"`
+	DosageFormId *openapi_types.UUID `json:"dosage_form_id,omitempty"`
+
+	// GenericMedicineId Generic (ingredient) dictionary entry.
+	GenericMedicineId *openapi_types.UUID `json:"generic_medicine_id,omitempty"`
+	HsnCode           *string             `json:"hsn_code,omitempty"`
+
+	// ImageUrl http(s) media reference.
+	ImageUrl        *string `json:"image_url,omitempty"`
+	ImportLicenseNo *string `json:"import_license_no,omitempty"`
+
+	// ImporterName Importer of record. Not a supplier reference.
+	ImporterName *string `json:"importer_name,omitempty"`
+
+	// InitialVariants Package variants that are created together with the medicine, in the
+	// same transaction: either the medicine and all of its variants exist, or
+	// none of them does. Optional — a variant can also be added later through
+	// POST /api/v1/medicines/{id}/variants.
+	InitialVariants *[]CreateMedicineVariantRequest `json:"initial_variants,omitempty"`
+	IsActive        *bool                           `json:"is_active,omitempty"`
+
+	// IsControlled Flat controlled-product flag.
+	IsControlled *bool `json:"is_controlled,omitempty"`
+	IsImported   *bool `json:"is_imported,omitempty"`
+
+	// IsRefrigerated Flat cold-chain flag; prefer storage_condition_id.
+	IsRefrigerated *bool `json:"is_refrigerated,omitempty"`
+
+	// ManufacturerId Optional denormalized copy of the brand's manufacturer. A value that
+	// contradicts the brand is rejected.
+	ManufacturerId *openapi_types.UUID `json:"manufacturer_id,omitempty"`
+	Name           string              `json:"name"`
+
+	// PackSize Display text such as "10x10".
+	PackSize      *string             `json:"pack_size,omitempty"`
+	PackageTypeId *openapi_types.UUID `json:"package_type_id,omitempty"`
+
+	// RequiresPrescription Flat, single-jurisdiction catalog flag. It documents that the product
+	// may only be dispensed against a prescription; it does not replace the
+	// prescription workflow.
+	RequiresPrescription *bool               `json:"requires_prescription,omitempty"`
+	RouteId              *openapi_types.UUID `json:"route_id,omitempty"`
+	SalesUnitId          *openapi_types.UUID `json:"sales_unit_id,omitempty"`
+
+	// ShelfLifeMonths Catalogue default shelf life. Not a batch expiry.
+	ShelfLifeMonths *int `json:"shelf_life_months,omitempty"`
+
+	// Sku Catalogue identifier of the product. Unique among non-deleted rows and
+	// write-once: it is an exact lookup key, so changing it would
+	// reinterpret historical stock, purchases and sales.
+	Sku                string              `json:"sku"`
+	StorageConditionId *openapi_types.UUID `json:"storage_condition_id,omitempty"`
+
+	// Strength Display text such as "500 mg".
+	Strength *string `json:"strength,omitempty"`
+
+	// TaxRateId Dictionary reference only; the tax rule belongs to the tax/sales contract.
+	TaxRateId *openapi_types.UUID `json:"tax_rate_id,omitempty"`
+
+	// UnitsPerPack Exact quantity contained in one package.
+	UnitsPerPack *int `json:"units_per_pack,omitempty"`
+
+	// UnitsPerStrip Exact quantity contained in one strip.
+	UnitsPerStrip *int `json:"units_per_strip,omitempty"`
+}
+
+// CreateMedicineVariantRequest A variant is a package identity: "Napa 500 mg, 10 tablets" and
+// "Napa 500 mg, 100 tablets" are two variants of one medicine with their own
+// SKU and barcode.
+type CreateMedicineVariantRequest struct {
+	Barcode  *string `json:"barcode,omitempty"`
+	IsActive *bool   `json:"is_active,omitempty"`
+
+	// Name Package label, for example "10 tablets x 10 strips".
+	Name     string  `json:"name"`
+	PackSize *string `json:"pack_size,omitempty"`
+
+	// Sku Sellable/stockable identity of the package. Unique and write-once.
+	Sku          string  `json:"sku"`
+	Strength     *string `json:"strength,omitempty"`
+	UnitsPerPack *int    `json:"units_per_pack,omitempty"`
+}
+
 // CreatePackageTypeRequest defines model for CreatePackageTypeRequest.
 type CreatePackageTypeRequest struct {
 	// Code Immutable after creation and unique among live rows.
@@ -1770,6 +2109,33 @@ type LogoutRequest struct {
 	All *bool `json:"all,omitempty"`
 }
 
+// LookupMedicineRequest Exactly one of barcode or sku must be provided. A lookup that matches
+// nothing is a not-found; a lookup that matches more than one active
+// variant is an integrity error and fails closed.
+type LookupMedicineRequest struct {
+	Barcode *string `json:"barcode,omitempty"`
+	Sku     *string `json:"sku,omitempty"`
+}
+
+// LookupMedicineResponse Catalogue and variant metadata only. A catalogue lookup does not prove
+// stock availability and carries no price: the sale workflow revalidates
+// branch stock, price and safety requirements itself.
+type LookupMedicineResponse struct {
+	Barcode              *string             `json:"barcode,omitempty"`
+	BrandName            *string             `json:"brand_name,omitempty"`
+	IsActive             bool                `json:"is_active"`
+	IsControlled         bool                `json:"is_controlled"`
+	MedicineId           openapi_types.UUID  `json:"medicine_id"`
+	MedicineName         string              `json:"medicine_name"`
+	PackSize             *string             `json:"pack_size,omitempty"`
+	RequiresPrescription bool                `json:"requires_prescription"`
+	Sku                  *string             `json:"sku,omitempty"`
+	Strength             *string             `json:"strength,omitempty"`
+	UnitsPerPack         *int                `json:"units_per_pack,omitempty"`
+	VariantId            *openapi_types.UUID `json:"variant_id,omitempty"`
+	VariantName          *string             `json:"variant_name,omitempty"`
+}
+
 // MFADisableRequest defines model for MFADisableRequest.
 type MFADisableRequest struct {
 	// Code A valid current TOTP code, proving control of the second factor before disabling.
@@ -1842,6 +2208,90 @@ type MeResponse struct {
 	Stage          UserStage           `json:"stage"`
 	Status         UserStatus          `json:"status"`
 	UserId         *openapi_types.UUID `json:"user_id,omitempty"`
+}
+
+// MedicineBarcodeResponse defines model for MedicineBarcodeResponse.
+type MedicineBarcodeResponse struct {
+	Barcode     string                             `json:"barcode"`
+	BarcodeType MedicineBarcodeResponseBarcodeType `json:"barcode_type"`
+	CreatedAt   time.Time                          `json:"created_at"`
+	Id          openapi_types.UUID                 `json:"id"`
+	IsPrimary   bool                               `json:"is_primary"`
+	MedicineId  openapi_types.UUID                 `json:"medicine_id"`
+	UpdatedAt   time.Time                          `json:"updated_at"`
+	VariantId   *openapi_types.UUID                `json:"variant_id,omitempty"`
+}
+
+// MedicineBarcodeResponseBarcodeType defines model for MedicineBarcodeResponse.BarcodeType.
+type MedicineBarcodeResponseBarcodeType string
+
+// MedicineReferenceLabels The joined display labels of the MasterData and Brand references.
+type MedicineReferenceLabels struct {
+	BrandName            string  `json:"brand_name"`
+	CategoryName         string  `json:"category_name"`
+	DosageFormName       *string `json:"dosage_form_name,omitempty"`
+	GenericName          *string `json:"generic_name,omitempty"`
+	ManufacturerName     *string `json:"manufacturer_name,omitempty"`
+	PackageTypeName      *string `json:"package_type_name,omitempty"`
+	RouteName            *string `json:"route_name,omitempty"`
+	SalesUnitName        *string `json:"sales_unit_name,omitempty"`
+	StorageConditionName *string `json:"storage_condition_name,omitempty"`
+	TaxRateCode          *string `json:"tax_rate_code,omitempty"`
+}
+
+// MedicineResponse defines model for MedicineResponse.
+type MedicineResponse struct {
+	Barcode           *string             `json:"barcode,omitempty"`
+	BrandId           openapi_types.UUID  `json:"brand_id"`
+	CategoryId        openapi_types.UUID  `json:"category_id"`
+	CountryOfOrigin   *string             `json:"country_of_origin,omitempty"`
+	CreatedAt         time.Time           `json:"created_at"`
+	Description       *string             `json:"description,omitempty"`
+	DisplayName       *string             `json:"display_name,omitempty"`
+	DosageFormId      *openapi_types.UUID `json:"dosage_form_id,omitempty"`
+	GenericMedicineId *openapi_types.UUID `json:"generic_medicine_id,omitempty"`
+	HsnCode           *string             `json:"hsn_code,omitempty"`
+	Id                openapi_types.UUID  `json:"id"`
+	ImageUrl          *string             `json:"image_url,omitempty"`
+	ImportLicenseNo   *string             `json:"import_license_no,omitempty"`
+	ImporterName      *string             `json:"importer_name,omitempty"`
+	IsActive          bool                `json:"is_active"`
+	IsControlled      *bool               `json:"is_controlled,omitempty"`
+	IsImported        *bool               `json:"is_imported,omitempty"`
+	IsRefrigerated    *bool               `json:"is_refrigerated,omitempty"`
+	ManufacturerId    *openapi_types.UUID `json:"manufacturer_id,omitempty"`
+	Name              string              `json:"name"`
+	PackSize          *string             `json:"pack_size,omitempty"`
+	PackageTypeId     *openapi_types.UUID `json:"package_type_id,omitempty"`
+
+	// References The joined display labels of the MasterData and Brand references.
+	References           *MedicineReferenceLabels `json:"references,omitempty"`
+	RequiresPrescription *bool                    `json:"requires_prescription,omitempty"`
+	RouteId              *openapi_types.UUID      `json:"route_id,omitempty"`
+	SalesUnitId          *openapi_types.UUID      `json:"sales_unit_id,omitempty"`
+	ShelfLifeMonths      *int                     `json:"shelf_life_months,omitempty"`
+	Sku                  string                   `json:"sku"`
+	StorageConditionId   *openapi_types.UUID      `json:"storage_condition_id,omitempty"`
+	Strength             *string                  `json:"strength,omitempty"`
+	TaxRateId            *openapi_types.UUID      `json:"tax_rate_id,omitempty"`
+	UnitsPerPack         *int                     `json:"units_per_pack,omitempty"`
+	UnitsPerStrip        *int                     `json:"units_per_strip,omitempty"`
+	UpdatedAt            time.Time                `json:"updated_at"`
+}
+
+// MedicineVariantResponse defines model for MedicineVariantResponse.
+type MedicineVariantResponse struct {
+	Barcode      *string            `json:"barcode,omitempty"`
+	CreatedAt    time.Time          `json:"created_at"`
+	Id           openapi_types.UUID `json:"id"`
+	IsActive     bool               `json:"is_active"`
+	MedicineId   openapi_types.UUID `json:"medicine_id"`
+	Name         string             `json:"name"`
+	PackSize     *string            `json:"pack_size,omitempty"`
+	Sku          string             `json:"sku"`
+	Strength     *string            `json:"strength,omitempty"`
+	UnitsPerPack *int               `json:"units_per_pack,omitempty"`
+	UpdatedAt    time.Time          `json:"updated_at"`
 }
 
 // Meta defines model for Meta.
@@ -2273,6 +2723,62 @@ type UpdateGenericMedicineRequest struct {
 	TherapeuticClassId *openapi_types.UUID `json:"therapeutic_class_id,omitempty"`
 }
 
+// UpdateMedicineRequest Every field is optional and every field is a pointer: an omitted field
+// leaves the stored value unchanged, and an explicit null is treated as
+// omitted. sku, barcode and brand_id are absent on purpose — they are
+// write-once. A change to a regulatory flag or to the import provenance
+// requires a reason.
+type UpdateMedicineRequest struct {
+	CategoryId        *openapi_types.UUID `json:"category_id,omitempty"`
+	CountryOfOrigin   *string             `json:"country_of_origin,omitempty"`
+	Description       *string             `json:"description,omitempty"`
+	DisplayName       *string             `json:"display_name,omitempty"`
+	DosageFormId      *openapi_types.UUID `json:"dosage_form_id,omitempty"`
+	GenericMedicineId *openapi_types.UUID `json:"generic_medicine_id,omitempty"`
+	HsnCode           *string             `json:"hsn_code,omitempty"`
+	ImageUrl          *string             `json:"image_url,omitempty"`
+	ImportLicenseNo   *string             `json:"import_license_no,omitempty"`
+	ImporterName      *string             `json:"importer_name,omitempty"`
+
+	// IsActive Deactivation is preferred over deletion; history keeps its references.
+	IsActive       *bool               `json:"is_active,omitempty"`
+	IsControlled   *bool               `json:"is_controlled,omitempty"`
+	IsImported     *bool               `json:"is_imported,omitempty"`
+	IsRefrigerated *bool               `json:"is_refrigerated,omitempty"`
+	ManufacturerId *openapi_types.UUID `json:"manufacturer_id,omitempty"`
+	Name           *string             `json:"name,omitempty"`
+
+	// PackSize Rejected once the medicine is referenced by stock, purchases or sales.
+	PackSize      *string             `json:"pack_size,omitempty"`
+	PackageTypeId *openapi_types.UUID `json:"package_type_id,omitempty"`
+
+	// Reason Required when a regulatory flag or the import provenance changes.
+	Reason               *string             `json:"reason,omitempty"`
+	RequiresPrescription *bool               `json:"requires_prescription,omitempty"`
+	RouteId              *openapi_types.UUID `json:"route_id,omitempty"`
+	SalesUnitId          *openapi_types.UUID `json:"sales_unit_id,omitempty"`
+	ShelfLifeMonths      *int                `json:"shelf_life_months,omitempty"`
+	StorageConditionId   *openapi_types.UUID `json:"storage_condition_id,omitempty"`
+
+	// Strength Rejected once the medicine is referenced by stock, purchases or sales.
+	Strength      *string             `json:"strength,omitempty"`
+	TaxRateId     *openapi_types.UUID `json:"tax_rate_id,omitempty"`
+	UnitsPerPack  *int                `json:"units_per_pack,omitempty"`
+	UnitsPerStrip *int                `json:"units_per_strip,omitempty"`
+}
+
+// UpdateMedicineVariantRequest Every field is optional. sku and barcode are absent: they are the
+// variant's identity, and a barcode is never silently transferred between
+// variants. The conversion fields may only change while the variant is
+// still unused.
+type UpdateMedicineVariantRequest struct {
+	IsActive     *bool   `json:"is_active,omitempty"`
+	Name         *string `json:"name,omitempty"`
+	PackSize     *string `json:"pack_size,omitempty"`
+	Strength     *string `json:"strength,omitempty"`
+	UnitsPerPack *int    `json:"units_per_pack,omitempty"`
+}
+
 // UpdateOrganizationRequest Every field optional (pointer); nil = leave unchanged. Identity (id, slug) and lifecycle/billing
 // (is_active, subscription_plan) are deliberately not updatable here.
 type UpdateOrganizationRequest struct {
@@ -2554,6 +3060,9 @@ type AuditUserID openapi_types.UUID
 
 // AuditValuesLimit defines model for AuditValuesLimit.
 type AuditValuesLimit int
+
+// Cursor defines model for Cursor.
+type Cursor string
 
 // IdempotencyKey defines model for IdempotencyKey.
 type IdempotencyKey string
@@ -3874,6 +4383,236 @@ type MasterdataUnitTypesUpdateParams struct {
 // MasterdataUnitTypesUpdate200JSONResponseBodySuccess defines parameters for MasterdataUnitTypesUpdate.
 type MasterdataUnitTypesUpdate200JSONResponseBodySuccess bool
 
+// MedicinesListParams defines parameters for MedicinesList.
+type MedicinesListParams struct {
+	// Page Page number, 1-based (offset pagination). Default 1.
+	Page *Page `form:"page,omitempty" json:"page,omitempty"`
+
+	// Limit Page size, clamped into [1,100]. Default 20.
+	Limit *Limit `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// Sort Comma-separated sort keys. Prefix with `-` for descending. At most 5 fields.
+	// Example: `-created_at,name`. Which fields are allowed is endpoint-specific.
+	Sort *Sort `form:"sort,omitempty" json:"sort,omitempty"`
+
+	// Cursor Opaque HMAC-signed cursor returned as `X-Next-Cursor` for cursor pagination.
+	Cursor *Cursor `form:"cursor,omitempty" json:"cursor,omitempty"`
+
+	// CategoryId Filter by product category.
+	CategoryId *openapi_types.UUID `form:"category_id,omitempty" json:"category_id,omitempty"`
+
+	// BrandId Filter by brand.
+	BrandId *openapi_types.UUID `form:"brand_id,omitempty" json:"brand_id,omitempty"`
+
+	// GenericId Filter by generic (ingredient) dictionary entry.
+	GenericId *openapi_types.UUID `form:"generic_id,omitempty" json:"generic_id,omitempty"`
+
+	// IsActive Filter by catalogue state.
+	IsActive *bool `form:"is_active,omitempty" json:"is_active,omitempty"`
+
+	// RequiresPrescription Filter by the prescription flag.
+	RequiresPrescription *bool `form:"requires_prescription,omitempty" json:"requires_prescription,omitempty"`
+
+	// IsControlled Filter by the controlled flag.
+	IsControlled *bool `form:"is_controlled,omitempty" json:"is_controlled,omitempty"`
+
+	// Q Free-text search. Matched fields are endpoint-specific.
+	Q *Q `form:"q,omitempty" json:"q,omitempty"`
+
+	// XRequestID Caller-supplied correlation id. If omitted the server mints one and returns it.
+	XRequestID *RequestId `json:"X-Request-ID,omitempty"`
+}
+
+// MedicinesList200JSONResponseBodySuccess defines parameters for MedicinesList.
+type MedicinesList200JSONResponseBodySuccess bool
+
+// MedicinesCreateParams defines parameters for MedicinesCreate.
+type MedicinesCreateParams struct {
+	// XRequestID Caller-supplied correlation id. If omitted the server mints one and returns it.
+	XRequestID *RequestId `json:"X-Request-ID,omitempty"`
+
+	// IdempotencyKey Optional idempotency key for safe retry of mutating requests (POST/PATCH/PUT/DELETE).
+	// The server stores the request+response keyed by this header for the configured TTL; a second
+	// request with the same key and body returns the cached response. A second request with a
+	// *different* body yields `409 IDEMPOTENCY_KEY_CONFLICT`.
+	IdempotencyKey *IdempotencyKey `json:"Idempotency-Key,omitempty"`
+}
+
+// MedicinesCreate201JSONResponseBodySuccess defines parameters for MedicinesCreate.
+type MedicinesCreate201JSONResponseBodySuccess bool
+
+// MedicinesLookupParams defines parameters for MedicinesLookup.
+type MedicinesLookupParams struct {
+	// XRequestID Caller-supplied correlation id. If omitted the server mints one and returns it.
+	XRequestID *RequestId `json:"X-Request-ID,omitempty"`
+}
+
+// MedicinesLookup200JSONResponseBodySuccess defines parameters for MedicinesLookup.
+type MedicinesLookup200JSONResponseBodySuccess bool
+
+// MedicinesSearchParams defines parameters for MedicinesSearch.
+type MedicinesSearchParams struct {
+	// Limit Page size, clamped into [1,100]. Default 20.
+	Limit *Limit `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// Sort Comma-separated sort keys. Prefix with `-` for descending. At most 5 fields.
+	// Example: `-created_at,name`. Which fields are allowed is endpoint-specific.
+	Sort *Sort `form:"sort,omitempty" json:"sort,omitempty"`
+
+	// Cursor Opaque HMAC-signed cursor returned as `X-Next-Cursor` for cursor pagination.
+	Cursor *Cursor `form:"cursor,omitempty" json:"cursor,omitempty"`
+
+	// Q Search term (maximum 200 characters).
+	Q string `form:"q" json:"q"`
+
+	// XRequestID Caller-supplied correlation id. If omitted the server mints one and returns it.
+	XRequestID *RequestId `json:"X-Request-ID,omitempty"`
+}
+
+// MedicinesSearch200JSONResponseBodySuccess defines parameters for MedicinesSearch.
+type MedicinesSearch200JSONResponseBodySuccess bool
+
+// MedicinesDeleteParams defines parameters for MedicinesDelete.
+type MedicinesDeleteParams struct {
+	// XRequestID Caller-supplied correlation id. If omitted the server mints one and returns it.
+	XRequestID *RequestId `json:"X-Request-ID,omitempty"`
+
+	// IdempotencyKey Optional idempotency key for safe retry of mutating requests (POST/PATCH/PUT/DELETE).
+	// The server stores the request+response keyed by this header for the configured TTL; a second
+	// request with the same key and body returns the cached response. A second request with a
+	// *different* body yields `409 IDEMPOTENCY_KEY_CONFLICT`.
+	IdempotencyKey *IdempotencyKey `json:"Idempotency-Key,omitempty"`
+}
+
+// MedicinesGetParams defines parameters for MedicinesGet.
+type MedicinesGetParams struct {
+	// XRequestID Caller-supplied correlation id. If omitted the server mints one and returns it.
+	XRequestID *RequestId `json:"X-Request-ID,omitempty"`
+}
+
+// MedicinesGet200JSONResponseBodySuccess defines parameters for MedicinesGet.
+type MedicinesGet200JSONResponseBodySuccess bool
+
+// MedicinesUpdateParams defines parameters for MedicinesUpdate.
+type MedicinesUpdateParams struct {
+	// XRequestID Caller-supplied correlation id. If omitted the server mints one and returns it.
+	XRequestID *RequestId `json:"X-Request-ID,omitempty"`
+
+	// IdempotencyKey Optional idempotency key for safe retry of mutating requests (POST/PATCH/PUT/DELETE).
+	// The server stores the request+response keyed by this header for the configured TTL; a second
+	// request with the same key and body returns the cached response. A second request with a
+	// *different* body yields `409 IDEMPOTENCY_KEY_CONFLICT`.
+	IdempotencyKey *IdempotencyKey `json:"Idempotency-Key,omitempty"`
+}
+
+// MedicinesUpdate200JSONResponseBodySuccess defines parameters for MedicinesUpdate.
+type MedicinesUpdate200JSONResponseBodySuccess bool
+
+// MedicinesListBarcodesParams defines parameters for MedicinesListBarcodes.
+type MedicinesListBarcodesParams struct {
+	// Limit Page size, clamped into [1,100]. Default 20.
+	Limit *Limit `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// Cursor Opaque HMAC-signed cursor returned as `X-Next-Cursor` for cursor pagination.
+	Cursor *Cursor `form:"cursor,omitempty" json:"cursor,omitempty"`
+
+	// XRequestID Caller-supplied correlation id. If omitted the server mints one and returns it.
+	XRequestID *RequestId `json:"X-Request-ID,omitempty"`
+}
+
+// MedicinesListBarcodes200JSONResponseBodySuccess defines parameters for MedicinesListBarcodes.
+type MedicinesListBarcodes200JSONResponseBodySuccess bool
+
+// MedicinesCreateBarcodeParams defines parameters for MedicinesCreateBarcode.
+type MedicinesCreateBarcodeParams struct {
+	// XRequestID Caller-supplied correlation id. If omitted the server mints one and returns it.
+	XRequestID *RequestId `json:"X-Request-ID,omitempty"`
+
+	// IdempotencyKey Optional idempotency key for safe retry of mutating requests (POST/PATCH/PUT/DELETE).
+	// The server stores the request+response keyed by this header for the configured TTL; a second
+	// request with the same key and body returns the cached response. A second request with a
+	// *different* body yields `409 IDEMPOTENCY_KEY_CONFLICT`.
+	IdempotencyKey *IdempotencyKey `json:"Idempotency-Key,omitempty"`
+}
+
+// MedicinesCreateBarcode201JSONResponseBodySuccess defines parameters for MedicinesCreateBarcode.
+type MedicinesCreateBarcode201JSONResponseBodySuccess bool
+
+// MedicinesDeleteBarcodeParams defines parameters for MedicinesDeleteBarcode.
+type MedicinesDeleteBarcodeParams struct {
+	// XRequestID Caller-supplied correlation id. If omitted the server mints one and returns it.
+	XRequestID *RequestId `json:"X-Request-ID,omitempty"`
+
+	// IdempotencyKey Optional idempotency key for safe retry of mutating requests (POST/PATCH/PUT/DELETE).
+	// The server stores the request+response keyed by this header for the configured TTL; a second
+	// request with the same key and body returns the cached response. A second request with a
+	// *different* body yields `409 IDEMPOTENCY_KEY_CONFLICT`.
+	IdempotencyKey *IdempotencyKey `json:"Idempotency-Key,omitempty"`
+}
+
+// MedicinesPriceHistoryParams defines parameters for MedicinesPriceHistory.
+type MedicinesPriceHistoryParams struct {
+	// XRequestID Caller-supplied correlation id. If omitted the server mints one and returns it.
+	XRequestID *RequestId `json:"X-Request-ID,omitempty"`
+}
+
+// MedicinesListVariantsParams defines parameters for MedicinesListVariants.
+type MedicinesListVariantsParams struct {
+	// Limit Page size, clamped into [1,100]. Default 20.
+	Limit *Limit `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// Cursor Opaque HMAC-signed cursor returned as `X-Next-Cursor` for cursor pagination.
+	Cursor *Cursor `form:"cursor,omitempty" json:"cursor,omitempty"`
+
+	// XRequestID Caller-supplied correlation id. If omitted the server mints one and returns it.
+	XRequestID *RequestId `json:"X-Request-ID,omitempty"`
+}
+
+// MedicinesListVariants200JSONResponseBodySuccess defines parameters for MedicinesListVariants.
+type MedicinesListVariants200JSONResponseBodySuccess bool
+
+// MedicinesCreateVariantParams defines parameters for MedicinesCreateVariant.
+type MedicinesCreateVariantParams struct {
+	// XRequestID Caller-supplied correlation id. If omitted the server mints one and returns it.
+	XRequestID *RequestId `json:"X-Request-ID,omitempty"`
+
+	// IdempotencyKey Optional idempotency key for safe retry of mutating requests (POST/PATCH/PUT/DELETE).
+	// The server stores the request+response keyed by this header for the configured TTL; a second
+	// request with the same key and body returns the cached response. A second request with a
+	// *different* body yields `409 IDEMPOTENCY_KEY_CONFLICT`.
+	IdempotencyKey *IdempotencyKey `json:"Idempotency-Key,omitempty"`
+}
+
+// MedicinesCreateVariant201JSONResponseBodySuccess defines parameters for MedicinesCreateVariant.
+type MedicinesCreateVariant201JSONResponseBodySuccess bool
+
+// MedicinesDeleteVariantParams defines parameters for MedicinesDeleteVariant.
+type MedicinesDeleteVariantParams struct {
+	// XRequestID Caller-supplied correlation id. If omitted the server mints one and returns it.
+	XRequestID *RequestId `json:"X-Request-ID,omitempty"`
+
+	// IdempotencyKey Optional idempotency key for safe retry of mutating requests (POST/PATCH/PUT/DELETE).
+	// The server stores the request+response keyed by this header for the configured TTL; a second
+	// request with the same key and body returns the cached response. A second request with a
+	// *different* body yields `409 IDEMPOTENCY_KEY_CONFLICT`.
+	IdempotencyKey *IdempotencyKey `json:"Idempotency-Key,omitempty"`
+}
+
+// MedicinesUpdateVariantParams defines parameters for MedicinesUpdateVariant.
+type MedicinesUpdateVariantParams struct {
+	// XRequestID Caller-supplied correlation id. If omitted the server mints one and returns it.
+	XRequestID *RequestId `json:"X-Request-ID,omitempty"`
+
+	// IdempotencyKey Optional idempotency key for safe retry of mutating requests (POST/PATCH/PUT/DELETE).
+	// The server stores the request+response keyed by this header for the configured TTL; a second
+	// request with the same key and body returns the cached response. A second request with a
+	// *different* body yields `409 IDEMPOTENCY_KEY_CONFLICT`.
+	IdempotencyKey *IdempotencyKey `json:"Idempotency-Key,omitempty"`
+}
+
+// MedicinesUpdateVariant200JSONResponseBodySuccess defines parameters for MedicinesUpdateVariant.
+type MedicinesUpdateVariant200JSONResponseBodySuccess bool
+
 // OrganizationsCurrentParams defines parameters for OrganizationsCurrent.
 type OrganizationsCurrentParams struct {
 	// XRequestID Caller-supplied correlation id. If omitted the server mints one and returns it.
@@ -4431,6 +5170,24 @@ type MasterdataUnitTypesCreateJSONRequestBody CreateUnitTypeRequest
 // MasterdataUnitTypesUpdateJSONRequestBody defines body for MasterdataUnitTypesUpdate for application/json ContentType.
 type MasterdataUnitTypesUpdateJSONRequestBody UpdateUnitTypeRequest
 
+// MedicinesCreateJSONRequestBody defines body for MedicinesCreate for application/json ContentType.
+type MedicinesCreateJSONRequestBody CreateMedicineRequest
+
+// MedicinesLookupJSONRequestBody defines body for MedicinesLookup for application/json ContentType.
+type MedicinesLookupJSONRequestBody LookupMedicineRequest
+
+// MedicinesUpdateJSONRequestBody defines body for MedicinesUpdate for application/json ContentType.
+type MedicinesUpdateJSONRequestBody UpdateMedicineRequest
+
+// MedicinesCreateBarcodeJSONRequestBody defines body for MedicinesCreateBarcode for application/json ContentType.
+type MedicinesCreateBarcodeJSONRequestBody CreateMedicineBarcodeRequest
+
+// MedicinesCreateVariantJSONRequestBody defines body for MedicinesCreateVariant for application/json ContentType.
+type MedicinesCreateVariantJSONRequestBody CreateMedicineVariantRequest
+
+// MedicinesUpdateVariantJSONRequestBody defines body for MedicinesUpdateVariant for application/json ContentType.
+type MedicinesUpdateVariantJSONRequestBody UpdateMedicineVariantRequest
+
 // OrganizationsUpdateJSONRequestBody defines body for OrganizationsUpdate for application/json ContentType.
 type OrganizationsUpdateJSONRequestBody UpdateOrganizationRequest
 
@@ -4748,6 +5505,51 @@ type ServerInterface interface {
 	// MasterdataUnitTypesUpdate Update a unit type
 	// (PATCH /master/unit-types/{id})
 	MasterdataUnitTypesUpdate(c *gin.Context, id openapi_types.UUID, params MasterdataUnitTypesUpdateParams)
+	// MedicinesList List medicines
+	// (GET /medicines)
+	MedicinesList(c *gin.Context, params MedicinesListParams)
+	// MedicinesCreate Create a medicine
+	// (POST /medicines)
+	MedicinesCreate(c *gin.Context, params MedicinesCreateParams)
+	// MedicinesLookup Exact lookup by barcode or SKU
+	// (POST /medicines/lookup)
+	MedicinesLookup(c *gin.Context, params MedicinesLookupParams)
+	// MedicinesSearch Search medicines
+	// (GET /medicines/search)
+	MedicinesSearch(c *gin.Context, params MedicinesSearchParams)
+	// MedicinesDelete Archive a medicine
+	// (DELETE /medicines/{id})
+	MedicinesDelete(c *gin.Context, id openapi_types.UUID, params MedicinesDeleteParams)
+	// MedicinesGet Get a medicine
+	// (GET /medicines/{id})
+	MedicinesGet(c *gin.Context, id openapi_types.UUID, params MedicinesGetParams)
+	// MedicinesUpdate Update a medicine
+	// (PATCH /medicines/{id})
+	MedicinesUpdate(c *gin.Context, id openapi_types.UUID, params MedicinesUpdateParams)
+	// MedicinesListBarcodes List the barcodes of a medicine
+	// (GET /medicines/{id}/barcodes)
+	MedicinesListBarcodes(c *gin.Context, id openapi_types.UUID, params MedicinesListBarcodesParams)
+	// MedicinesCreateBarcode Add a barcode
+	// (POST /medicines/{id}/barcodes)
+	MedicinesCreateBarcode(c *gin.Context, id openapi_types.UUID, params MedicinesCreateBarcodeParams)
+	// MedicinesDeleteBarcode Deactivate a barcode assignment
+	// (DELETE /medicines/{id}/barcodes/{bc_id})
+	MedicinesDeleteBarcode(c *gin.Context, id openapi_types.UUID, bcId openapi_types.UUID, params MedicinesDeleteBarcodeParams)
+	// MedicinesPriceHistory Price history (pricing adapter — blocked)
+	// (GET /medicines/{id}/price-history)
+	MedicinesPriceHistory(c *gin.Context, id openapi_types.UUID, params MedicinesPriceHistoryParams)
+	// MedicinesListVariants List the variants of a medicine
+	// (GET /medicines/{id}/variants)
+	MedicinesListVariants(c *gin.Context, id openapi_types.UUID, params MedicinesListVariantsParams)
+	// MedicinesCreateVariant Add a package variant
+	// (POST /medicines/{id}/variants)
+	MedicinesCreateVariant(c *gin.Context, id openapi_types.UUID, params MedicinesCreateVariantParams)
+	// MedicinesDeleteVariant Archive a package variant
+	// (DELETE /medicines/{id}/variants/{variant_id})
+	MedicinesDeleteVariant(c *gin.Context, id openapi_types.UUID, variantId openapi_types.UUID, params MedicinesDeleteVariantParams)
+	// MedicinesUpdateVariant Update a package variant
+	// (PATCH /medicines/{id}/variants/{variant_id})
+	MedicinesUpdateVariant(c *gin.Context, id openapi_types.UUID, variantId openapi_types.UUID, params MedicinesUpdateVariantParams)
 	// OrganizationsCurrent Get the caller's organization
 	// (GET /organizations/current)
 	OrganizationsCurrent(c *gin.Context, params OrganizationsCurrentParams)
@@ -10519,6 +11321,1036 @@ func (siw *ServerInterfaceWrapper) MasterdataUnitTypesUpdate(c *gin.Context) {
 	siw.Handler.MasterdataUnitTypesUpdate(c, id, params)
 }
 
+// MedicinesList operation middleware
+func (siw *ServerInterfaceWrapper) MedicinesList(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params MedicinesListParams
+
+	// ------------- Optional query parameter "page" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "page", c.Request.URL.Query(), &params.Page, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter page: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "limit", c.Request.URL.Query(), &params.Limit, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter limit: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "sort" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "sort", c.Request.URL.Query(), &params.Sort, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter sort: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "cursor" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "cursor", c.Request.URL.Query(), &params.Cursor, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter cursor: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "category_id" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "category_id", c.Request.URL.Query(), &params.CategoryId, runtime.BindQueryParameterOptions{Type: "string", Format: "uuid"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter category_id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "brand_id" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "brand_id", c.Request.URL.Query(), &params.BrandId, runtime.BindQueryParameterOptions{Type: "string", Format: "uuid"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter brand_id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "generic_id" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "generic_id", c.Request.URL.Query(), &params.GenericId, runtime.BindQueryParameterOptions{Type: "string", Format: "uuid"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter generic_id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "is_active" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "is_active", c.Request.URL.Query(), &params.IsActive, runtime.BindQueryParameterOptions{Type: "boolean", Format: ""})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter is_active: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "requires_prescription" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "requires_prescription", c.Request.URL.Query(), &params.RequiresPrescription, runtime.BindQueryParameterOptions{Type: "boolean", Format: ""})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter requires_prescription: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "is_controlled" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "is_controlled", c.Request.URL.Query(), &params.IsControlled, runtime.BindQueryParameterOptions{Type: "boolean", Format: ""})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter is_controlled: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "q" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "q", c.Request.URL.Query(), &params.Q, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter q: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	headers := c.Request.Header
+
+	// ------------- Optional header parameter "X-Request-ID" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-Request-ID")]; found {
+		var XRequestID RequestId
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandler(c, fmt.Errorf("Expected one value for X-Request-ID, got %d", n), http.StatusBadRequest)
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", valueList[0], &XRequestID, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"})
+		if err != nil {
+			siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter X-Request-ID: %w", err), http.StatusBadRequest)
+			return
+		}
+
+		params.XRequestID = &XRequestID
+
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.MedicinesList(c, params)
+}
+
+// MedicinesCreate operation middleware
+func (siw *ServerInterfaceWrapper) MedicinesCreate(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params MedicinesCreateParams
+
+	headers := c.Request.Header
+
+	// ------------- Optional header parameter "X-Request-ID" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-Request-ID")]; found {
+		var XRequestID RequestId
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandler(c, fmt.Errorf("Expected one value for X-Request-ID, got %d", n), http.StatusBadRequest)
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", valueList[0], &XRequestID, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"})
+		if err != nil {
+			siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter X-Request-ID: %w", err), http.StatusBadRequest)
+			return
+		}
+
+		params.XRequestID = &XRequestID
+
+	}
+
+	// ------------- Optional header parameter "Idempotency-Key" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("Idempotency-Key")]; found {
+		var IdempotencyKey IdempotencyKey
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandler(c, fmt.Errorf("Expected one value for Idempotency-Key, got %d", n), http.StatusBadRequest)
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "Idempotency-Key", valueList[0], &IdempotencyKey, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter Idempotency-Key: %w", err), http.StatusBadRequest)
+			return
+		}
+
+		params.IdempotencyKey = &IdempotencyKey
+
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.MedicinesCreate(c, params)
+}
+
+// MedicinesLookup operation middleware
+func (siw *ServerInterfaceWrapper) MedicinesLookup(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params MedicinesLookupParams
+
+	headers := c.Request.Header
+
+	// ------------- Optional header parameter "X-Request-ID" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-Request-ID")]; found {
+		var XRequestID RequestId
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandler(c, fmt.Errorf("Expected one value for X-Request-ID, got %d", n), http.StatusBadRequest)
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", valueList[0], &XRequestID, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"})
+		if err != nil {
+			siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter X-Request-ID: %w", err), http.StatusBadRequest)
+			return
+		}
+
+		params.XRequestID = &XRequestID
+
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.MedicinesLookup(c, params)
+}
+
+// MedicinesSearch operation middleware
+func (siw *ServerInterfaceWrapper) MedicinesSearch(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params MedicinesSearchParams
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "limit", c.Request.URL.Query(), &params.Limit, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter limit: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "sort" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "sort", c.Request.URL.Query(), &params.Sort, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter sort: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "cursor" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "cursor", c.Request.URL.Query(), &params.Cursor, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter cursor: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Required query parameter "q" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "q", c.Request.URL.Query(), &params.Q, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter q: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	headers := c.Request.Header
+
+	// ------------- Optional header parameter "X-Request-ID" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-Request-ID")]; found {
+		var XRequestID RequestId
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandler(c, fmt.Errorf("Expected one value for X-Request-ID, got %d", n), http.StatusBadRequest)
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", valueList[0], &XRequestID, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"})
+		if err != nil {
+			siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter X-Request-ID: %w", err), http.StatusBadRequest)
+			return
+		}
+
+		params.XRequestID = &XRequestID
+
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.MedicinesSearch(c, params)
+}
+
+// MedicinesDelete operation middleware
+func (siw *ServerInterfaceWrapper) MedicinesDelete(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params MedicinesDeleteParams
+
+	headers := c.Request.Header
+
+	// ------------- Optional header parameter "X-Request-ID" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-Request-ID")]; found {
+		var XRequestID RequestId
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandler(c, fmt.Errorf("Expected one value for X-Request-ID, got %d", n), http.StatusBadRequest)
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", valueList[0], &XRequestID, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"})
+		if err != nil {
+			siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter X-Request-ID: %w", err), http.StatusBadRequest)
+			return
+		}
+
+		params.XRequestID = &XRequestID
+
+	}
+
+	// ------------- Optional header parameter "Idempotency-Key" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("Idempotency-Key")]; found {
+		var IdempotencyKey IdempotencyKey
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandler(c, fmt.Errorf("Expected one value for Idempotency-Key, got %d", n), http.StatusBadRequest)
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "Idempotency-Key", valueList[0], &IdempotencyKey, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter Idempotency-Key: %w", err), http.StatusBadRequest)
+			return
+		}
+
+		params.IdempotencyKey = &IdempotencyKey
+
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.MedicinesDelete(c, id, params)
+}
+
+// MedicinesGet operation middleware
+func (siw *ServerInterfaceWrapper) MedicinesGet(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params MedicinesGetParams
+
+	headers := c.Request.Header
+
+	// ------------- Optional header parameter "X-Request-ID" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-Request-ID")]; found {
+		var XRequestID RequestId
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandler(c, fmt.Errorf("Expected one value for X-Request-ID, got %d", n), http.StatusBadRequest)
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", valueList[0], &XRequestID, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"})
+		if err != nil {
+			siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter X-Request-ID: %w", err), http.StatusBadRequest)
+			return
+		}
+
+		params.XRequestID = &XRequestID
+
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.MedicinesGet(c, id, params)
+}
+
+// MedicinesUpdate operation middleware
+func (siw *ServerInterfaceWrapper) MedicinesUpdate(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params MedicinesUpdateParams
+
+	headers := c.Request.Header
+
+	// ------------- Optional header parameter "X-Request-ID" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-Request-ID")]; found {
+		var XRequestID RequestId
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandler(c, fmt.Errorf("Expected one value for X-Request-ID, got %d", n), http.StatusBadRequest)
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", valueList[0], &XRequestID, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"})
+		if err != nil {
+			siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter X-Request-ID: %w", err), http.StatusBadRequest)
+			return
+		}
+
+		params.XRequestID = &XRequestID
+
+	}
+
+	// ------------- Optional header parameter "Idempotency-Key" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("Idempotency-Key")]; found {
+		var IdempotencyKey IdempotencyKey
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandler(c, fmt.Errorf("Expected one value for Idempotency-Key, got %d", n), http.StatusBadRequest)
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "Idempotency-Key", valueList[0], &IdempotencyKey, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter Idempotency-Key: %w", err), http.StatusBadRequest)
+			return
+		}
+
+		params.IdempotencyKey = &IdempotencyKey
+
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.MedicinesUpdate(c, id, params)
+}
+
+// MedicinesListBarcodes operation middleware
+func (siw *ServerInterfaceWrapper) MedicinesListBarcodes(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params MedicinesListBarcodesParams
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "limit", c.Request.URL.Query(), &params.Limit, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter limit: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "cursor" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "cursor", c.Request.URL.Query(), &params.Cursor, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter cursor: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	headers := c.Request.Header
+
+	// ------------- Optional header parameter "X-Request-ID" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-Request-ID")]; found {
+		var XRequestID RequestId
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandler(c, fmt.Errorf("Expected one value for X-Request-ID, got %d", n), http.StatusBadRequest)
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", valueList[0], &XRequestID, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"})
+		if err != nil {
+			siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter X-Request-ID: %w", err), http.StatusBadRequest)
+			return
+		}
+
+		params.XRequestID = &XRequestID
+
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.MedicinesListBarcodes(c, id, params)
+}
+
+// MedicinesCreateBarcode operation middleware
+func (siw *ServerInterfaceWrapper) MedicinesCreateBarcode(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params MedicinesCreateBarcodeParams
+
+	headers := c.Request.Header
+
+	// ------------- Optional header parameter "X-Request-ID" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-Request-ID")]; found {
+		var XRequestID RequestId
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandler(c, fmt.Errorf("Expected one value for X-Request-ID, got %d", n), http.StatusBadRequest)
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", valueList[0], &XRequestID, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"})
+		if err != nil {
+			siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter X-Request-ID: %w", err), http.StatusBadRequest)
+			return
+		}
+
+		params.XRequestID = &XRequestID
+
+	}
+
+	// ------------- Optional header parameter "Idempotency-Key" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("Idempotency-Key")]; found {
+		var IdempotencyKey IdempotencyKey
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandler(c, fmt.Errorf("Expected one value for Idempotency-Key, got %d", n), http.StatusBadRequest)
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "Idempotency-Key", valueList[0], &IdempotencyKey, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter Idempotency-Key: %w", err), http.StatusBadRequest)
+			return
+		}
+
+		params.IdempotencyKey = &IdempotencyKey
+
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.MedicinesCreateBarcode(c, id, params)
+}
+
+// MedicinesDeleteBarcode operation middleware
+func (siw *ServerInterfaceWrapper) MedicinesDeleteBarcode(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Path parameter "bc_id" -------------
+	var bcId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "bc_id", c.Param("bc_id"), &bcId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter bc_id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params MedicinesDeleteBarcodeParams
+
+	headers := c.Request.Header
+
+	// ------------- Optional header parameter "X-Request-ID" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-Request-ID")]; found {
+		var XRequestID RequestId
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandler(c, fmt.Errorf("Expected one value for X-Request-ID, got %d", n), http.StatusBadRequest)
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", valueList[0], &XRequestID, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"})
+		if err != nil {
+			siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter X-Request-ID: %w", err), http.StatusBadRequest)
+			return
+		}
+
+		params.XRequestID = &XRequestID
+
+	}
+
+	// ------------- Optional header parameter "Idempotency-Key" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("Idempotency-Key")]; found {
+		var IdempotencyKey IdempotencyKey
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandler(c, fmt.Errorf("Expected one value for Idempotency-Key, got %d", n), http.StatusBadRequest)
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "Idempotency-Key", valueList[0], &IdempotencyKey, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter Idempotency-Key: %w", err), http.StatusBadRequest)
+			return
+		}
+
+		params.IdempotencyKey = &IdempotencyKey
+
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.MedicinesDeleteBarcode(c, id, bcId, params)
+}
+
+// MedicinesPriceHistory operation middleware
+func (siw *ServerInterfaceWrapper) MedicinesPriceHistory(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params MedicinesPriceHistoryParams
+
+	headers := c.Request.Header
+
+	// ------------- Optional header parameter "X-Request-ID" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-Request-ID")]; found {
+		var XRequestID RequestId
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandler(c, fmt.Errorf("Expected one value for X-Request-ID, got %d", n), http.StatusBadRequest)
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", valueList[0], &XRequestID, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"})
+		if err != nil {
+			siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter X-Request-ID: %w", err), http.StatusBadRequest)
+			return
+		}
+
+		params.XRequestID = &XRequestID
+
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.MedicinesPriceHistory(c, id, params)
+}
+
+// MedicinesListVariants operation middleware
+func (siw *ServerInterfaceWrapper) MedicinesListVariants(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params MedicinesListVariantsParams
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "limit", c.Request.URL.Query(), &params.Limit, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter limit: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "cursor" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "cursor", c.Request.URL.Query(), &params.Cursor, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter cursor: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	headers := c.Request.Header
+
+	// ------------- Optional header parameter "X-Request-ID" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-Request-ID")]; found {
+		var XRequestID RequestId
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandler(c, fmt.Errorf("Expected one value for X-Request-ID, got %d", n), http.StatusBadRequest)
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", valueList[0], &XRequestID, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"})
+		if err != nil {
+			siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter X-Request-ID: %w", err), http.StatusBadRequest)
+			return
+		}
+
+		params.XRequestID = &XRequestID
+
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.MedicinesListVariants(c, id, params)
+}
+
+// MedicinesCreateVariant operation middleware
+func (siw *ServerInterfaceWrapper) MedicinesCreateVariant(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params MedicinesCreateVariantParams
+
+	headers := c.Request.Header
+
+	// ------------- Optional header parameter "X-Request-ID" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-Request-ID")]; found {
+		var XRequestID RequestId
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandler(c, fmt.Errorf("Expected one value for X-Request-ID, got %d", n), http.StatusBadRequest)
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", valueList[0], &XRequestID, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"})
+		if err != nil {
+			siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter X-Request-ID: %w", err), http.StatusBadRequest)
+			return
+		}
+
+		params.XRequestID = &XRequestID
+
+	}
+
+	// ------------- Optional header parameter "Idempotency-Key" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("Idempotency-Key")]; found {
+		var IdempotencyKey IdempotencyKey
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandler(c, fmt.Errorf("Expected one value for Idempotency-Key, got %d", n), http.StatusBadRequest)
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "Idempotency-Key", valueList[0], &IdempotencyKey, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter Idempotency-Key: %w", err), http.StatusBadRequest)
+			return
+		}
+
+		params.IdempotencyKey = &IdempotencyKey
+
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.MedicinesCreateVariant(c, id, params)
+}
+
+// MedicinesDeleteVariant operation middleware
+func (siw *ServerInterfaceWrapper) MedicinesDeleteVariant(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Path parameter "variant_id" -------------
+	var variantId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "variant_id", c.Param("variant_id"), &variantId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter variant_id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params MedicinesDeleteVariantParams
+
+	headers := c.Request.Header
+
+	// ------------- Optional header parameter "X-Request-ID" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-Request-ID")]; found {
+		var XRequestID RequestId
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandler(c, fmt.Errorf("Expected one value for X-Request-ID, got %d", n), http.StatusBadRequest)
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", valueList[0], &XRequestID, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"})
+		if err != nil {
+			siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter X-Request-ID: %w", err), http.StatusBadRequest)
+			return
+		}
+
+		params.XRequestID = &XRequestID
+
+	}
+
+	// ------------- Optional header parameter "Idempotency-Key" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("Idempotency-Key")]; found {
+		var IdempotencyKey IdempotencyKey
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandler(c, fmt.Errorf("Expected one value for Idempotency-Key, got %d", n), http.StatusBadRequest)
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "Idempotency-Key", valueList[0], &IdempotencyKey, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter Idempotency-Key: %w", err), http.StatusBadRequest)
+			return
+		}
+
+		params.IdempotencyKey = &IdempotencyKey
+
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.MedicinesDeleteVariant(c, id, variantId, params)
+}
+
+// MedicinesUpdateVariant operation middleware
+func (siw *ServerInterfaceWrapper) MedicinesUpdateVariant(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Path parameter "variant_id" -------------
+	var variantId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "variant_id", c.Param("variant_id"), &variantId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter variant_id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params MedicinesUpdateVariantParams
+
+	headers := c.Request.Header
+
+	// ------------- Optional header parameter "X-Request-ID" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-Request-ID")]; found {
+		var XRequestID RequestId
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandler(c, fmt.Errorf("Expected one value for X-Request-ID, got %d", n), http.StatusBadRequest)
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-Request-ID", valueList[0], &XRequestID, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: "uuid"})
+		if err != nil {
+			siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter X-Request-ID: %w", err), http.StatusBadRequest)
+			return
+		}
+
+		params.XRequestID = &XRequestID
+
+	}
+
+	// ------------- Optional header parameter "Idempotency-Key" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("Idempotency-Key")]; found {
+		var IdempotencyKey IdempotencyKey
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandler(c, fmt.Errorf("Expected one value for Idempotency-Key, got %d", n), http.StatusBadRequest)
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "Idempotency-Key", valueList[0], &IdempotencyKey, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter Idempotency-Key: %w", err), http.StatusBadRequest)
+			return
+		}
+
+		params.IdempotencyKey = &IdempotencyKey
+
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.MedicinesUpdateVariant(c, id, variantId, params)
+}
+
 // OrganizationsCurrent operation middleware
 func (siw *ServerInterfaceWrapper) OrganizationsCurrent(c *gin.Context) {
 
@@ -12903,6 +14735,21 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.DELETE(options.BaseURL+"/brands/:id", wrapper.BrandsDelete)
 	router.GET(options.BaseURL+"/brands/:id", wrapper.BrandsGet)
 	router.PATCH(options.BaseURL+"/brands/:id", wrapper.BrandsUpdate)
+	router.GET(options.BaseURL+"/medicines", wrapper.MedicinesList)
+	router.POST(options.BaseURL+"/medicines", wrapper.MedicinesCreate)
+	router.GET(options.BaseURL+"/medicines/search", wrapper.MedicinesSearch)
+	router.POST(options.BaseURL+"/medicines/lookup", wrapper.MedicinesLookup)
+	router.DELETE(options.BaseURL+"/medicines/:id", wrapper.MedicinesDelete)
+	router.GET(options.BaseURL+"/medicines/:id", wrapper.MedicinesGet)
+	router.PATCH(options.BaseURL+"/medicines/:id", wrapper.MedicinesUpdate)
+	router.GET(options.BaseURL+"/medicines/:id/variants", wrapper.MedicinesListVariants)
+	router.POST(options.BaseURL+"/medicines/:id/variants", wrapper.MedicinesCreateVariant)
+	router.DELETE(options.BaseURL+"/medicines/:id/variants/:variant_id", wrapper.MedicinesDeleteVariant)
+	router.PATCH(options.BaseURL+"/medicines/:id/variants/:variant_id", wrapper.MedicinesUpdateVariant)
+	router.GET(options.BaseURL+"/medicines/:id/barcodes", wrapper.MedicinesListBarcodes)
+	router.POST(options.BaseURL+"/medicines/:id/barcodes", wrapper.MedicinesCreateBarcode)
+	router.DELETE(options.BaseURL+"/medicines/:id/barcodes/:bc_id", wrapper.MedicinesDeleteBarcode)
+	router.GET(options.BaseURL+"/medicines/:id/price-history", wrapper.MedicinesPriceHistory)
 	router.GET(options.BaseURL+"/settings", wrapper.SettingsList)
 	router.POST(options.BaseURL+"/settings/bulk", wrapper.SettingsBulkUpdate)
 	router.GET(options.BaseURL+"/settings/:key", wrapper.SettingsGet)
@@ -25995,6 +27842,2319 @@ func (response MasterdataUnitTypesUpdate503JSONResponse) VisitMasterdataUnitType
 	return err
 }
 
+type MedicinesListRequestObject struct {
+	Params MedicinesListParams
+}
+
+type MedicinesListResponseObject interface {
+	VisitMedicinesListResponse(w http.ResponseWriter) error
+}
+
+type MedicinesList200JSONResponse struct {
+	Data       []MedicineResponse                      `json:"data"`
+	Meta       Meta                                    `json:"meta"`
+	Pagination PaginationMeta                          `json:"pagination"`
+	Success    MedicinesList200JSONResponseBodySuccess `json:"success"`
+}
+
+func (response MedicinesList200JSONResponse) VisitMedicinesListResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesList400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response MedicinesList400JSONResponse) VisitMedicinesListResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesList401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response MedicinesList401JSONResponse) VisitMedicinesListResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.WWWAuthenticate != nil {
+		w.Header().Set("WWW-Authenticate", fmt.Sprint(*response.Headers.WWWAuthenticate))
+	}
+	if response.Headers.XMFAChallenge != nil {
+		w.Header().Set("X-MFA-Challenge", fmt.Sprint(*response.Headers.XMFAChallenge))
+	}
+	if response.Headers.XPasswordChangeToken != nil {
+		w.Header().Set("X-Password-Change-Token", fmt.Sprint(*response.Headers.XPasswordChangeToken))
+	}
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesList403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response MedicinesList403JSONResponse) VisitMedicinesListResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesList429JSONResponse struct{ TooManyRequestsJSONResponse }
+
+func (response MedicinesList429JSONResponse) VisitMedicinesListResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.RetryAfter != nil {
+		w.Header().Set("Retry-After", fmt.Sprint(*response.Headers.RetryAfter))
+	}
+	if response.Headers.XRateLimitLimit != nil {
+		w.Header().Set("X-RateLimit-Limit", fmt.Sprint(*response.Headers.XRateLimitLimit))
+	}
+	if response.Headers.XRateLimitRemaining != nil {
+		w.Header().Set("X-RateLimit-Remaining", fmt.Sprint(*response.Headers.XRateLimitRemaining))
+	}
+	if response.Headers.XRateLimitReset != nil {
+		w.Header().Set("X-RateLimit-Reset", fmt.Sprint(*response.Headers.XRateLimitReset))
+	}
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(429)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesList500JSONResponse struct{ InternalErrorJSONResponse }
+
+func (response MedicinesList500JSONResponse) VisitMedicinesListResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(500)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesCreateRequestObject struct {
+	Params MedicinesCreateParams
+	Body   *MedicinesCreateJSONRequestBody
+}
+
+type MedicinesCreateResponseObject interface {
+	VisitMedicinesCreateResponse(w http.ResponseWriter) error
+}
+
+type MedicinesCreate201JSONResponse struct {
+	Data    MedicineResponse                          `json:"data"`
+	Meta    Meta                                      `json:"meta"`
+	Success MedicinesCreate201JSONResponseBodySuccess `json:"success"`
+}
+
+func (response MedicinesCreate201JSONResponse) VisitMedicinesCreateResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesCreate400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response MedicinesCreate400JSONResponse) VisitMedicinesCreateResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesCreate401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response MedicinesCreate401JSONResponse) VisitMedicinesCreateResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.WWWAuthenticate != nil {
+		w.Header().Set("WWW-Authenticate", fmt.Sprint(*response.Headers.WWWAuthenticate))
+	}
+	if response.Headers.XMFAChallenge != nil {
+		w.Header().Set("X-MFA-Challenge", fmt.Sprint(*response.Headers.XMFAChallenge))
+	}
+	if response.Headers.XPasswordChangeToken != nil {
+		w.Header().Set("X-Password-Change-Token", fmt.Sprint(*response.Headers.XPasswordChangeToken))
+	}
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesCreate403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response MedicinesCreate403JSONResponse) VisitMedicinesCreateResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesCreate404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response MedicinesCreate404JSONResponse) VisitMedicinesCreateResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesCreate409JSONResponse struct{ ConflictJSONResponse }
+
+func (response MedicinesCreate409JSONResponse) VisitMedicinesCreateResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(409)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesCreate429JSONResponse struct{ TooManyRequestsJSONResponse }
+
+func (response MedicinesCreate429JSONResponse) VisitMedicinesCreateResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.RetryAfter != nil {
+		w.Header().Set("Retry-After", fmt.Sprint(*response.Headers.RetryAfter))
+	}
+	if response.Headers.XRateLimitLimit != nil {
+		w.Header().Set("X-RateLimit-Limit", fmt.Sprint(*response.Headers.XRateLimitLimit))
+	}
+	if response.Headers.XRateLimitRemaining != nil {
+		w.Header().Set("X-RateLimit-Remaining", fmt.Sprint(*response.Headers.XRateLimitRemaining))
+	}
+	if response.Headers.XRateLimitReset != nil {
+		w.Header().Set("X-RateLimit-Reset", fmt.Sprint(*response.Headers.XRateLimitReset))
+	}
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(429)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesCreate500JSONResponse struct{ InternalErrorJSONResponse }
+
+func (response MedicinesCreate500JSONResponse) VisitMedicinesCreateResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(500)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesLookupRequestObject struct {
+	Params MedicinesLookupParams
+	Body   *MedicinesLookupJSONRequestBody
+}
+
+type MedicinesLookupResponseObject interface {
+	VisitMedicinesLookupResponse(w http.ResponseWriter) error
+}
+
+type MedicinesLookup200JSONResponse struct {
+	// Data Catalogue and variant metadata only. A catalogue lookup does not prove
+	// stock availability and carries no price: the sale workflow revalidates
+	// branch stock, price and safety requirements itself.
+	Data    LookupMedicineResponse                    `json:"data"`
+	Meta    Meta                                      `json:"meta"`
+	Success MedicinesLookup200JSONResponseBodySuccess `json:"success"`
+}
+
+func (response MedicinesLookup200JSONResponse) VisitMedicinesLookupResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesLookup400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response MedicinesLookup400JSONResponse) VisitMedicinesLookupResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesLookup401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response MedicinesLookup401JSONResponse) VisitMedicinesLookupResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.WWWAuthenticate != nil {
+		w.Header().Set("WWW-Authenticate", fmt.Sprint(*response.Headers.WWWAuthenticate))
+	}
+	if response.Headers.XMFAChallenge != nil {
+		w.Header().Set("X-MFA-Challenge", fmt.Sprint(*response.Headers.XMFAChallenge))
+	}
+	if response.Headers.XPasswordChangeToken != nil {
+		w.Header().Set("X-Password-Change-Token", fmt.Sprint(*response.Headers.XPasswordChangeToken))
+	}
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesLookup403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response MedicinesLookup403JSONResponse) VisitMedicinesLookupResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesLookup404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response MedicinesLookup404JSONResponse) VisitMedicinesLookupResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesLookup409JSONResponse struct{ ConflictJSONResponse }
+
+func (response MedicinesLookup409JSONResponse) VisitMedicinesLookupResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(409)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesLookup429JSONResponse struct{ TooManyRequestsJSONResponse }
+
+func (response MedicinesLookup429JSONResponse) VisitMedicinesLookupResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.RetryAfter != nil {
+		w.Header().Set("Retry-After", fmt.Sprint(*response.Headers.RetryAfter))
+	}
+	if response.Headers.XRateLimitLimit != nil {
+		w.Header().Set("X-RateLimit-Limit", fmt.Sprint(*response.Headers.XRateLimitLimit))
+	}
+	if response.Headers.XRateLimitRemaining != nil {
+		w.Header().Set("X-RateLimit-Remaining", fmt.Sprint(*response.Headers.XRateLimitRemaining))
+	}
+	if response.Headers.XRateLimitReset != nil {
+		w.Header().Set("X-RateLimit-Reset", fmt.Sprint(*response.Headers.XRateLimitReset))
+	}
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(429)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesLookup500JSONResponse struct{ InternalErrorJSONResponse }
+
+func (response MedicinesLookup500JSONResponse) VisitMedicinesLookupResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(500)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesSearchRequestObject struct {
+	Params MedicinesSearchParams
+}
+
+type MedicinesSearchResponseObject interface {
+	VisitMedicinesSearchResponse(w http.ResponseWriter) error
+}
+
+type MedicinesSearch200JSONResponse struct {
+	Data       []MedicineResponse                        `json:"data"`
+	Meta       Meta                                      `json:"meta"`
+	Pagination PaginationMeta                            `json:"pagination"`
+	Success    MedicinesSearch200JSONResponseBodySuccess `json:"success"`
+}
+
+func (response MedicinesSearch200JSONResponse) VisitMedicinesSearchResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesSearch400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response MedicinesSearch400JSONResponse) VisitMedicinesSearchResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesSearch401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response MedicinesSearch401JSONResponse) VisitMedicinesSearchResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.WWWAuthenticate != nil {
+		w.Header().Set("WWW-Authenticate", fmt.Sprint(*response.Headers.WWWAuthenticate))
+	}
+	if response.Headers.XMFAChallenge != nil {
+		w.Header().Set("X-MFA-Challenge", fmt.Sprint(*response.Headers.XMFAChallenge))
+	}
+	if response.Headers.XPasswordChangeToken != nil {
+		w.Header().Set("X-Password-Change-Token", fmt.Sprint(*response.Headers.XPasswordChangeToken))
+	}
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesSearch403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response MedicinesSearch403JSONResponse) VisitMedicinesSearchResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesSearch429JSONResponse struct{ TooManyRequestsJSONResponse }
+
+func (response MedicinesSearch429JSONResponse) VisitMedicinesSearchResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.RetryAfter != nil {
+		w.Header().Set("Retry-After", fmt.Sprint(*response.Headers.RetryAfter))
+	}
+	if response.Headers.XRateLimitLimit != nil {
+		w.Header().Set("X-RateLimit-Limit", fmt.Sprint(*response.Headers.XRateLimitLimit))
+	}
+	if response.Headers.XRateLimitRemaining != nil {
+		w.Header().Set("X-RateLimit-Remaining", fmt.Sprint(*response.Headers.XRateLimitRemaining))
+	}
+	if response.Headers.XRateLimitReset != nil {
+		w.Header().Set("X-RateLimit-Reset", fmt.Sprint(*response.Headers.XRateLimitReset))
+	}
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(429)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesSearch500JSONResponse struct{ InternalErrorJSONResponse }
+
+func (response MedicinesSearch500JSONResponse) VisitMedicinesSearchResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(500)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesDeleteRequestObject struct {
+	Id     openapi_types.UUID `json:"id"`
+	Params MedicinesDeleteParams
+}
+
+type MedicinesDeleteResponseObject interface {
+	VisitMedicinesDeleteResponse(w http.ResponseWriter) error
+}
+
+type MedicinesDelete204Response struct {
+}
+
+func (response MedicinesDelete204Response) VisitMedicinesDeleteResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type MedicinesDelete400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response MedicinesDelete400JSONResponse) VisitMedicinesDeleteResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesDelete401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response MedicinesDelete401JSONResponse) VisitMedicinesDeleteResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.WWWAuthenticate != nil {
+		w.Header().Set("WWW-Authenticate", fmt.Sprint(*response.Headers.WWWAuthenticate))
+	}
+	if response.Headers.XMFAChallenge != nil {
+		w.Header().Set("X-MFA-Challenge", fmt.Sprint(*response.Headers.XMFAChallenge))
+	}
+	if response.Headers.XPasswordChangeToken != nil {
+		w.Header().Set("X-Password-Change-Token", fmt.Sprint(*response.Headers.XPasswordChangeToken))
+	}
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesDelete403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response MedicinesDelete403JSONResponse) VisitMedicinesDeleteResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesDelete404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response MedicinesDelete404JSONResponse) VisitMedicinesDeleteResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesDelete409JSONResponse struct{ ConflictJSONResponse }
+
+func (response MedicinesDelete409JSONResponse) VisitMedicinesDeleteResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(409)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesDelete429JSONResponse struct{ TooManyRequestsJSONResponse }
+
+func (response MedicinesDelete429JSONResponse) VisitMedicinesDeleteResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.RetryAfter != nil {
+		w.Header().Set("Retry-After", fmt.Sprint(*response.Headers.RetryAfter))
+	}
+	if response.Headers.XRateLimitLimit != nil {
+		w.Header().Set("X-RateLimit-Limit", fmt.Sprint(*response.Headers.XRateLimitLimit))
+	}
+	if response.Headers.XRateLimitRemaining != nil {
+		w.Header().Set("X-RateLimit-Remaining", fmt.Sprint(*response.Headers.XRateLimitRemaining))
+	}
+	if response.Headers.XRateLimitReset != nil {
+		w.Header().Set("X-RateLimit-Reset", fmt.Sprint(*response.Headers.XRateLimitReset))
+	}
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(429)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesDelete500JSONResponse struct{ InternalErrorJSONResponse }
+
+func (response MedicinesDelete500JSONResponse) VisitMedicinesDeleteResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(500)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesGetRequestObject struct {
+	Id     openapi_types.UUID `json:"id"`
+	Params MedicinesGetParams
+}
+
+type MedicinesGetResponseObject interface {
+	VisitMedicinesGetResponse(w http.ResponseWriter) error
+}
+
+type MedicinesGet200JSONResponse struct {
+	Data    MedicineResponse                       `json:"data"`
+	Meta    Meta                                   `json:"meta"`
+	Success MedicinesGet200JSONResponseBodySuccess `json:"success"`
+}
+
+func (response MedicinesGet200JSONResponse) VisitMedicinesGetResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesGet400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response MedicinesGet400JSONResponse) VisitMedicinesGetResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesGet401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response MedicinesGet401JSONResponse) VisitMedicinesGetResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.WWWAuthenticate != nil {
+		w.Header().Set("WWW-Authenticate", fmt.Sprint(*response.Headers.WWWAuthenticate))
+	}
+	if response.Headers.XMFAChallenge != nil {
+		w.Header().Set("X-MFA-Challenge", fmt.Sprint(*response.Headers.XMFAChallenge))
+	}
+	if response.Headers.XPasswordChangeToken != nil {
+		w.Header().Set("X-Password-Change-Token", fmt.Sprint(*response.Headers.XPasswordChangeToken))
+	}
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesGet403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response MedicinesGet403JSONResponse) VisitMedicinesGetResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesGet404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response MedicinesGet404JSONResponse) VisitMedicinesGetResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesGet429JSONResponse struct{ TooManyRequestsJSONResponse }
+
+func (response MedicinesGet429JSONResponse) VisitMedicinesGetResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.RetryAfter != nil {
+		w.Header().Set("Retry-After", fmt.Sprint(*response.Headers.RetryAfter))
+	}
+	if response.Headers.XRateLimitLimit != nil {
+		w.Header().Set("X-RateLimit-Limit", fmt.Sprint(*response.Headers.XRateLimitLimit))
+	}
+	if response.Headers.XRateLimitRemaining != nil {
+		w.Header().Set("X-RateLimit-Remaining", fmt.Sprint(*response.Headers.XRateLimitRemaining))
+	}
+	if response.Headers.XRateLimitReset != nil {
+		w.Header().Set("X-RateLimit-Reset", fmt.Sprint(*response.Headers.XRateLimitReset))
+	}
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(429)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesGet500JSONResponse struct{ InternalErrorJSONResponse }
+
+func (response MedicinesGet500JSONResponse) VisitMedicinesGetResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(500)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesUpdateRequestObject struct {
+	Id     openapi_types.UUID `json:"id"`
+	Params MedicinesUpdateParams
+	Body   *MedicinesUpdateJSONRequestBody
+}
+
+type MedicinesUpdateResponseObject interface {
+	VisitMedicinesUpdateResponse(w http.ResponseWriter) error
+}
+
+type MedicinesUpdate200JSONResponse struct {
+	Data    MedicineResponse                          `json:"data"`
+	Meta    Meta                                      `json:"meta"`
+	Success MedicinesUpdate200JSONResponseBodySuccess `json:"success"`
+}
+
+func (response MedicinesUpdate200JSONResponse) VisitMedicinesUpdateResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesUpdate400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response MedicinesUpdate400JSONResponse) VisitMedicinesUpdateResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesUpdate401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response MedicinesUpdate401JSONResponse) VisitMedicinesUpdateResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.WWWAuthenticate != nil {
+		w.Header().Set("WWW-Authenticate", fmt.Sprint(*response.Headers.WWWAuthenticate))
+	}
+	if response.Headers.XMFAChallenge != nil {
+		w.Header().Set("X-MFA-Challenge", fmt.Sprint(*response.Headers.XMFAChallenge))
+	}
+	if response.Headers.XPasswordChangeToken != nil {
+		w.Header().Set("X-Password-Change-Token", fmt.Sprint(*response.Headers.XPasswordChangeToken))
+	}
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesUpdate403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response MedicinesUpdate403JSONResponse) VisitMedicinesUpdateResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesUpdate404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response MedicinesUpdate404JSONResponse) VisitMedicinesUpdateResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesUpdate409JSONResponse struct{ ConflictJSONResponse }
+
+func (response MedicinesUpdate409JSONResponse) VisitMedicinesUpdateResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(409)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesUpdate429JSONResponse struct{ TooManyRequestsJSONResponse }
+
+func (response MedicinesUpdate429JSONResponse) VisitMedicinesUpdateResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.RetryAfter != nil {
+		w.Header().Set("Retry-After", fmt.Sprint(*response.Headers.RetryAfter))
+	}
+	if response.Headers.XRateLimitLimit != nil {
+		w.Header().Set("X-RateLimit-Limit", fmt.Sprint(*response.Headers.XRateLimitLimit))
+	}
+	if response.Headers.XRateLimitRemaining != nil {
+		w.Header().Set("X-RateLimit-Remaining", fmt.Sprint(*response.Headers.XRateLimitRemaining))
+	}
+	if response.Headers.XRateLimitReset != nil {
+		w.Header().Set("X-RateLimit-Reset", fmt.Sprint(*response.Headers.XRateLimitReset))
+	}
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(429)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesUpdate500JSONResponse struct{ InternalErrorJSONResponse }
+
+func (response MedicinesUpdate500JSONResponse) VisitMedicinesUpdateResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(500)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesListBarcodesRequestObject struct {
+	Id     openapi_types.UUID `json:"id"`
+	Params MedicinesListBarcodesParams
+}
+
+type MedicinesListBarcodesResponseObject interface {
+	VisitMedicinesListBarcodesResponse(w http.ResponseWriter) error
+}
+
+type MedicinesListBarcodes200JSONResponse struct {
+	Data       []MedicineBarcodeResponse                       `json:"data"`
+	Meta       Meta                                            `json:"meta"`
+	Pagination PaginationMeta                                  `json:"pagination"`
+	Success    MedicinesListBarcodes200JSONResponseBodySuccess `json:"success"`
+}
+
+func (response MedicinesListBarcodes200JSONResponse) VisitMedicinesListBarcodesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesListBarcodes400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response MedicinesListBarcodes400JSONResponse) VisitMedicinesListBarcodesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesListBarcodes401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response MedicinesListBarcodes401JSONResponse) VisitMedicinesListBarcodesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.WWWAuthenticate != nil {
+		w.Header().Set("WWW-Authenticate", fmt.Sprint(*response.Headers.WWWAuthenticate))
+	}
+	if response.Headers.XMFAChallenge != nil {
+		w.Header().Set("X-MFA-Challenge", fmt.Sprint(*response.Headers.XMFAChallenge))
+	}
+	if response.Headers.XPasswordChangeToken != nil {
+		w.Header().Set("X-Password-Change-Token", fmt.Sprint(*response.Headers.XPasswordChangeToken))
+	}
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesListBarcodes403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response MedicinesListBarcodes403JSONResponse) VisitMedicinesListBarcodesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesListBarcodes404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response MedicinesListBarcodes404JSONResponse) VisitMedicinesListBarcodesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesListBarcodes429JSONResponse struct{ TooManyRequestsJSONResponse }
+
+func (response MedicinesListBarcodes429JSONResponse) VisitMedicinesListBarcodesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.RetryAfter != nil {
+		w.Header().Set("Retry-After", fmt.Sprint(*response.Headers.RetryAfter))
+	}
+	if response.Headers.XRateLimitLimit != nil {
+		w.Header().Set("X-RateLimit-Limit", fmt.Sprint(*response.Headers.XRateLimitLimit))
+	}
+	if response.Headers.XRateLimitRemaining != nil {
+		w.Header().Set("X-RateLimit-Remaining", fmt.Sprint(*response.Headers.XRateLimitRemaining))
+	}
+	if response.Headers.XRateLimitReset != nil {
+		w.Header().Set("X-RateLimit-Reset", fmt.Sprint(*response.Headers.XRateLimitReset))
+	}
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(429)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesListBarcodes500JSONResponse struct{ InternalErrorJSONResponse }
+
+func (response MedicinesListBarcodes500JSONResponse) VisitMedicinesListBarcodesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(500)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesCreateBarcodeRequestObject struct {
+	Id     openapi_types.UUID `json:"id"`
+	Params MedicinesCreateBarcodeParams
+	Body   *MedicinesCreateBarcodeJSONRequestBody
+}
+
+type MedicinesCreateBarcodeResponseObject interface {
+	VisitMedicinesCreateBarcodeResponse(w http.ResponseWriter) error
+}
+
+type MedicinesCreateBarcode201JSONResponse struct {
+	Data    MedicineBarcodeResponse                          `json:"data"`
+	Meta    Meta                                             `json:"meta"`
+	Success MedicinesCreateBarcode201JSONResponseBodySuccess `json:"success"`
+}
+
+func (response MedicinesCreateBarcode201JSONResponse) VisitMedicinesCreateBarcodeResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesCreateBarcode400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response MedicinesCreateBarcode400JSONResponse) VisitMedicinesCreateBarcodeResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesCreateBarcode401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response MedicinesCreateBarcode401JSONResponse) VisitMedicinesCreateBarcodeResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.WWWAuthenticate != nil {
+		w.Header().Set("WWW-Authenticate", fmt.Sprint(*response.Headers.WWWAuthenticate))
+	}
+	if response.Headers.XMFAChallenge != nil {
+		w.Header().Set("X-MFA-Challenge", fmt.Sprint(*response.Headers.XMFAChallenge))
+	}
+	if response.Headers.XPasswordChangeToken != nil {
+		w.Header().Set("X-Password-Change-Token", fmt.Sprint(*response.Headers.XPasswordChangeToken))
+	}
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesCreateBarcode403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response MedicinesCreateBarcode403JSONResponse) VisitMedicinesCreateBarcodeResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesCreateBarcode404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response MedicinesCreateBarcode404JSONResponse) VisitMedicinesCreateBarcodeResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesCreateBarcode409JSONResponse struct{ ConflictJSONResponse }
+
+func (response MedicinesCreateBarcode409JSONResponse) VisitMedicinesCreateBarcodeResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(409)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesCreateBarcode429JSONResponse struct{ TooManyRequestsJSONResponse }
+
+func (response MedicinesCreateBarcode429JSONResponse) VisitMedicinesCreateBarcodeResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.RetryAfter != nil {
+		w.Header().Set("Retry-After", fmt.Sprint(*response.Headers.RetryAfter))
+	}
+	if response.Headers.XRateLimitLimit != nil {
+		w.Header().Set("X-RateLimit-Limit", fmt.Sprint(*response.Headers.XRateLimitLimit))
+	}
+	if response.Headers.XRateLimitRemaining != nil {
+		w.Header().Set("X-RateLimit-Remaining", fmt.Sprint(*response.Headers.XRateLimitRemaining))
+	}
+	if response.Headers.XRateLimitReset != nil {
+		w.Header().Set("X-RateLimit-Reset", fmt.Sprint(*response.Headers.XRateLimitReset))
+	}
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(429)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesCreateBarcode500JSONResponse struct{ InternalErrorJSONResponse }
+
+func (response MedicinesCreateBarcode500JSONResponse) VisitMedicinesCreateBarcodeResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(500)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesDeleteBarcodeRequestObject struct {
+	Id     openapi_types.UUID `json:"id"`
+	BcId   openapi_types.UUID `json:"bc_id"`
+	Params MedicinesDeleteBarcodeParams
+}
+
+type MedicinesDeleteBarcodeResponseObject interface {
+	VisitMedicinesDeleteBarcodeResponse(w http.ResponseWriter) error
+}
+
+type MedicinesDeleteBarcode204Response struct {
+}
+
+func (response MedicinesDeleteBarcode204Response) VisitMedicinesDeleteBarcodeResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type MedicinesDeleteBarcode400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response MedicinesDeleteBarcode400JSONResponse) VisitMedicinesDeleteBarcodeResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesDeleteBarcode401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response MedicinesDeleteBarcode401JSONResponse) VisitMedicinesDeleteBarcodeResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.WWWAuthenticate != nil {
+		w.Header().Set("WWW-Authenticate", fmt.Sprint(*response.Headers.WWWAuthenticate))
+	}
+	if response.Headers.XMFAChallenge != nil {
+		w.Header().Set("X-MFA-Challenge", fmt.Sprint(*response.Headers.XMFAChallenge))
+	}
+	if response.Headers.XPasswordChangeToken != nil {
+		w.Header().Set("X-Password-Change-Token", fmt.Sprint(*response.Headers.XPasswordChangeToken))
+	}
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesDeleteBarcode403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response MedicinesDeleteBarcode403JSONResponse) VisitMedicinesDeleteBarcodeResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesDeleteBarcode404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response MedicinesDeleteBarcode404JSONResponse) VisitMedicinesDeleteBarcodeResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesDeleteBarcode429JSONResponse struct{ TooManyRequestsJSONResponse }
+
+func (response MedicinesDeleteBarcode429JSONResponse) VisitMedicinesDeleteBarcodeResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.RetryAfter != nil {
+		w.Header().Set("Retry-After", fmt.Sprint(*response.Headers.RetryAfter))
+	}
+	if response.Headers.XRateLimitLimit != nil {
+		w.Header().Set("X-RateLimit-Limit", fmt.Sprint(*response.Headers.XRateLimitLimit))
+	}
+	if response.Headers.XRateLimitRemaining != nil {
+		w.Header().Set("X-RateLimit-Remaining", fmt.Sprint(*response.Headers.XRateLimitRemaining))
+	}
+	if response.Headers.XRateLimitReset != nil {
+		w.Header().Set("X-RateLimit-Reset", fmt.Sprint(*response.Headers.XRateLimitReset))
+	}
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(429)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesDeleteBarcode500JSONResponse struct{ InternalErrorJSONResponse }
+
+func (response MedicinesDeleteBarcode500JSONResponse) VisitMedicinesDeleteBarcodeResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(500)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesPriceHistoryRequestObject struct {
+	Id     openapi_types.UUID `json:"id"`
+	Params MedicinesPriceHistoryParams
+}
+
+type MedicinesPriceHistoryResponseObject interface {
+	VisitMedicinesPriceHistoryResponse(w http.ResponseWriter) error
+}
+
+type MedicinesPriceHistory400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response MedicinesPriceHistory400JSONResponse) VisitMedicinesPriceHistoryResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesPriceHistory401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response MedicinesPriceHistory401JSONResponse) VisitMedicinesPriceHistoryResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.WWWAuthenticate != nil {
+		w.Header().Set("WWW-Authenticate", fmt.Sprint(*response.Headers.WWWAuthenticate))
+	}
+	if response.Headers.XMFAChallenge != nil {
+		w.Header().Set("X-MFA-Challenge", fmt.Sprint(*response.Headers.XMFAChallenge))
+	}
+	if response.Headers.XPasswordChangeToken != nil {
+		w.Header().Set("X-Password-Change-Token", fmt.Sprint(*response.Headers.XPasswordChangeToken))
+	}
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesPriceHistory403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response MedicinesPriceHistory403JSONResponse) VisitMedicinesPriceHistoryResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesPriceHistory404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response MedicinesPriceHistory404JSONResponse) VisitMedicinesPriceHistoryResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesPriceHistory429JSONResponse struct{ TooManyRequestsJSONResponse }
+
+func (response MedicinesPriceHistory429JSONResponse) VisitMedicinesPriceHistoryResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.RetryAfter != nil {
+		w.Header().Set("Retry-After", fmt.Sprint(*response.Headers.RetryAfter))
+	}
+	if response.Headers.XRateLimitLimit != nil {
+		w.Header().Set("X-RateLimit-Limit", fmt.Sprint(*response.Headers.XRateLimitLimit))
+	}
+	if response.Headers.XRateLimitRemaining != nil {
+		w.Header().Set("X-RateLimit-Remaining", fmt.Sprint(*response.Headers.XRateLimitRemaining))
+	}
+	if response.Headers.XRateLimitReset != nil {
+		w.Header().Set("X-RateLimit-Reset", fmt.Sprint(*response.Headers.XRateLimitReset))
+	}
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(429)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesPriceHistory500JSONResponse struct{ InternalErrorJSONResponse }
+
+func (response MedicinesPriceHistory500JSONResponse) VisitMedicinesPriceHistoryResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(500)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesPriceHistory501JSONResponse ErrorEnvelope
+
+func (response MedicinesPriceHistory501JSONResponse) VisitMedicinesPriceHistoryResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(501)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesListVariantsRequestObject struct {
+	Id     openapi_types.UUID `json:"id"`
+	Params MedicinesListVariantsParams
+}
+
+type MedicinesListVariantsResponseObject interface {
+	VisitMedicinesListVariantsResponse(w http.ResponseWriter) error
+}
+
+type MedicinesListVariants200JSONResponse struct {
+	Data       []MedicineVariantResponse                       `json:"data"`
+	Meta       Meta                                            `json:"meta"`
+	Pagination PaginationMeta                                  `json:"pagination"`
+	Success    MedicinesListVariants200JSONResponseBodySuccess `json:"success"`
+}
+
+func (response MedicinesListVariants200JSONResponse) VisitMedicinesListVariantsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesListVariants400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response MedicinesListVariants400JSONResponse) VisitMedicinesListVariantsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesListVariants401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response MedicinesListVariants401JSONResponse) VisitMedicinesListVariantsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.WWWAuthenticate != nil {
+		w.Header().Set("WWW-Authenticate", fmt.Sprint(*response.Headers.WWWAuthenticate))
+	}
+	if response.Headers.XMFAChallenge != nil {
+		w.Header().Set("X-MFA-Challenge", fmt.Sprint(*response.Headers.XMFAChallenge))
+	}
+	if response.Headers.XPasswordChangeToken != nil {
+		w.Header().Set("X-Password-Change-Token", fmt.Sprint(*response.Headers.XPasswordChangeToken))
+	}
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesListVariants403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response MedicinesListVariants403JSONResponse) VisitMedicinesListVariantsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesListVariants404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response MedicinesListVariants404JSONResponse) VisitMedicinesListVariantsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesListVariants429JSONResponse struct{ TooManyRequestsJSONResponse }
+
+func (response MedicinesListVariants429JSONResponse) VisitMedicinesListVariantsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.RetryAfter != nil {
+		w.Header().Set("Retry-After", fmt.Sprint(*response.Headers.RetryAfter))
+	}
+	if response.Headers.XRateLimitLimit != nil {
+		w.Header().Set("X-RateLimit-Limit", fmt.Sprint(*response.Headers.XRateLimitLimit))
+	}
+	if response.Headers.XRateLimitRemaining != nil {
+		w.Header().Set("X-RateLimit-Remaining", fmt.Sprint(*response.Headers.XRateLimitRemaining))
+	}
+	if response.Headers.XRateLimitReset != nil {
+		w.Header().Set("X-RateLimit-Reset", fmt.Sprint(*response.Headers.XRateLimitReset))
+	}
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(429)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesListVariants500JSONResponse struct{ InternalErrorJSONResponse }
+
+func (response MedicinesListVariants500JSONResponse) VisitMedicinesListVariantsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(500)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesCreateVariantRequestObject struct {
+	Id     openapi_types.UUID `json:"id"`
+	Params MedicinesCreateVariantParams
+	Body   *MedicinesCreateVariantJSONRequestBody
+}
+
+type MedicinesCreateVariantResponseObject interface {
+	VisitMedicinesCreateVariantResponse(w http.ResponseWriter) error
+}
+
+type MedicinesCreateVariant201JSONResponse struct {
+	Data    MedicineVariantResponse                          `json:"data"`
+	Meta    Meta                                             `json:"meta"`
+	Success MedicinesCreateVariant201JSONResponseBodySuccess `json:"success"`
+}
+
+func (response MedicinesCreateVariant201JSONResponse) VisitMedicinesCreateVariantResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesCreateVariant400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response MedicinesCreateVariant400JSONResponse) VisitMedicinesCreateVariantResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesCreateVariant401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response MedicinesCreateVariant401JSONResponse) VisitMedicinesCreateVariantResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.WWWAuthenticate != nil {
+		w.Header().Set("WWW-Authenticate", fmt.Sprint(*response.Headers.WWWAuthenticate))
+	}
+	if response.Headers.XMFAChallenge != nil {
+		w.Header().Set("X-MFA-Challenge", fmt.Sprint(*response.Headers.XMFAChallenge))
+	}
+	if response.Headers.XPasswordChangeToken != nil {
+		w.Header().Set("X-Password-Change-Token", fmt.Sprint(*response.Headers.XPasswordChangeToken))
+	}
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesCreateVariant403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response MedicinesCreateVariant403JSONResponse) VisitMedicinesCreateVariantResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesCreateVariant404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response MedicinesCreateVariant404JSONResponse) VisitMedicinesCreateVariantResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesCreateVariant409JSONResponse struct{ ConflictJSONResponse }
+
+func (response MedicinesCreateVariant409JSONResponse) VisitMedicinesCreateVariantResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(409)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesCreateVariant429JSONResponse struct{ TooManyRequestsJSONResponse }
+
+func (response MedicinesCreateVariant429JSONResponse) VisitMedicinesCreateVariantResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.RetryAfter != nil {
+		w.Header().Set("Retry-After", fmt.Sprint(*response.Headers.RetryAfter))
+	}
+	if response.Headers.XRateLimitLimit != nil {
+		w.Header().Set("X-RateLimit-Limit", fmt.Sprint(*response.Headers.XRateLimitLimit))
+	}
+	if response.Headers.XRateLimitRemaining != nil {
+		w.Header().Set("X-RateLimit-Remaining", fmt.Sprint(*response.Headers.XRateLimitRemaining))
+	}
+	if response.Headers.XRateLimitReset != nil {
+		w.Header().Set("X-RateLimit-Reset", fmt.Sprint(*response.Headers.XRateLimitReset))
+	}
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(429)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesCreateVariant500JSONResponse struct{ InternalErrorJSONResponse }
+
+func (response MedicinesCreateVariant500JSONResponse) VisitMedicinesCreateVariantResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(500)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesDeleteVariantRequestObject struct {
+	Id        openapi_types.UUID `json:"id"`
+	VariantId openapi_types.UUID `json:"variant_id"`
+	Params    MedicinesDeleteVariantParams
+}
+
+type MedicinesDeleteVariantResponseObject interface {
+	VisitMedicinesDeleteVariantResponse(w http.ResponseWriter) error
+}
+
+type MedicinesDeleteVariant204Response struct {
+}
+
+func (response MedicinesDeleteVariant204Response) VisitMedicinesDeleteVariantResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type MedicinesDeleteVariant400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response MedicinesDeleteVariant400JSONResponse) VisitMedicinesDeleteVariantResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesDeleteVariant401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response MedicinesDeleteVariant401JSONResponse) VisitMedicinesDeleteVariantResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.WWWAuthenticate != nil {
+		w.Header().Set("WWW-Authenticate", fmt.Sprint(*response.Headers.WWWAuthenticate))
+	}
+	if response.Headers.XMFAChallenge != nil {
+		w.Header().Set("X-MFA-Challenge", fmt.Sprint(*response.Headers.XMFAChallenge))
+	}
+	if response.Headers.XPasswordChangeToken != nil {
+		w.Header().Set("X-Password-Change-Token", fmt.Sprint(*response.Headers.XPasswordChangeToken))
+	}
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesDeleteVariant403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response MedicinesDeleteVariant403JSONResponse) VisitMedicinesDeleteVariantResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesDeleteVariant404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response MedicinesDeleteVariant404JSONResponse) VisitMedicinesDeleteVariantResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesDeleteVariant429JSONResponse struct{ TooManyRequestsJSONResponse }
+
+func (response MedicinesDeleteVariant429JSONResponse) VisitMedicinesDeleteVariantResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.RetryAfter != nil {
+		w.Header().Set("Retry-After", fmt.Sprint(*response.Headers.RetryAfter))
+	}
+	if response.Headers.XRateLimitLimit != nil {
+		w.Header().Set("X-RateLimit-Limit", fmt.Sprint(*response.Headers.XRateLimitLimit))
+	}
+	if response.Headers.XRateLimitRemaining != nil {
+		w.Header().Set("X-RateLimit-Remaining", fmt.Sprint(*response.Headers.XRateLimitRemaining))
+	}
+	if response.Headers.XRateLimitReset != nil {
+		w.Header().Set("X-RateLimit-Reset", fmt.Sprint(*response.Headers.XRateLimitReset))
+	}
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(429)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesDeleteVariant500JSONResponse struct{ InternalErrorJSONResponse }
+
+func (response MedicinesDeleteVariant500JSONResponse) VisitMedicinesDeleteVariantResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(500)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesUpdateVariantRequestObject struct {
+	Id        openapi_types.UUID `json:"id"`
+	VariantId openapi_types.UUID `json:"variant_id"`
+	Params    MedicinesUpdateVariantParams
+	Body      *MedicinesUpdateVariantJSONRequestBody
+}
+
+type MedicinesUpdateVariantResponseObject interface {
+	VisitMedicinesUpdateVariantResponse(w http.ResponseWriter) error
+}
+
+type MedicinesUpdateVariant200JSONResponse struct {
+	Data    MedicineVariantResponse                          `json:"data"`
+	Meta    Meta                                             `json:"meta"`
+	Success MedicinesUpdateVariant200JSONResponseBodySuccess `json:"success"`
+}
+
+func (response MedicinesUpdateVariant200JSONResponse) VisitMedicinesUpdateVariantResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesUpdateVariant400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response MedicinesUpdateVariant400JSONResponse) VisitMedicinesUpdateVariantResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesUpdateVariant401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response MedicinesUpdateVariant401JSONResponse) VisitMedicinesUpdateVariantResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.WWWAuthenticate != nil {
+		w.Header().Set("WWW-Authenticate", fmt.Sprint(*response.Headers.WWWAuthenticate))
+	}
+	if response.Headers.XMFAChallenge != nil {
+		w.Header().Set("X-MFA-Challenge", fmt.Sprint(*response.Headers.XMFAChallenge))
+	}
+	if response.Headers.XPasswordChangeToken != nil {
+		w.Header().Set("X-Password-Change-Token", fmt.Sprint(*response.Headers.XPasswordChangeToken))
+	}
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesUpdateVariant403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response MedicinesUpdateVariant403JSONResponse) VisitMedicinesUpdateVariantResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesUpdateVariant404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response MedicinesUpdateVariant404JSONResponse) VisitMedicinesUpdateVariantResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesUpdateVariant409JSONResponse struct{ ConflictJSONResponse }
+
+func (response MedicinesUpdateVariant409JSONResponse) VisitMedicinesUpdateVariantResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(409)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesUpdateVariant429JSONResponse struct{ TooManyRequestsJSONResponse }
+
+func (response MedicinesUpdateVariant429JSONResponse) VisitMedicinesUpdateVariantResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.RetryAfter != nil {
+		w.Header().Set("Retry-After", fmt.Sprint(*response.Headers.RetryAfter))
+	}
+	if response.Headers.XRateLimitLimit != nil {
+		w.Header().Set("X-RateLimit-Limit", fmt.Sprint(*response.Headers.XRateLimitLimit))
+	}
+	if response.Headers.XRateLimitRemaining != nil {
+		w.Header().Set("X-RateLimit-Remaining", fmt.Sprint(*response.Headers.XRateLimitRemaining))
+	}
+	if response.Headers.XRateLimitReset != nil {
+		w.Header().Set("X-RateLimit-Reset", fmt.Sprint(*response.Headers.XRateLimitReset))
+	}
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(429)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MedicinesUpdateVariant500JSONResponse struct{ InternalErrorJSONResponse }
+
+func (response MedicinesUpdateVariant500JSONResponse) VisitMedicinesUpdateVariantResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(500)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type OrganizationsCurrentRequestObject struct {
 	Params OrganizationsCurrentParams
 }
@@ -29943,6 +34103,51 @@ type StrictServerInterface interface {
 	// MasterdataUnitTypesUpdate Update a unit type
 	// (PATCH /master/unit-types/{id})
 	MasterdataUnitTypesUpdate(ctx context.Context, request MasterdataUnitTypesUpdateRequestObject) (MasterdataUnitTypesUpdateResponseObject, error)
+	// MedicinesList List medicines
+	// (GET /medicines)
+	MedicinesList(ctx context.Context, request MedicinesListRequestObject) (MedicinesListResponseObject, error)
+	// MedicinesCreate Create a medicine
+	// (POST /medicines)
+	MedicinesCreate(ctx context.Context, request MedicinesCreateRequestObject) (MedicinesCreateResponseObject, error)
+	// MedicinesLookup Exact lookup by barcode or SKU
+	// (POST /medicines/lookup)
+	MedicinesLookup(ctx context.Context, request MedicinesLookupRequestObject) (MedicinesLookupResponseObject, error)
+	// MedicinesSearch Search medicines
+	// (GET /medicines/search)
+	MedicinesSearch(ctx context.Context, request MedicinesSearchRequestObject) (MedicinesSearchResponseObject, error)
+	// MedicinesDelete Archive a medicine
+	// (DELETE /medicines/{id})
+	MedicinesDelete(ctx context.Context, request MedicinesDeleteRequestObject) (MedicinesDeleteResponseObject, error)
+	// MedicinesGet Get a medicine
+	// (GET /medicines/{id})
+	MedicinesGet(ctx context.Context, request MedicinesGetRequestObject) (MedicinesGetResponseObject, error)
+	// MedicinesUpdate Update a medicine
+	// (PATCH /medicines/{id})
+	MedicinesUpdate(ctx context.Context, request MedicinesUpdateRequestObject) (MedicinesUpdateResponseObject, error)
+	// MedicinesListBarcodes List the barcodes of a medicine
+	// (GET /medicines/{id}/barcodes)
+	MedicinesListBarcodes(ctx context.Context, request MedicinesListBarcodesRequestObject) (MedicinesListBarcodesResponseObject, error)
+	// MedicinesCreateBarcode Add a barcode
+	// (POST /medicines/{id}/barcodes)
+	MedicinesCreateBarcode(ctx context.Context, request MedicinesCreateBarcodeRequestObject) (MedicinesCreateBarcodeResponseObject, error)
+	// MedicinesDeleteBarcode Deactivate a barcode assignment
+	// (DELETE /medicines/{id}/barcodes/{bc_id})
+	MedicinesDeleteBarcode(ctx context.Context, request MedicinesDeleteBarcodeRequestObject) (MedicinesDeleteBarcodeResponseObject, error)
+	// MedicinesPriceHistory Price history (pricing adapter — blocked)
+	// (GET /medicines/{id}/price-history)
+	MedicinesPriceHistory(ctx context.Context, request MedicinesPriceHistoryRequestObject) (MedicinesPriceHistoryResponseObject, error)
+	// MedicinesListVariants List the variants of a medicine
+	// (GET /medicines/{id}/variants)
+	MedicinesListVariants(ctx context.Context, request MedicinesListVariantsRequestObject) (MedicinesListVariantsResponseObject, error)
+	// MedicinesCreateVariant Add a package variant
+	// (POST /medicines/{id}/variants)
+	MedicinesCreateVariant(ctx context.Context, request MedicinesCreateVariantRequestObject) (MedicinesCreateVariantResponseObject, error)
+	// MedicinesDeleteVariant Archive a package variant
+	// (DELETE /medicines/{id}/variants/{variant_id})
+	MedicinesDeleteVariant(ctx context.Context, request MedicinesDeleteVariantRequestObject) (MedicinesDeleteVariantResponseObject, error)
+	// MedicinesUpdateVariant Update a package variant
+	// (PATCH /medicines/{id}/variants/{variant_id})
+	MedicinesUpdateVariant(ctx context.Context, request MedicinesUpdateVariantRequestObject) (MedicinesUpdateVariantResponseObject, error)
 	// OrganizationsCurrent Get the caller's organization
 	// (GET /organizations/current)
 	OrganizationsCurrent(ctx context.Context, request OrganizationsCurrentRequestObject) (OrganizationsCurrentResponseObject, error)
@@ -32781,6 +36986,452 @@ func (sh *strictHandler) MasterdataUnitTypesUpdate(ctx *gin.Context, id openapi_
 	}
 }
 
+// MedicinesList operation middleware
+func (sh *strictHandler) MedicinesList(ctx *gin.Context, params MedicinesListParams) {
+	var request MedicinesListRequestObject
+
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.MedicinesList(ctx, request.(MedicinesListRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "MedicinesList")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(MedicinesListResponseObject); ok {
+		if err := validResponse.VisitMedicinesListResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// MedicinesCreate operation middleware
+func (sh *strictHandler) MedicinesCreate(ctx *gin.Context, params MedicinesCreateParams) {
+	var request MedicinesCreateRequestObject
+
+	request.Params = params
+
+	var body MedicinesCreateJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(ctx, err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.MedicinesCreate(ctx, request.(MedicinesCreateRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "MedicinesCreate")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(MedicinesCreateResponseObject); ok {
+		if err := validResponse.VisitMedicinesCreateResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// MedicinesLookup operation middleware
+func (sh *strictHandler) MedicinesLookup(ctx *gin.Context, params MedicinesLookupParams) {
+	var request MedicinesLookupRequestObject
+
+	request.Params = params
+
+	var body MedicinesLookupJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(ctx, err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.MedicinesLookup(ctx, request.(MedicinesLookupRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "MedicinesLookup")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(MedicinesLookupResponseObject); ok {
+		if err := validResponse.VisitMedicinesLookupResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// MedicinesSearch operation middleware
+func (sh *strictHandler) MedicinesSearch(ctx *gin.Context, params MedicinesSearchParams) {
+	var request MedicinesSearchRequestObject
+
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.MedicinesSearch(ctx, request.(MedicinesSearchRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "MedicinesSearch")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(MedicinesSearchResponseObject); ok {
+		if err := validResponse.VisitMedicinesSearchResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// MedicinesDelete operation middleware
+func (sh *strictHandler) MedicinesDelete(ctx *gin.Context, id openapi_types.UUID, params MedicinesDeleteParams) {
+	var request MedicinesDeleteRequestObject
+
+	request.Id = id
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.MedicinesDelete(ctx, request.(MedicinesDeleteRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "MedicinesDelete")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(MedicinesDeleteResponseObject); ok {
+		if err := validResponse.VisitMedicinesDeleteResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// MedicinesGet operation middleware
+func (sh *strictHandler) MedicinesGet(ctx *gin.Context, id openapi_types.UUID, params MedicinesGetParams) {
+	var request MedicinesGetRequestObject
+
+	request.Id = id
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.MedicinesGet(ctx, request.(MedicinesGetRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "MedicinesGet")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(MedicinesGetResponseObject); ok {
+		if err := validResponse.VisitMedicinesGetResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// MedicinesUpdate operation middleware
+func (sh *strictHandler) MedicinesUpdate(ctx *gin.Context, id openapi_types.UUID, params MedicinesUpdateParams) {
+	var request MedicinesUpdateRequestObject
+
+	request.Id = id
+	request.Params = params
+
+	var body MedicinesUpdateJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(ctx, err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.MedicinesUpdate(ctx, request.(MedicinesUpdateRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "MedicinesUpdate")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(MedicinesUpdateResponseObject); ok {
+		if err := validResponse.VisitMedicinesUpdateResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// MedicinesListBarcodes operation middleware
+func (sh *strictHandler) MedicinesListBarcodes(ctx *gin.Context, id openapi_types.UUID, params MedicinesListBarcodesParams) {
+	var request MedicinesListBarcodesRequestObject
+
+	request.Id = id
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.MedicinesListBarcodes(ctx, request.(MedicinesListBarcodesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "MedicinesListBarcodes")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(MedicinesListBarcodesResponseObject); ok {
+		if err := validResponse.VisitMedicinesListBarcodesResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// MedicinesCreateBarcode operation middleware
+func (sh *strictHandler) MedicinesCreateBarcode(ctx *gin.Context, id openapi_types.UUID, params MedicinesCreateBarcodeParams) {
+	var request MedicinesCreateBarcodeRequestObject
+
+	request.Id = id
+	request.Params = params
+
+	var body MedicinesCreateBarcodeJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(ctx, err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.MedicinesCreateBarcode(ctx, request.(MedicinesCreateBarcodeRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "MedicinesCreateBarcode")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(MedicinesCreateBarcodeResponseObject); ok {
+		if err := validResponse.VisitMedicinesCreateBarcodeResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// MedicinesDeleteBarcode operation middleware
+func (sh *strictHandler) MedicinesDeleteBarcode(ctx *gin.Context, id openapi_types.UUID, bcId openapi_types.UUID, params MedicinesDeleteBarcodeParams) {
+	var request MedicinesDeleteBarcodeRequestObject
+
+	request.Id = id
+	request.BcId = bcId
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.MedicinesDeleteBarcode(ctx, request.(MedicinesDeleteBarcodeRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "MedicinesDeleteBarcode")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(MedicinesDeleteBarcodeResponseObject); ok {
+		if err := validResponse.VisitMedicinesDeleteBarcodeResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// MedicinesPriceHistory operation middleware
+func (sh *strictHandler) MedicinesPriceHistory(ctx *gin.Context, id openapi_types.UUID, params MedicinesPriceHistoryParams) {
+	var request MedicinesPriceHistoryRequestObject
+
+	request.Id = id
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.MedicinesPriceHistory(ctx, request.(MedicinesPriceHistoryRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "MedicinesPriceHistory")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(MedicinesPriceHistoryResponseObject); ok {
+		if err := validResponse.VisitMedicinesPriceHistoryResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// MedicinesListVariants operation middleware
+func (sh *strictHandler) MedicinesListVariants(ctx *gin.Context, id openapi_types.UUID, params MedicinesListVariantsParams) {
+	var request MedicinesListVariantsRequestObject
+
+	request.Id = id
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.MedicinesListVariants(ctx, request.(MedicinesListVariantsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "MedicinesListVariants")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(MedicinesListVariantsResponseObject); ok {
+		if err := validResponse.VisitMedicinesListVariantsResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// MedicinesCreateVariant operation middleware
+func (sh *strictHandler) MedicinesCreateVariant(ctx *gin.Context, id openapi_types.UUID, params MedicinesCreateVariantParams) {
+	var request MedicinesCreateVariantRequestObject
+
+	request.Id = id
+	request.Params = params
+
+	var body MedicinesCreateVariantJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(ctx, err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.MedicinesCreateVariant(ctx, request.(MedicinesCreateVariantRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "MedicinesCreateVariant")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(MedicinesCreateVariantResponseObject); ok {
+		if err := validResponse.VisitMedicinesCreateVariantResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// MedicinesDeleteVariant operation middleware
+func (sh *strictHandler) MedicinesDeleteVariant(ctx *gin.Context, id openapi_types.UUID, variantId openapi_types.UUID, params MedicinesDeleteVariantParams) {
+	var request MedicinesDeleteVariantRequestObject
+
+	request.Id = id
+	request.VariantId = variantId
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.MedicinesDeleteVariant(ctx, request.(MedicinesDeleteVariantRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "MedicinesDeleteVariant")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(MedicinesDeleteVariantResponseObject); ok {
+		if err := validResponse.VisitMedicinesDeleteVariantResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// MedicinesUpdateVariant operation middleware
+func (sh *strictHandler) MedicinesUpdateVariant(ctx *gin.Context, id openapi_types.UUID, variantId openapi_types.UUID, params MedicinesUpdateVariantParams) {
+	var request MedicinesUpdateVariantRequestObject
+
+	request.Id = id
+	request.VariantId = variantId
+	request.Params = params
+
+	var body MedicinesUpdateVariantJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(ctx, err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.MedicinesUpdateVariant(ctx, request.(MedicinesUpdateVariantRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "MedicinesUpdateVariant")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(MedicinesUpdateVariantResponseObject); ok {
+		if err := validResponse.VisitMedicinesUpdateVariantResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // OrganizationsCurrent operation middleware
 func (sh *strictHandler) OrganizationsCurrent(ctx *gin.Context, params OrganizationsCurrentParams) {
 	var request OrganizationsCurrentRequestObject
@@ -33870,417 +38521,504 @@ func (sh *strictHandler) WarehousesUpdate(ctx *gin.Context, id openapi_types.UUI
 // const string: with thousands of chunks the chained `+` fold is several
 // times slower for the Go compiler than parsing a slice literal.
 var swaggerSpec = []string{
-	"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",
+	"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",
+	"Sy7s0d9//Pv/BwAA//8=",
 }
 
 // decodeSpec returns the embedded OpenAPI spec as raw JSON bytes,
