@@ -1,0 +1,838 @@
+# ---------------------------------------------------------------------------
+# Central medicine catalogue. Mirrors internal/modules/medicine/routes.go.
+#
+# The catalogue is organization-central: one product identity is shared by
+# every branch of the organization, and the tenant comes from the
+# authenticated principal (docs/adr/MEDICINE_CONTRACT.md §1, §3).
+# ---------------------------------------------------------------------------
+
+/medicines:
+  post:
+    operationId: medicines.create
+    summary: Create a medicine
+    security:
+      - bearerAuth: []
+    description: |
+      Creates a catalogue entry. The brand is required and carries the tenant
+      scope: it must be an active brand of the caller's organization. Every
+      dictionary reference must exist and be active. The SKU is unique among
+      non-deleted rows and is write-once. Requires medicines:create.
+    tags: [medicines]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/IdempotencyKey'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/medicine.yaml#/CreateMedicineRequest'
+          examples:
+            basic:
+              value:
+                sku: NAP-500-10
+                name: Napa 500 mg
+                display_name: Napa
+                brand_id: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                category_id: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+                strength: 500 mg
+                pack_size: 10x10
+                units_per_pack: 100
+                requires_prescription: false
+                is_active: true
+    responses:
+      '201':
+        description: Medicine created.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [success, data, meta]
+              properties:
+                success:
+                  type: boolean
+                  const: true
+                data:
+                  $ref: '../components/schemas/medicine.yaml#/MedicineResponse'
+                meta:
+                  $ref: '../components/schemas/common.yaml#/Meta'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+      '409':
+        $ref: '../components/responses/error.yaml#/Conflict'
+      '429':
+        $ref: '../components/responses/error.yaml#/TooManyRequests'
+      '500':
+        $ref: '../components/responses/error.yaml#/InternalError'
+  get:
+    operationId: medicines.list
+    summary: List medicines
+    security:
+      - bearerAuth: []
+    description: |
+      Returns a tenant-scoped, paginated catalogue list. Filters are combined
+      conjunctively. A request without a cursor returns the offset page
+      together with the total count; a request with a cursor returns the next
+      keyset page. The sort is restricted to the allow-listed fields
+      (`name`, `display_name`, `sku`, `created_at`, `updated_at`) with an id
+      tie-breaker. Requires medicines:view.
+    tags: [medicines]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/Page'
+      - $ref: '../components/parameters/pagination.yaml#/Limit'
+      - $ref: '../components/parameters/pagination.yaml#/Sort'
+      - $ref: '../components/parameters/pagination.yaml#/Cursor'
+      - name: category_id
+        in: query
+        description: Filter by product category.
+        schema:
+          type: string
+          format: uuid
+      - name: brand_id
+        in: query
+        description: Filter by brand.
+        schema:
+          type: string
+          format: uuid
+      - name: generic_id
+        in: query
+        description: Filter by generic (ingredient) dictionary entry.
+        schema:
+          type: string
+          format: uuid
+      - name: is_active
+        in: query
+        description: Filter by catalogue state.
+        schema:
+          type: boolean
+      - name: requires_prescription
+        in: query
+        description: Filter by the prescription flag.
+        schema:
+          type: boolean
+      - name: is_controlled
+        in: query
+        description: Filter by the controlled flag.
+        schema:
+          type: boolean
+      - $ref: '../components/parameters/pagination.yaml#/Q'
+    responses:
+      '200':
+        description: Paginated tenant-scoped catalogue list.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [success, data, pagination, meta]
+              properties:
+                success:
+                  type: boolean
+                  const: true
+                data:
+                  type: array
+                  items:
+                    $ref: '../components/schemas/medicine.yaml#/MedicineResponse'
+                pagination:
+                  $ref: '../components/schemas/common.yaml#/PaginationMeta'
+                meta:
+                  $ref: '../components/schemas/common.yaml#/Meta'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '429':
+        $ref: '../components/responses/error.yaml#/TooManyRequests'
+      '500':
+        $ref: '../components/responses/error.yaml#/InternalError'
+
+/medicines/search:
+  get:
+    operationId: medicines.search
+    summary: Search medicines
+    security:
+      - bearerAuth: []
+    description: |
+      Bounded text search over the catalogue name, display name, SKU and
+      barcode. This is not an exact lookup and it is not a clinical
+      substitution aid: it returns candidates for a human to choose from, and
+      the caller still has to resolve the exact variant before a sale. The
+      result set is keyset paginated. Requires medicines:view.
+    tags: [medicines]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/Limit'
+      - $ref: '../components/parameters/pagination.yaml#/Sort'
+      - $ref: '../components/parameters/pagination.yaml#/Cursor'
+      - name: q
+        in: query
+        required: true
+        description: Search term (maximum 200 characters).
+        schema:
+          type: string
+          minLength: 1
+          maxLength: 200
+    responses:
+      '200':
+        description: Matching catalogue entries.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [success, data, pagination, meta]
+              properties:
+                success:
+                  type: boolean
+                  const: true
+                data:
+                  type: array
+                  items:
+                    $ref: '../components/schemas/medicine.yaml#/MedicineResponse'
+                pagination:
+                  $ref: '../components/schemas/common.yaml#/PaginationMeta'
+                meta:
+                  $ref: '../components/schemas/common.yaml#/Meta'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '429':
+        $ref: '../components/responses/error.yaml#/TooManyRequests'
+      '500':
+        $ref: '../components/responses/error.yaml#/InternalError'
+
+/medicines/lookup:
+  post:
+    operationId: medicines.lookup
+    summary: Exact lookup by barcode or SKU
+    security:
+      - bearerAuth: []
+    description: |
+      Resolves exactly one barcode or SKU to a catalogue entry and, when the
+      identifier belongs to a variant, to that variant. Exactly one of
+      barcode or sku must be provided. A lookup that matches nothing is a
+      not-found; a lookup that matches more than one active variant is an
+      integrity error (409) and fails closed. The response carries no stock
+      and no price. Requires medicines:view.
+    tags: [medicines]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/medicine.yaml#/LookupMedicineRequest'
+          examples:
+            barcode:
+              value:
+                barcode: '8901234567890'
+            sku:
+              value:
+                sku: NAP-500-10
+    responses:
+      '200':
+        description: The resolved catalogue entry.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [success, data, meta]
+              properties:
+                success:
+                  type: boolean
+                  const: true
+                data:
+                  $ref: '../components/schemas/medicine.yaml#/LookupMedicineResponse'
+                meta:
+                  $ref: '../components/schemas/common.yaml#/Meta'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+      '409':
+        $ref: '../components/responses/error.yaml#/Conflict'
+      '429':
+        $ref: '../components/responses/error.yaml#/TooManyRequests'
+      '500':
+        $ref: '../components/responses/error.yaml#/InternalError'
+
+/medicines/{id}:
+  get:
+    operationId: medicines.get
+    summary: Get a medicine
+    security:
+      - bearerAuth: []
+    description: |
+      Returns the catalogue entry with the joined labels of its MasterData and
+      Brand references. A medicine of another organization is reported as not
+      found. Requires medicines:view.
+    tags: [medicines]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - name: id
+        in: path
+        required: true
+        description: Medicine UUID.
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: Catalogue entry with its reference labels.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [success, data, meta]
+              properties:
+                success:
+                  type: boolean
+                  const: true
+                data:
+                  $ref: '../components/schemas/medicine.yaml#/MedicineResponse'
+                meta:
+                  $ref: '../components/schemas/common.yaml#/Meta'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+      '429':
+        $ref: '../components/responses/error.yaml#/TooManyRequests'
+      '500':
+        $ref: '../components/responses/error.yaml#/InternalError'
+  patch:
+    operationId: medicines.update
+    summary: Update a medicine
+    security:
+      - bearerAuth: []
+    description: |
+      Applies a partial update of the allow-listed fields. sku, barcode and
+      brand_id are write-once and cannot be changed. A change to a regulatory
+      flag or to the import provenance requires a reason. Once the medicine is
+      referenced by stock, purchases or sales, the strength, the pack size, the
+      package conversion and the generic reference are protected: the change
+      is refused and a new identity has to be created instead. Requires
+      medicines:update.
+    tags: [medicines]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/IdempotencyKey'
+      - name: id
+        in: path
+        required: true
+        description: Medicine UUID.
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/medicine.yaml#/UpdateMedicineRequest'
+    responses:
+      '200':
+        description: Updated medicine.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [success, data, meta]
+              properties:
+                success:
+                  type: boolean
+                  const: true
+                data:
+                  $ref: '../components/schemas/medicine.yaml#/MedicineResponse'
+                meta:
+                  $ref: '../components/schemas/common.yaml#/Meta'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+      '409':
+        $ref: '../components/responses/error.yaml#/Conflict'
+      '429':
+        $ref: '../components/responses/error.yaml#/TooManyRequests'
+      '500':
+        $ref: '../components/responses/error.yaml#/InternalError'
+  delete:
+    operationId: medicines.delete
+    summary: Archive a medicine
+    security:
+      - bearerAuth: []
+    description: |
+      Archives a catalogue entry. The delete is a soft delete: history keeps
+      its references. A medicine that stock, purchases or sales reference is
+      not deleted at all — deactivate it instead (409). Requires
+      medicines:delete.
+    tags: [medicines]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/IdempotencyKey'
+      - name: id
+        in: path
+        required: true
+        description: Medicine UUID.
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '204':
+        description: Medicine archived.
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+      '409':
+        $ref: '../components/responses/error.yaml#/Conflict'
+      '429':
+        $ref: '../components/responses/error.yaml#/TooManyRequests'
+      '500':
+        $ref: '../components/responses/error.yaml#/InternalError'
+
+/medicines/{id}/variants:
+  get:
+    operationId: medicines.listVariants
+    summary: List the variants of a medicine
+    security:
+      - bearerAuth: []
+    description: |
+      Returns the package variants of the medicine. The page is keyset
+      paginated and the cursor is bound to the medicine and the tenant.
+      Requires medicines:view.
+    tags: [medicines]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/Limit'
+      - $ref: '../components/parameters/pagination.yaml#/Cursor'
+      - name: id
+        in: path
+        required: true
+        description: Medicine UUID.
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: Package variants.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [success, data, pagination, meta]
+              properties:
+                success:
+                  type: boolean
+                  const: true
+                data:
+                  type: array
+                  items:
+                    $ref: '../components/schemas/medicine.yaml#/MedicineVariantResponse'
+                pagination:
+                  $ref: '../components/schemas/common.yaml#/PaginationMeta'
+                meta:
+                  $ref: '../components/schemas/common.yaml#/Meta'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+      '429':
+        $ref: '../components/responses/error.yaml#/TooManyRequests'
+      '500':
+        $ref: '../components/responses/error.yaml#/InternalError'
+  post:
+    operationId: medicines.createVariant
+    summary: Add a package variant
+    security:
+      - bearerAuth: []
+    description: |
+      Adds a sellable/stockable package to the medicine. The SKU is unique
+      among non-deleted rows and is write-once. Requires medicines:update.
+    tags: [medicines]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/IdempotencyKey'
+      - name: id
+        in: path
+        required: true
+        description: Medicine UUID.
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/medicine.yaml#/CreateMedicineVariantRequest'
+    responses:
+      '201':
+        description: Variant created.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [success, data, meta]
+              properties:
+                success:
+                  type: boolean
+                  const: true
+                data:
+                  $ref: '../components/schemas/medicine.yaml#/MedicineVariantResponse'
+                meta:
+                  $ref: '../components/schemas/common.yaml#/Meta'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+      '409':
+        $ref: '../components/responses/error.yaml#/Conflict'
+      '429':
+        $ref: '../components/responses/error.yaml#/TooManyRequests'
+      '500':
+        $ref: '../components/responses/error.yaml#/InternalError'
+
+/medicines/{id}/variants/{variant_id}:
+  patch:
+    operationId: medicines.updateVariant
+    summary: Update a package variant
+    security:
+      - bearerAuth: []
+    description: |
+      Applies a partial update to the package label and the packaging fields.
+      sku and barcode are write-once. The conversion fields may only change
+      while the variant is unused; once a purchase, an inventory movement or a
+      sale references it, the change is refused (409) and a new variant has
+      to be created instead. Requires medicines:update.
+    tags: [medicines]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/IdempotencyKey'
+      - name: id
+        in: path
+        required: true
+        description: Medicine UUID.
+        schema:
+          type: string
+          format: uuid
+      - name: variant_id
+        in: path
+        required: true
+        description: Variant UUID.
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/medicine.yaml#/UpdateMedicineVariantRequest'
+    responses:
+      '200':
+        description: Updated variant.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [success, data, meta]
+              properties:
+                success:
+                  type: boolean
+                  const: true
+                data:
+                  $ref: '../components/schemas/medicine.yaml#/MedicineVariantResponse'
+                meta:
+                  $ref: '../components/schemas/common.yaml#/Meta'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+      '409':
+        $ref: '../components/responses/error.yaml#/Conflict'
+      '429':
+        $ref: '../components/responses/error.yaml#/TooManyRequests'
+      '500':
+        $ref: '../components/responses/error.yaml#/InternalError'
+  delete:
+    operationId: medicines.deleteVariant
+    summary: Archive a package variant
+    security:
+      - bearerAuth: []
+    description: |
+      Archives a package variant. An unused variant is soft-deleted; a variant
+      that operational records reference is deactivated instead, so its
+      identity stays resolvable and historical documents remain renderable.
+      Requires medicines:update.
+    tags: [medicines]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/IdempotencyKey'
+      - name: id
+        in: path
+        required: true
+        description: Medicine UUID.
+        schema:
+          type: string
+          format: uuid
+      - name: variant_id
+        in: path
+        required: true
+        description: Variant UUID.
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '204':
+        description: Variant archived or deactivated.
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+      '429':
+        $ref: '../components/responses/error.yaml#/TooManyRequests'
+      '500':
+        $ref: '../components/responses/error.yaml#/InternalError'
+
+/medicines/{id}/barcodes:
+  get:
+    operationId: medicines.listBarcodes
+    summary: List the barcodes of a medicine
+    security:
+      - bearerAuth: []
+    description: |
+      Returns the barcode assignments of the medicine. The page is keyset
+      paginated and the cursor is bound to the medicine and the tenant.
+      Requires medicines:view.
+    tags: [medicines]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/Limit'
+      - $ref: '../components/parameters/pagination.yaml#/Cursor'
+      - name: id
+        in: path
+        required: true
+        description: Medicine UUID.
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: Barcode assignments.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [success, data, pagination, meta]
+              properties:
+                success:
+                  type: boolean
+                  const: true
+                data:
+                  type: array
+                  items:
+                    $ref: '../components/schemas/medicine.yaml#/MedicineBarcodeResponse'
+                pagination:
+                  $ref: '../components/schemas/common.yaml#/PaginationMeta'
+                meta:
+                  $ref: '../components/schemas/common.yaml#/Meta'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+      '429':
+        $ref: '../components/responses/error.yaml#/TooManyRequests'
+      '500':
+        $ref: '../components/responses/error.yaml#/InternalError'
+  post:
+    operationId: medicines.createBarcode
+    summary: Add a barcode
+    security:
+      - bearerAuth: []
+    description: |
+      Binds a barcode to the medicine and, optionally, to one of its
+      variants. The variant has to be a variant of the same medicine, and the
+      code is unique among non-deleted rows: a duplicate is a conflict, never
+      a silent reassignment. Requires medicines:update.
+    tags: [medicines]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/IdempotencyKey'
+      - name: id
+        in: path
+        required: true
+        description: Medicine UUID.
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/medicine.yaml#/CreateMedicineBarcodeRequest'
+    responses:
+      '201':
+        description: Barcode created.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [success, data, meta]
+              properties:
+                success:
+                  type: boolean
+                  const: true
+                data:
+                  $ref: '../components/schemas/medicine.yaml#/MedicineBarcodeResponse'
+                meta:
+                  $ref: '../components/schemas/common.yaml#/Meta'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+      '409':
+        $ref: '../components/responses/error.yaml#/Conflict'
+      '429':
+        $ref: '../components/responses/error.yaml#/TooManyRequests'
+      '500':
+        $ref: '../components/responses/error.yaml#/InternalError'
+
+/medicines/{id}/barcodes/{bc_id}:
+  delete:
+    operationId: medicines.deleteBarcode
+    summary: Deactivate a barcode assignment
+    security:
+      - bearerAuth: []
+    description: |
+      Deactivates a barcode assignment. The row is kept, so the history of what
+      the code used to point at stays readable, and the code is never silently
+      transferred to another variant. Requires medicines:update.
+    tags: [medicines]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/IdempotencyKey'
+      - name: id
+        in: path
+        required: true
+        description: Medicine UUID.
+        schema:
+          type: string
+          format: uuid
+      - name: bc_id
+        in: path
+        required: true
+        description: Barcode UUID.
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '204':
+        description: Barcode assignment deactivated.
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+      '429':
+        $ref: '../components/responses/error.yaml#/TooManyRequests'
+      '500':
+        $ref: '../components/responses/error.yaml#/InternalError'
+
+/medicines/{id}/price-history:
+  get:
+    operationId: medicines.priceHistory
+    summary: Price history (pricing adapter — blocked)
+    security:
+      - bearerAuth: []
+    description: |
+      Blocked by design. Price history is owned by the pricing module, and this
+      endpoint is only a compatibility adapter towards an approved Pricing
+      interface. No such interface exists yet, so the route answers 501
+      NOT_IMPLEMENTED instead of serving the medicine_price_history table —
+      serving it here would create a second, competing source of price history.
+      Requires medicines:view.
+    tags: [medicines]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - name: id
+        in: path
+        required: true
+        description: Medicine UUID.
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '501':
+        description: Price history is owned by the pricing module.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/common.yaml#/ErrorEnvelope'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+      '429':
+        $ref: '../components/responses/error.yaml#/TooManyRequests'
+      '500':
+        $ref: '../components/responses/error.yaml#/InternalError'

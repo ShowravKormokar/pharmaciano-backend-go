@@ -1,0 +1,535 @@
+# ---------------------------------------------------------------------------
+# Central medicine catalogue — mirrors internal/modules/medicine/dto.go.
+#
+# The catalogue holds no price, no acquisition cost and no reorder policy:
+# those facts belong to pricing, purchase/inventory and inventory policy
+# (docs/adr/MEDICINE_CONTRACT.md §2, §17). A tenant is never accepted from a
+# request body either — it comes from the authenticated principal.
+# ---------------------------------------------------------------------------
+
+CreateMedicineRequest:
+  type: object
+  required: [sku, name, brand_id, category_id]
+  properties:
+    sku:
+      type: string
+      minLength: 1
+      maxLength: 60
+      description: |
+        Catalogue identifier of the product. Unique among non-deleted rows and
+        write-once: it is an exact lookup key, so changing it would
+        reinterpret historical stock, purchases and sales.
+    barcode:
+      type: [string, 'null']
+      maxLength: 60
+      description: |
+        Optional medicine-level barcode. The authoritative identifiers are the
+        variant barcodes below.
+    name:
+      type: string
+      minLength: 1
+      maxLength: 255
+    display_name:
+      type: [string, 'null']
+      maxLength: 255
+      description: Label used on receipts and pick lists.
+    description:
+      type: [string, 'null']
+      maxLength: 4000
+    generic_medicine_id:
+      type: [string, 'null']
+      format: uuid
+      description: Generic (ingredient) dictionary entry.
+    brand_id:
+      type: string
+      format: uuid
+      description: |
+        The brand of the product. It is required and it carries the tenant
+        scope: the catalogue row belongs to the organization that owns the
+        brand. Write-once.
+    category_id:
+      type: string
+      format: uuid
+      description: Product category. Required.
+    dosage_form_id:
+      type: [string, 'null']
+      format: uuid
+    route_id:
+      type: [string, 'null']
+      format: uuid
+    manufacturer_id:
+      type: [string, 'null']
+      format: uuid
+      description: |
+        Optional denormalized copy of the brand's manufacturer. A value that
+        contradicts the brand is rejected.
+    storage_condition_id:
+      type: [string, 'null']
+      format: uuid
+    strength:
+      type: [string, 'null']
+      maxLength: 60
+      description: Display text such as "500 mg".
+    pack_size:
+      type: [string, 'null']
+      maxLength: 60
+      description: Display text such as "10x10".
+    units_per_pack:
+      type: [integer, 'null']
+      minimum: 1
+      description: Exact quantity contained in one package.
+    units_per_strip:
+      type: [integer, 'null']
+      minimum: 1
+      description: Exact quantity contained in one strip.
+    package_type_id:
+      type: [string, 'null']
+      format: uuid
+    sales_unit_id:
+      type: [string, 'null']
+      format: uuid
+    requires_prescription:
+      type: [boolean, 'null']
+      description: |
+        Flat, single-jurisdiction catalog flag. It documents that the product
+        may only be dispensed against a prescription; it does not replace the
+        prescription workflow.
+    is_controlled:
+      type: [boolean, 'null']
+      description: Flat controlled-product flag.
+    is_refrigerated:
+      type: [boolean, 'null']
+      description: Flat cold-chain flag; prefer storage_condition_id.
+    is_imported:
+      type: [boolean, 'null']
+    country_of_origin:
+      type: [string, 'null']
+      maxLength: 100
+    importer_name:
+      type: [string, 'null']
+      maxLength: 200
+      description: Importer of record. Not a supplier reference.
+    import_license_no:
+      type: [string, 'null']
+      maxLength: 80
+    tax_rate_id:
+      type: [string, 'null']
+      format: uuid
+      description: Dictionary reference only; the tax rule belongs to the tax/sales contract.
+    hsn_code:
+      type: [string, 'null']
+      maxLength: 40
+    shelf_life_months:
+      type: [integer, 'null']
+      minimum: 1
+      description: Catalogue default shelf life. Not a batch expiry.
+    image_url:
+      type: [string, 'null']
+      maxLength: 500
+      description: http(s) media reference.
+    is_active:
+      type: [boolean, 'null']
+      default: true
+    initial_variants:
+      type: array
+      description: |
+        Package variants that are created together with the medicine, in the
+        same transaction: either the medicine and all of its variants exist, or
+        none of them does. Optional — a variant can also be added later through
+        POST /api/v1/medicines/{id}/variants.
+      items:
+        $ref: '#/CreateMedicineVariantRequest'
+
+UpdateMedicineRequest:
+  type: object
+  description: |
+    Every field is optional and every field is a pointer: an omitted field
+    leaves the stored value unchanged, and an explicit null is treated as
+    omitted. sku, barcode and brand_id are absent on purpose — they are
+    write-once. A change to a regulatory flag or to the import provenance
+    requires a reason.
+  properties:
+    name:
+      type: [string, 'null']
+      minLength: 1
+      maxLength: 255
+    display_name:
+      type: [string, 'null']
+      maxLength: 255
+    description:
+      type: [string, 'null']
+      maxLength: 4000
+    generic_medicine_id:
+      type: [string, 'null']
+      format: uuid
+    category_id:
+      type: [string, 'null']
+      format: uuid
+    dosage_form_id:
+      type: [string, 'null']
+      format: uuid
+    route_id:
+      type: [string, 'null']
+      format: uuid
+    manufacturer_id:
+      type: [string, 'null']
+      format: uuid
+    storage_condition_id:
+      type: [string, 'null']
+      format: uuid
+    strength:
+      type: [string, 'null']
+      maxLength: 60
+      description: Rejected once the medicine is referenced by stock, purchases or sales.
+    pack_size:
+      type: [string, 'null']
+      maxLength: 60
+      description: Rejected once the medicine is referenced by stock, purchases or sales.
+    units_per_pack:
+      type: [integer, 'null']
+      minimum: 1
+    units_per_strip:
+      type: [integer, 'null']
+      minimum: 1
+    package_type_id:
+      type: [string, 'null']
+      format: uuid
+    sales_unit_id:
+      type: [string, 'null']
+      format: uuid
+    requires_prescription:
+      type: [boolean, 'null']
+    is_controlled:
+      type: [boolean, 'null']
+    is_refrigerated:
+      type: [boolean, 'null']
+    is_imported:
+      type: [boolean, 'null']
+    country_of_origin:
+      type: [string, 'null']
+      maxLength: 100
+    importer_name:
+      type: [string, 'null']
+      maxLength: 200
+    import_license_no:
+      type: [string, 'null']
+      maxLength: 80
+    tax_rate_id:
+      type: [string, 'null']
+      format: uuid
+    hsn_code:
+      type: [string, 'null']
+      maxLength: 40
+    shelf_life_months:
+      type: [integer, 'null']
+      minimum: 1
+    image_url:
+      type: [string, 'null']
+      maxLength: 500
+    is_active:
+      type: [boolean, 'null']
+      description: Deactivation is preferred over deletion; history keeps its references.
+    reason:
+      type: [string, 'null']
+      maxLength: 255
+      description: Required when a regulatory flag or the import provenance changes.
+
+CreateMedicineVariantRequest:
+  type: object
+  required: [name, sku]
+  description: |
+    A variant is a package identity: "Napa 500 mg, 10 tablets" and
+    "Napa 500 mg, 100 tablets" are two variants of one medicine with their own
+    SKU and barcode.
+  properties:
+    name:
+      type: string
+      minLength: 1
+      maxLength: 200
+      description: Package label, for example "10 tablets x 10 strips".
+    sku:
+      type: string
+      minLength: 1
+      maxLength: 60
+      description: Sellable/stockable identity of the package. Unique and write-once.
+    barcode:
+      type: [string, 'null']
+      maxLength: 60
+    strength:
+      type: [string, 'null']
+      maxLength: 60
+    pack_size:
+      type: [string, 'null']
+      maxLength: 60
+    units_per_pack:
+      type: [integer, 'null']
+      minimum: 1
+    is_active:
+      type: [boolean, 'null']
+      default: true
+
+UpdateMedicineVariantRequest:
+  type: object
+  description: |
+    Every field is optional. sku and barcode are absent: they are the
+    variant's identity, and a barcode is never silently transferred between
+    variants. The conversion fields may only change while the variant is
+    still unused.
+  properties:
+    name:
+      type: [string, 'null']
+      minLength: 1
+      maxLength: 200
+    strength:
+      type: [string, 'null']
+      maxLength: 60
+    pack_size:
+      type: [string, 'null']
+      maxLength: 60
+    units_per_pack:
+      type: [integer, 'null']
+      minimum: 1
+    is_active:
+      type: [boolean, 'null']
+
+CreateMedicineBarcodeRequest:
+  type: object
+  required: [barcode]
+  properties:
+    variant_id:
+      type: [string, 'null']
+      format: uuid
+      description: The variant the barcode identifies; it must belong to the same medicine.
+    barcode:
+      type: string
+      minLength: 1
+      maxLength: 60
+      description: Exact identifier. Unique among non-deleted rows.
+    barcode_type:
+      type: string
+      enum: [EAN13, EAN8, UPC, CODE128, QR, OTHER]
+      default: EAN13
+    is_primary:
+      type: [boolean, 'null']
+      default: false
+
+LookupMedicineRequest:
+  type: object
+  description: |
+    Exactly one of barcode or sku must be provided. A lookup that matches
+    nothing is a not-found; a lookup that matches more than one active
+    variant is an integrity error and fails closed.
+  properties:
+    barcode:
+      type: [string, 'null']
+      maxLength: 60
+    sku:
+      type: [string, 'null']
+      maxLength: 60
+
+LookupMedicineResponse:
+  type: object
+  required: [medicine_id, medicine_name, requires_prescription, is_controlled, is_active]
+  description: |
+    Catalogue and variant metadata only. A catalogue lookup does not prove
+    stock availability and carries no price: the sale workflow revalidates
+    branch stock, price and safety requirements itself.
+  properties:
+    medicine_id:
+      type: string
+      format: uuid
+    variant_id:
+      type: [string, 'null']
+      format: uuid
+    medicine_name:
+      type: string
+    variant_name:
+      type: [string, 'null']
+    brand_name:
+      type: [string, 'null']
+    sku:
+      type: [string, 'null']
+    barcode:
+      type: [string, 'null']
+    strength:
+      type: [string, 'null']
+    pack_size:
+      type: [string, 'null']
+    units_per_pack:
+      type: [integer, 'null']
+    requires_prescription:
+      type: boolean
+    is_controlled:
+      type: boolean
+    is_active:
+      type: boolean
+
+MedicineReferenceLabels:
+  type: object
+  required: [brand_name, category_name]
+  description: The joined display labels of the MasterData and Brand references.
+  properties:
+    brand_name:
+      type: string
+    category_name:
+      type: string
+    generic_name:
+      type: [string, 'null']
+    dosage_form_name:
+      type: [string, 'null']
+    route_name:
+      type: [string, 'null']
+    manufacturer_name:
+      type: [string, 'null']
+    storage_condition_name:
+      type: [string, 'null']
+    package_type_name:
+      type: [string, 'null']
+    sales_unit_name:
+      type: [string, 'null']
+    tax_rate_code:
+      type: [string, 'null']
+
+MedicineResponse:
+  type: object
+  required: [id, sku, name, brand_id, category_id, is_active, created_at, updated_at]
+  properties:
+    id:
+      type: string
+      format: uuid
+    sku:
+      type: string
+    barcode:
+      type: [string, 'null']
+    name:
+      type: string
+    display_name:
+      type: [string, 'null']
+    description:
+      type: [string, 'null']
+    generic_medicine_id:
+      type: [string, 'null']
+      format: uuid
+    brand_id:
+      type: string
+      format: uuid
+    category_id:
+      type: string
+      format: uuid
+    dosage_form_id:
+      type: [string, 'null']
+      format: uuid
+    route_id:
+      type: [string, 'null']
+      format: uuid
+    manufacturer_id:
+      type: [string, 'null']
+      format: uuid
+    storage_condition_id:
+      type: [string, 'null']
+      format: uuid
+    strength:
+      type: [string, 'null']
+    pack_size:
+      type: [string, 'null']
+    units_per_pack:
+      type: [integer, 'null']
+    units_per_strip:
+      type: [integer, 'null']
+    package_type_id:
+      type: [string, 'null']
+      format: uuid
+    sales_unit_id:
+      type: [string, 'null']
+      format: uuid
+    requires_prescription:
+      type: boolean
+    is_controlled:
+      type: boolean
+    is_refrigerated:
+      type: boolean
+    is_imported:
+      type: boolean
+    country_of_origin:
+      type: [string, 'null']
+    importer_name:
+      type: [string, 'null']
+    import_license_no:
+      type: [string, 'null']
+    tax_rate_id:
+      type: [string, 'null']
+      format: uuid
+    hsn_code:
+      type: [string, 'null']
+    shelf_life_months:
+      type: [integer, 'null']
+    image_url:
+      type: [string, 'null']
+    is_active:
+      type: boolean
+    references:
+      $ref: '#/MedicineReferenceLabels'
+    created_at:
+      type: string
+      format: date-time
+    updated_at:
+      type: string
+      format: date-time
+
+MedicineVariantResponse:
+  type: object
+  required: [id, medicine_id, name, sku, is_active, created_at, updated_at]
+  properties:
+    id:
+      type: string
+      format: uuid
+    medicine_id:
+      type: string
+      format: uuid
+    name:
+      type: string
+    sku:
+      type: string
+    barcode:
+      type: [string, 'null']
+    strength:
+      type: [string, 'null']
+    pack_size:
+      type: [string, 'null']
+    units_per_pack:
+      type: [integer, 'null']
+    is_active:
+      type: boolean
+    created_at:
+      type: string
+      format: date-time
+    updated_at:
+      type: string
+      format: date-time
+
+MedicineBarcodeResponse:
+  type: object
+  required: [id, medicine_id, barcode, barcode_type, is_primary, created_at, updated_at]
+  properties:
+    id:
+      type: string
+      format: uuid
+    medicine_id:
+      type: string
+      format: uuid
+    variant_id:
+      type: [string, 'null']
+      format: uuid
+    barcode:
+      type: string
+    barcode_type:
+      type: string
+      enum: [EAN13, EAN8, UPC, CODE128, QR, OTHER]
+    is_primary:
+      type: boolean
+    created_at:
+      type: string
+      format: date-time
+    updated_at:
+      type: string
+      format: date-time
