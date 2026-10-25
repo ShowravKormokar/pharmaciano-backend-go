@@ -70,6 +70,8 @@ tags:
     description: Inventory storage locations.
   - name: brands
     description: Organization-owned commercial medicine brands.
+  - name: medicines
+    description: The organization-central medicine catalogue and its package variants and barcodes.
   - name: masterdata
     description: Central reference catalogues shared across organizations.
   - name: rbac
@@ -155,6 +157,24 @@ paths:
     $ref: 'paths/brands.yaml#/~1brands'
   /brands/{id}:
     $ref: 'paths/brands.yaml#/~1brands~1{id}'
+  /medicines:
+    $ref: 'paths/medicines.yaml#/~1medicines'
+  /medicines/search:
+    $ref: 'paths/medicines.yaml#/~1medicines~1search'
+  /medicines/lookup:
+    $ref: 'paths/medicines.yaml#/~1medicines~1lookup'
+  /medicines/{id}:
+    $ref: 'paths/medicines.yaml#/~1medicines~1{id}'
+  /medicines/{id}/variants:
+    $ref: 'paths/medicines.yaml#/~1medicines~1{id}~1variants'
+  /medicines/{id}/variants/{variant_id}:
+    $ref: 'paths/medicines.yaml#/~1medicines~1{id}~1variants~1{variant_id}'
+  /medicines/{id}/barcodes:
+    $ref: 'paths/medicines.yaml#/~1medicines~1{id}~1barcodes'
+  /medicines/{id}/barcodes/{bc_id}:
+    $ref: 'paths/medicines.yaml#/~1medicines~1{id}~1barcodes~1{bc_id}'
+  /medicines/{id}/price-history:
+    $ref: 'paths/medicines.yaml#/~1medicines~1{id}~1price-history'
   /settings:
     $ref: 'paths/settings.yaml#/~1settings'
   /settings/bulk:
@@ -335,6 +355,28 @@ components:
       $ref: 'components/schemas/brand.yaml#/UpdateBrandRequest'
     Brand:
       $ref: 'components/schemas/brand.yaml#/Brand'
+    CreateMedicineRequest:
+      $ref: 'components/schemas/medicine.yaml#/CreateMedicineRequest'
+    UpdateMedicineRequest:
+      $ref: 'components/schemas/medicine.yaml#/UpdateMedicineRequest'
+    CreateMedicineVariantRequest:
+      $ref: 'components/schemas/medicine.yaml#/CreateMedicineVariantRequest'
+    UpdateMedicineVariantRequest:
+      $ref: 'components/schemas/medicine.yaml#/UpdateMedicineVariantRequest'
+    CreateMedicineBarcodeRequest:
+      $ref: 'components/schemas/medicine.yaml#/CreateMedicineBarcodeRequest'
+    LookupMedicineRequest:
+      $ref: 'components/schemas/medicine.yaml#/LookupMedicineRequest'
+    LookupMedicineResponse:
+      $ref: 'components/schemas/medicine.yaml#/LookupMedicineResponse'
+    MedicineReferenceLabels:
+      $ref: 'components/schemas/medicine.yaml#/MedicineReferenceLabels'
+    MedicineResponse:
+      $ref: 'components/schemas/medicine.yaml#/MedicineResponse'
+    MedicineVariantResponse:
+      $ref: 'components/schemas/medicine.yaml#/MedicineVariantResponse'
+    MedicineBarcodeResponse:
+      $ref: 'components/schemas/medicine.yaml#/MedicineBarcodeResponse'
     WarehouseListItem:
       $ref: 'components/schemas/warehouse.yaml#/WarehouseListItem'
     # masterdata
