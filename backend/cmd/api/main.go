@@ -20,6 +20,7 @@ import (
 	"backend/internal/modules/branch"
 	"backend/internal/modules/brand"
 	"backend/internal/modules/masterdata"
+	"backend/internal/modules/medicine"
 	"backend/internal/modules/organization"
 	"backend/internal/modules/rbac"
 	"backend/internal/modules/settings"
@@ -247,6 +248,13 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("audit module init: %w", err)
 	}
+	// medicine signs its own pagination cursors with the shared cursor signing
+	// key: a module that cannot sign them would silently degrade to offset
+	// pagination, so a missing or short key aborts the boot instead.
+	medicineHandler, err := medicine.New(pg, cfg.Pagination.CursorSigningKey, val, log)
+	if err != nil {
+		return fmt.Errorf("medicine module init: %w", err)
+	}
 
 	// --- Middleware container ---------------------------------------------------
 	// Inject the real authenticator (auth) and authorizer (rbac) so Protected
@@ -283,6 +291,7 @@ func run() error {
 		settings.New(pg, val, log),
 		auditHandler,
 		userHandler,
+		medicineHandler,
 	}
 
 	// --- Router -----------------------------------------------------------------
