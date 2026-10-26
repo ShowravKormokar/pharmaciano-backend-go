@@ -23,6 +23,7 @@ import (
 	"backend/internal/common/httpx"
 	errs "backend/internal/errors"
 	"backend/internal/platform/db"
+	"backend/internal/platform/telemetry"
 	"backend/internal/platform/validator"
 	"backend/pkg/pagination"
 )
@@ -39,7 +40,10 @@ type Handler struct {
 // The cursor signing key is required: the catalogue pages with signed,
 // opaque cursors, and a module that cannot sign them would silently degrade
 // to offset pagination. Failing at construction keeps that impossible.
-func New(database *db.DB, cursorSigningKey string, v *validator.Validator, log *zap.Logger) (*Handler, error) {
+//
+// metrics is optional: when nil the service skips the per-operation
+// Prometheus counters.
+func New(database *db.DB, cursorSigningKey string, v *validator.Validator, log *zap.Logger, metrics ...*telemetry.Metrics) (*Handler, error) {
 	if database == nil {
 		return nil, fmt.Errorf("medicine handler: database is required")
 	}
@@ -48,7 +52,7 @@ func New(database *db.DB, cursorSigningKey string, v *validator.Validator, log *
 		return nil, fmt.Errorf("medicine handler: configure cursor signing: %w", err)
 	}
 	repo := NewRepository(database, codec)
-	svc := NewService(repo, database)
+	svc := NewService(repo, database, metrics...)
 	return &Handler{svc: svc, val: v, log: log}, nil
 }
 
