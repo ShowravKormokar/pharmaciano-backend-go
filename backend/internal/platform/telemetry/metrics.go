@@ -71,6 +71,9 @@ type Metrics struct {
 	LowStockAlertsTotal    prometheus.Counter
 	ExpiryAlertsTotal      prometheus.Counter
 
+	// Medicine catalogue
+	MedicineOperationsTotal *prometheus.CounterVec // operation, outcome
+
 	// Jobs
 	JobDuration   *prometheus.HistogramVec
 	JobsProcessed *prometheus.CounterVec
@@ -396,6 +399,14 @@ func NewMetrics() *Metrics {
 		},
 	)
 
+	m.MedicineOperationsTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "medicine_operations_total",
+			Help: "Medicine catalogue operations by operation and outcome.",
+		},
+		[]string{"operation", "outcome"}, // operation: create|get|list|search|lookup|update|delete|create_variant|update_variant|delete_variant|create_barcode|delete_barcode|price_history; outcome: success|invalid|denied|not_found|conflict|error
+	)
+
 	// Jobs Collector
 	m.JobDuration = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
@@ -576,6 +587,7 @@ func NewMetrics() *Metrics {
 		m.AuditReadRequestsTotal, m.AuditSinkWritesTotal,
 		// Business / jobs / ai / mailer / storage
 		m.SalesCompletedTotal, m.PurchasesApprovedTotal, m.LowStockAlertsTotal, m.ExpiryAlertsTotal,
+		m.MedicineOperationsTotal,
 		m.JobDuration, m.JobsProcessed, m.JobsFailed, m.JobQueueSize,
 		m.AICallsTotal, m.AICallDuration, m.AITokensUsed, m.AICostUSD,
 		m.MailSendTotal, m.MailSendDuration,
@@ -724,6 +736,9 @@ func (m *Metrics) ObserveSaleCompleted(branchID string) {
 }
 func (m *Metrics) ObservePurchaseApproved(branchID string) {
 	m.PurchasesApprovedTotal.WithLabelValues(branchID).Inc()
+}
+func (m *Metrics) ObserveMedicine(operation, outcome string) {
+	m.MedicineOperationsTotal.WithLabelValues(operation, outcome).Inc()
 }
 func (m *Metrics) RecordLowStockAlert() {
 	m.LowStockAlertsTotal.Inc()
