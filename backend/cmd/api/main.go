@@ -251,7 +251,7 @@ func run() error {
 	// medicine signs its own pagination cursors with the shared cursor signing
 	// key: a module that cannot sign them would silently degrade to offset
 	// pagination, so a missing or short key aborts the boot instead.
-	medicineHandler, err := medicine.New(pg, cfg.Pagination.CursorSigningKey, val, log)
+	medicineHandler, err := medicine.New(pg, cfg.Pagination.CursorSigningKey, val, log, metrics)
 	if err != nil {
 		return fmt.Errorf("medicine module init: %w", err)
 	}
