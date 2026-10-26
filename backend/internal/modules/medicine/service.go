@@ -36,18 +36,27 @@ import (
 	appctx "backend/internal/common/context"
 	errs "backend/internal/errors"
 	"backend/internal/platform/db"
+	"backend/internal/platform/telemetry"
 	"backend/pkg/pagination"
 )
 
 // Service holds the Medicine business rules.
 type Service struct {
-	repo *Repository
-	db   *db.DB
+	repo    *Repository
+	db      *db.DB
+	metrics *telemetry.Metrics
 }
 
 // NewService assembles the service.
-func NewService(repo *Repository, database *db.DB) *Service {
-	return &Service{repo: repo, db: database}
+//
+// metrics is optional: when nil the service still works, it just skips the
+// per-operation Prometheus counters.
+func NewService(repo *Repository, database *db.DB, metrics ...*telemetry.Metrics) *Service {
+	s := &Service{repo: repo, db: database}
+	if len(metrics) > 0 {
+		s.metrics = metrics[0]
+	}
+	return s
 }
 
 // MedicineList is one page of catalogue entries together with the joined
@@ -80,7 +89,8 @@ type MedicineList struct {
 // below is tenant-scoped on purpose: it must not reveal whether another
 // organization owns a SKU, while the database constraint still prevents the
 // duplicate.
-func (s *Service) Create(ctx context.Context, req *CreateMedicineRequest) (*Medicine, error) {
+func (s *Service) Create(ctx context.Context, req *CreateMedicineRequest) (retMed *Medicine, retErr error) {
+	defer s.observe("create", retErr)
 	if req == nil {
 		return nil, errs.Validation("medicine request is required")
 	}
@@ -187,7 +197,8 @@ func (s *Service) Create(ctx context.Context, req *CreateMedicineRequest) (*Medi
 // ---------------------------------------------------------------------------
 
 // Get returns one catalogue entry.
-func (s *Service) Get(ctx context.Context, id uuid.UUID) (*Medicine, error) {
+func (s *Service) Get(ctx context.Context, id uuid.UUID) (retMed *Medicine, retErr error) {
+	defer s.observe("get", retErr)
 	orgID, err := organizationID(ctx)
 	if err != nil {
 		return nil, err
@@ -204,7 +215,8 @@ func (s *Service) Get(ctx context.Context, id uuid.UUID) (*Medicine, error) {
 //
 // The labels are loaded in one statement, so the detail view costs two
 // queries instead of one per reference (contract §9, "Performance").
-func (s *Service) GetWithReferences(ctx context.Context, id uuid.UUID) (*Medicine, *MedicineReferenceLabels, error) {
+func (s *Service) GetWithReferences(ctx context.Context, id uuid.UUID) (retMed *Medicine, retLabels *MedicineReferenceLabels, retErr error) {
+	defer s.observe("get_with_references", retErr)
 	orgID, err := organizationID(ctx)
 	if err != nil {
 		return nil, nil, err
@@ -237,7 +249,8 @@ func (s *Service) GetWithReferences(ctx context.Context, id uuid.UUID) (*Medicin
 //
 // The sort is taken from the allow-list only; a client can never influence the
 // shape of the ORDER BY (contract §8.2, §11).
-func (s *Service) List(ctx context.Context, q ListMedicinesQuery) (MedicineList, error) {
+func (s *Service) List(ctx context.Context, q ListMedicinesQuery) (retMed MedicineList, retErr error) {
+	defer s.observe("list", retErr)
 	orgID, err := organizationID(ctx)
 	if err != nil {
 		return MedicineList{}, err
@@ -286,7 +299,8 @@ func (s *Service) List(ctx context.Context, q ListMedicinesQuery) (MedicineList,
 // Search is not an exact lookup and it is not a clinical substitution aid: it
 // returns candidates for a human to choose from, and the caller still has to
 // resolve the exact variant before a sale (contract §1.9, §7).
-func (s *Service) Search(ctx context.Context, q SearchMedicinesQuery) (MedicineList, error) {
+func (s *Service) Search(ctx context.Context, q SearchMedicinesQuery) (retMed MedicineList, retErr error) {
+	defer s.observe("search", retErr)
 	orgID, err := organizationID(ctx)
 	if err != nil {
 		return MedicineList{}, err
@@ -334,7 +348,8 @@ func (s *Service) Search(ctx context.Context, q SearchMedicinesQuery) (MedicineL
 //     sales reference the product would reinterpret that history, so the
 //     change is refused and a new identity has to be created instead
 //     (contract §5.2, §10).
-func (s *Service) Update(ctx context.Context, id uuid.UUID, req *UpdateMedicineRequest) (*Medicine, error) {
+func (s *Service) Update(ctx context.Context, id uuid.UUID, req *UpdateMedicineRequest) (retMed *Medicine, retErr error) {
+	defer s.observe("update", retErr)
 	if req == nil {
 		return nil, errs.Validation("medicine update request is required")
 	}
@@ -392,7 +407,8 @@ func (s *Service) Update(ctx context.Context, id uuid.UUID, req *UpdateMedicineR
 // is referenced by stock, purchases or sales is not deleted at all — the
 // caller has to deactivate it instead, so the operational records keep
 // pointing at a live identity (contract §7, "Deletion", §10).
-func (s *Service) Delete(ctx context.Context, id uuid.UUID) error {
+func (s *Service) Delete(ctx context.Context, id uuid.UUID) (retErr error) {
+	defer s.observe("delete", retErr)
 	orgID, err := organizationID(ctx)
 	if err != nil {
 		return err
@@ -434,7 +450,8 @@ func (s *Service) Delete(ctx context.Context, id uuid.UUID) error {
 // The response carries catalogue and variant metadata only: no stock, no
 // price. The sale workflow revalidates branch stock, price and safety state
 // itself (contract §7, §8.2).
-func (s *Service) Lookup(ctx context.Context, req *LookupMedicineRequest) (*LookupMedicineResponse, error) {
+func (s *Service) Lookup(ctx context.Context, req *LookupMedicineRequest) (retMed *LookupMedicineResponse, retErr error) {
+	defer s.observe("lookup", retErr)
 	if req == nil {
 		return nil, errs.Validation("lookup request is required")
 	}
@@ -481,7 +498,8 @@ func (s *Service) Lookup(ctx context.Context, req *LookupMedicineRequest) (*Look
 // ---------------------------------------------------------------------------
 
 // ListVariants returns one page of the package variants of a medicine.
-func (s *Service) ListVariants(ctx context.Context, medicineID uuid.UUID, limit int, cursor string) (VariantPage, pagination.Meta, error) {
+func (s *Service) ListVariants(ctx context.Context, medicineID uuid.UUID, limit int, cursor string) (retPage VariantPage, retMeta pagination.Meta, retErr error) {
+	defer s.observe("list_variants", retErr)
 	orgID, err := organizationID(ctx)
 	if err != nil {
 		return VariantPage{}, pagination.Meta{}, err
@@ -501,7 +519,8 @@ func (s *Service) ListVariants(ctx context.Context, medicineID uuid.UUID, limit 
 // The SKU is the sellable identity of the package and is unique among live
 // rows across the whole table. A duplicate is a conflict, never a silent
 // overwrite (contract §1.4, §5.2).
-func (s *Service) CreateVariant(ctx context.Context, medicineID uuid.UUID, req *CreateMedicineVariantRequest) (*MedicineVariant, error) {
+func (s *Service) CreateVariant(ctx context.Context, medicineID uuid.UUID, req *CreateMedicineVariantRequest) (retVar *MedicineVariant, retErr error) {
+	defer s.observe("create_variant", retErr)
 	if req == nil {
 		return nil, errs.Validation("medicine variant request is required")
 	}
@@ -584,7 +603,8 @@ func buildVariant(req *CreateMedicineVariantRequest) (*MedicineVariant, error) {
 // variant is still unused. Once a purchase, an inventory movement or a sale
 // references it, the conversion is protected and a new variant has to be
 // created instead (contract §5.2, §10).
-func (s *Service) UpdateVariant(ctx context.Context, medicineID, variantID uuid.UUID, req *UpdateMedicineVariantRequest) (*MedicineVariant, error) {
+func (s *Service) UpdateVariant(ctx context.Context, medicineID, variantID uuid.UUID, req *UpdateMedicineVariantRequest) (retVar *MedicineVariant, retErr error) {
+	defer s.observe("update_variant", retErr)
 	if req == nil {
 		return nil, errs.Validation("medicine variant update request is required")
 	}
@@ -650,7 +670,8 @@ func (s *Service) UpdateVariant(ctx context.Context, medicineID, variantID uuid.
 // operational records already reference is deactivated instead: its identity
 // has to stay resolvable so historical invoices and movements remain
 // renderable (contract §5.2, §10).
-func (s *Service) DeleteVariant(ctx context.Context, medicineID, variantID uuid.UUID) error {
+func (s *Service) DeleteVariant(ctx context.Context, medicineID, variantID uuid.UUID) (retErr error) {
+	defer s.observe("delete_variant", retErr)
 	orgID, err := organizationID(ctx)
 	if err != nil {
 		return err
@@ -689,7 +710,8 @@ func (s *Service) DeleteVariant(ctx context.Context, medicineID, variantID uuid.
 // ---------------------------------------------------------------------------
 
 // ListBarcodes returns one page of the barcode assignments of a medicine.
-func (s *Service) ListBarcodes(ctx context.Context, medicineID uuid.UUID, limit int, cursor string) (BarcodePage, pagination.Meta, error) {
+func (s *Service) ListBarcodes(ctx context.Context, medicineID uuid.UUID, limit int, cursor string) (retPage BarcodePage, retMeta pagination.Meta, retErr error) {
+	defer s.observe("list_barcodes", retErr)
 	orgID, err := organizationID(ctx)
 	if err != nil {
 		return BarcodePage{}, pagination.Meta{}, err
@@ -711,7 +733,8 @@ func (s *Service) ListBarcodes(ctx context.Context, medicineID uuid.UUID, limit 
 // be a variant of the same medicine, and the code itself is unique among live
 // rows — a duplicate is a conflict rather than a silent reassignment
 // (contract §5.3).
-func (s *Service) CreateBarcode(ctx context.Context, medicineID uuid.UUID, req *CreateMedicineBarcodeRequest) (*MedicineBarcode, error) {
+func (s *Service) CreateBarcode(ctx context.Context, medicineID uuid.UUID, req *CreateMedicineBarcodeRequest) (retBarcode *MedicineBarcode, retErr error) {
+	defer s.observe("create_barcode", retErr)
 	if req == nil {
 		return nil, errs.Validation("medicine barcode request is required")
 	}
@@ -779,7 +802,8 @@ func (s *Service) CreateBarcode(ctx context.Context, medicineID uuid.UUID, req *
 // The row is kept (soft-deleted) so the history of what the code used to
 // point at stays readable, and the code is never silently transferred to
 // another variant (contract §5.3, §8).
-func (s *Service) DeleteBarcode(ctx context.Context, medicineID, barcodeID uuid.UUID) error {
+func (s *Service) DeleteBarcode(ctx context.Context, medicineID, barcodeID uuid.UUID) (retErr error) {
+	defer s.observe("delete_barcode", retErr)
 	orgID, err := organizationID(ctx)
 	if err != nil {
 		return err
@@ -810,7 +834,8 @@ func (s *Service) DeleteBarcode(ctx context.Context, medicineID, barcodeID uuid.
 //
 // Serving the table from here would create a second, competing source of
 // price history, which is exactly what the contract forbids.
-func (s *Service) PriceHistory(ctx context.Context, id uuid.UUID) error {
+func (s *Service) PriceHistory(ctx context.Context, id uuid.UUID) (retErr error) {
+	defer s.observe("price_history", retErr)
 	return errs.New(errs.CodeNotImplemented,
 		"medicine price history is owned by the pricing module and no pricing interface is available yet")
 }
@@ -1368,4 +1393,32 @@ func sameUUID(a *uuid.UUID, b *uuid.UUID) bool {
 		return a == nil && b == nil
 	}
 	return *a == *b
+}
+
+// observe records one medicine catalogue operation as a Prometheus counter
+// labelled by operation and outcome. It is a no-op when metrics is nil.
+//
+// The outcome bucket mirrors the audit module: 4xx client errors split into
+// invalid (400/422), denied (401/403) and not_found (404); everything else is
+// "error", and a nil error is "success".
+func (s *Service) observe(operation string, err error) {
+	if s == nil || s.metrics == nil {
+		return
+	}
+	outcome := "success"
+	if err != nil {
+		switch status := errs.HTTPStatus(err); status {
+		case 400, 422:
+			outcome = "invalid"
+		case 401, 403:
+			outcome = "denied"
+		case 404:
+			outcome = "not_found"
+		case 409:
+			outcome = "conflict"
+		default:
+			outcome = "error"
+		}
+	}
+	s.metrics.ObserveMedicine(operation, outcome)
 }
