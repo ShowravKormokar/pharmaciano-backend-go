@@ -1,0 +1,36 @@
+# /customers/*
+paths:
+  /customers:
+    post:
+      operationId: customers.create
+      tags: [customers]
+    get:
+      operationId: customers.list
+      tags: [customers]
+  /customers/{id}:
+    get:
+      operationId: customers.get
+      tags: [customers]
+    patch:
+      operationId: customers.update
+      tags: [customers]
+    delete:
+      operationId: customers.archive
+      tags: [customers]
+  /customers/{id}/consents:
+    get:
+      operationId: customers.consents.list
+      tags: [customers]
+    post:
+      operationId: customers.consents.create
+      tags: [customers]
+  /customers/{id}/branches:
+    get:
+      operationId: customers.branches.list
+      tags: [customers]
+    post:
+      operationId: customers.branches.grant
+      tags: [customers]
+    delete:
+      operationId: customers.branches.revoke
+      tags: [customers]
