@@ -1,4 +1,4 @@
-﻿package constants
+package constants
 
 // Package constants holds values that are compared against by name across modules and MUST stay in lock-step with seed data and migrations.
 
@@ -87,33 +87,38 @@ const (
 
 // Permission action names — the "act" component.
 const (
-	ActionCreate     = "create"
-	ActionView       = "view"
-	ActionUpdate     = "update"
-	ActionDelete     = "delete"
-	ActionAssign     = "assign"
-	ActionRevoke     = "revoke"
-	ActionExport     = "export"
-	ActionImport     = "import"
-	ActionSubmit     = "submit"
-	ActionApprove    = "approve"
-	ActionReject     = "reject"
-	ActionReceive    = "receive"
-	ActionCancel     = "cancel"
-	ActionVoid       = "void"
-	ActionRefund     = "refund"
-	ActionAdjust     = "adjust"
-	ActionTransfer   = "transfer"
-	ActionDeactivate = "deactivate"
-	ActionPost       = "post"
-	ActionSchedule   = "schedule"
-	ActionForecast   = "forecast"
-	ActionBroadcast  = "broadcast"
-	ActionRead       = "read"
-	ActionDismiss    = "dismiss"
-	ActionRun        = "run"
-	ActionRestore    = "restore"
-	ActionToggle     = "toggle"
+	ActionCreate         = "create"
+	ActionView           = "view"
+	ActionUpdate         = "update"
+	ActionDelete         = "delete"
+	ActionAssign         = "assign"
+	ActionRevoke         = "revoke"
+	ActionExport         = "export"
+	ActionImport         = "import"
+	ActionSubmit         = "submit"
+	ActionApprove        = "approve"
+	ActionReject         = "reject"
+	ActionReceive        = "receive"
+	ActionCancel         = "cancel"
+	ActionVoid           = "void"
+	ActionRefund         = "refund"
+	ActionAdjust         = "adjust"
+	ActionTransfer       = "transfer"
+	ActionDeactivate     = "deactivate"
+	ActionPost           = "post"
+	ActionReverse        = "reverse"
+	ActionManageAccounts = "manage-accounts"
+	ActionManagePeriods  = "manage-periods"
+	ActionClosePeriod    = "close-period"
+	ActionReopenPeriod   = "reopen-period"
+	ActionSchedule       = "schedule"
+	ActionForecast       = "forecast"
+	ActionBroadcast      = "broadcast"
+	ActionRead           = "read"
+	ActionDismiss        = "dismiss"
+	ActionRun            = "run"
+	ActionRestore        = "restore"
+	ActionToggle         = "toggle"
 )
 
 var AllModules = []string{
@@ -131,7 +136,8 @@ var AllActions = []string{
 	ActionCreate, ActionView, ActionUpdate, ActionDelete, ActionAssign,
 	ActionRevoke, ActionExport, ActionImport, ActionSubmit, ActionApprove,
 	ActionReject, ActionReceive, ActionCancel, ActionVoid, ActionRefund,
-	ActionAdjust, ActionTransfer, ActionDeactivate, ActionPost, ActionSchedule,
+	ActionAdjust, ActionTransfer, ActionDeactivate, ActionPost, ActionReverse,
+	ActionManageAccounts, ActionManagePeriods, ActionClosePeriod, ActionReopenPeriod, ActionSchedule,
 	ActionForecast, ActionBroadcast, ActionRead, ActionDismiss, ActionRun,
 	ActionRestore, ActionToggle,
 }
@@ -237,13 +243,13 @@ const (
 
 // Default limits
 const (
-	DefaultPageSize   = 20
-	MaxPageSize       = 100
-	MaxExportRows     = 50_000
+	DefaultPageSize    = 20
+	MaxPageSize        = 100
+	MaxExportRows      = 50_000
 	MaxBroadcastFanout = 10_000
-	MinPasswordLength = 10
-	MaxLoginAttempts  = 5
-	MinAIHistoryDays  = 30
-	InvoiceNoPadding  = 6
-	PurchaseNoPadding = 6
+	MinPasswordLength  = 10
+	MaxLoginAttempts   = 5
+	MinAIHistoryDays   = 30
+	InvoiceNoPadding   = 6
+	PurchaseNoPadding  = 6
 )
