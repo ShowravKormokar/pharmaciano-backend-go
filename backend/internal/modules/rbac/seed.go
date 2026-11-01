@@ -162,7 +162,10 @@ func systemRoleMatrix() map[string][]grantSpec {
 
 	// ACCOUNTANT — finance and financial reporting.
 	m[constants.RoleAccountant] = []grantSpec{
-		{module: constants.ModuleLedger, actions: []string{constants.ActionView, constants.ActionPost, constants.ActionExport}},
+		{module: constants.ModuleLedger, actions: []string{
+			constants.ActionView, constants.ActionCreate, constants.ActionPost,
+			constants.ActionReverse, constants.ActionExport,
+		}},
 		{module: constants.ModulePurchasePayments},
 		{module: constants.ModulePurchases, actions: readOnly},
 		{module: constants.ModuleSales, actions: readOnly},
