@@ -19,6 +19,7 @@ import (
 	"backend/internal/modules/auth"
 	"backend/internal/modules/brand"
 	"backend/internal/modules/branch"
+	"backend/internal/modules/ledger"
 	"backend/internal/modules/customer"
 	"backend/internal/modules/masterdata"
 	"backend/internal/modules/medicine"
@@ -284,6 +285,7 @@ func run() error {
 	modules := []router.ModuleRegistrar{
 		organization.New(pg, val, log),
 		branch.New(pg, val, log),
+		ledger.New(pg, val, log),
 		customer.New(pg, val, log),
 		masterdata.New(pg, val, log),
 		brand.New(pg, val, log),
