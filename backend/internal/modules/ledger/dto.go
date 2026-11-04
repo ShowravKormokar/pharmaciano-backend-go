@@ -181,7 +181,7 @@ type UpdateJournalRequest struct {
 }
 
 func (r UpdateJournalRequest) IsEmpty() bool {
-	return r.ExpectedVersion == 0 && r.JournalDate == nil && r.Description == nil && len(r.Lines) == 0
+	return r.JournalDate == nil && r.Description == nil && len(r.Lines) == 0
 }
 
 // PostJournalRequest is the body of POST /ledger/journals/{id}/post.
