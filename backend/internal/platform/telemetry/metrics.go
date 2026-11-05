@@ -66,10 +66,11 @@ type Metrics struct {
 	AuditSinkWritesTotal   *prometheus.CounterVec // sink, outcome
 
 	// Business
-	SalesCompletedTotal    *prometheus.CounterVec
-	PurchasesApprovedTotal *prometheus.CounterVec
-	LowStockAlertsTotal    prometheus.Counter
-	ExpiryAlertsTotal      prometheus.Counter
+	SalesCompletedTotal      *prometheus.CounterVec
+	PurchasesApprovedTotal   *prometheus.CounterVec
+	LowStockAlertsTotal      prometheus.Counter
+	ExpiryAlertsTotal        prometheus.Counter
+	InventoryOperationsTotal *prometheus.CounterVec // operation, outcome
 
 	// Medicine catalogue
 	MedicineOperationsTotal *prometheus.CounterVec // operation, outcome
@@ -398,6 +399,13 @@ func NewMetrics() *Metrics {
 			Help: "Expiry alerts fired.",
 		},
 	)
+	m.InventoryOperationsTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "inventory_operations_total",
+			Help: "Inventory operations by operation and outcome.",
+		},
+		[]string{"operation", "outcome"},
+	)
 
 	m.MedicineOperationsTotal = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
@@ -587,6 +595,7 @@ func NewMetrics() *Metrics {
 		m.AuditReadRequestsTotal, m.AuditSinkWritesTotal,
 		// Business / jobs / ai / mailer / storage
 		m.SalesCompletedTotal, m.PurchasesApprovedTotal, m.LowStockAlertsTotal, m.ExpiryAlertsTotal,
+		m.InventoryOperationsTotal,
 		m.MedicineOperationsTotal,
 		m.JobDuration, m.JobsProcessed, m.JobsFailed, m.JobQueueSize,
 		m.AICallsTotal, m.AICallDuration, m.AITokensUsed, m.AICostUSD,
@@ -745,6 +754,9 @@ func (m *Metrics) RecordLowStockAlert() {
 }
 func (m *Metrics) RecordExpiryAlert() {
 	m.ExpiryAlertsTotal.Inc()
+}
+func (m *Metrics) ObserveInventory(operation, outcome string) {
+	m.InventoryOperationsTotal.WithLabelValues(operation, outcome).Inc()
 }
 
 // ObserveJob records one completed job attempt. Pass failReason == "" for a
