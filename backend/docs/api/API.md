@@ -482,7 +482,7 @@ Branch-scoped by `tenant` middleware. `X-Branch-ID` header can override for SUPE
 
 | Method & Path | Rate | Permission | Description |
 |---|---|---|---|
-| `GET    /api/v1/inventory/batches` | `rate_auth_read` | `inventory:view` | List batches. `?branch_id=&medicine_id=&status=&expiring_before=&low_stock=true&q=`. Cursor pagination. |
+| `GET    /api/v1/inventory/batches` | `rate_auth_read` | `inventory:view` | Implemented. Signed cursor page; supports `branch_id`, `warehouse_id`, `variant_id`, `status`, `condition`, and lot-number prefix `q`. Cost is not exposed. |
 | `GET    /api/v1/inventory/batches/{id}` | `rate_auth_read` | `inventory:view` | Detail with movements. |
 | `PATCH  /api/v1/inventory/batches/{id}` | `rate_auth_write` | `inventory:adjust` | Update selling price, tax, status. |
 | `POST   /api/v1/inventory/batches/{id}/deactivate` | `rate_auth_write` | `inventory:deactivate` | Stop sales for this batch. |
