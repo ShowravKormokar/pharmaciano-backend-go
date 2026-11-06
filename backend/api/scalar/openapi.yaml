@@ -46,6 +46,10 @@ tags:
   description: Organization-owned commercial medicine brands.
 - name: medicines
   description: The organization-central medicine catalogue and its package variants and barcodes.
+- name: inventory
+  description: Organization-owned batch identity and warehouse-scoped stock visibility.
+- name: customers
+  description: Customer identity, branch visibility, and consent management.
 - name: masterdata
   description: Central reference catalogues shared across organizations.
 - name: rbac
@@ -13625,6 +13629,50 @@ paths:
                     meta:
                       request_id: f47ac10b-58cc-4372-a567-0e02b2c3d479
                       timestamp: '2026-09-14T16:00:00Z'
+  /customers:
+    post:
+      operationId: customers.create
+      tags:
+      - customers
+    get:
+      operationId: customers.list
+      tags:
+      - customers
+  /customers/{id}:
+    get:
+      operationId: customers.get
+      tags:
+      - customers
+    patch:
+      operationId: customers.update
+      tags:
+      - customers
+    delete:
+      operationId: customers.archive
+      tags:
+      - customers
+  /customers/{id}/consents:
+    get:
+      operationId: customers.consents.list
+      tags:
+      - customers
+    post:
+      operationId: customers.consents.create
+      tags:
+      - customers
+  /customers/{id}/branches:
+    get:
+      operationId: customers.branches.list
+      tags:
+      - customers
+    post:
+      operationId: customers.branches.grant
+      tags:
+      - customers
+    delete:
+      operationId: customers.branches.revoke
+      tags:
+      - customers
   /branches/{id}/warehouses:
     get:
       operationId: warehouses.listByBranch
@@ -34937,6 +34985,529 @@ paths:
                         description: API version tag of the responding surface, e.g. "v1".
                         example: v1
                 description: Uniform error envelope. Success is always false; the payload lives under error.
+  /inventory/batches:
+    get:
+      operationId: inventory.batches.list
+      summary: List inventory batches
+      security:
+      - bearerAuth: []
+      description: 'Returns organization-owned batch identities with quantities aggregated only from
+
+        warehouses visible to the caller. Results use a signed cursor and never expose cost
+
+        layers. Requires inventory:view.
+
+        '
+      tags:
+      - inventory
+      parameters:
+      - name: X-Request-ID
+        in: header
+        description: Caller-supplied correlation id. If omitted the server mints one and returns it.
+        required: false
+        schema:
+          type: string
+          format: uuid
+      - name: cursor
+        in: query
+        description: Opaque HMAC-signed cursor returned as `X-Next-Cursor` for cursor pagination.
+        schema:
+          type: string
+          example: eyJ0IjoiMjAyNi0wOS0xMVRUMTA6...
+      - name: limit
+        in: query
+        description: Page size, clamped into [1,100]. Default 20.
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+          example: 20
+      - name: branch_id
+        in: query
+        description: Optional branch-scope filter for multi-branch tenants.
+        schema:
+          type: string
+          format: uuid
+          example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+      - name: warehouse_id
+        in: query
+        description: Restrict results to one warehouse in the caller's organization and branch scope.
+        schema:
+          type: string
+          format: uuid
+      - name: variant_id
+        in: query
+        description: Restrict results to a medicine variant.
+        schema:
+          type: string
+          format: uuid
+      - name: status
+        in: query
+        schema:
+          type: string
+          enum:
+          - active
+          - inactive
+          - exhausted
+          - recalled
+      - name: condition
+        in: query
+        description: Restrict balance totals to one stock condition.
+        schema:
+          type: string
+          enum:
+          - sellable
+          - quarantined
+          - damaged
+          - expired
+          - recalled
+          - in_transit
+      - name: q
+        in: query
+        description: Case-insensitive lot-number prefix, up to 80 characters.
+        schema:
+          type: string
+          maxLength: 80
+      responses:
+        '200':
+          description: Cursor-paginated batch list.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - data
+                - pagination
+                - meta
+                properties:
+                  success:
+                    type: boolean
+                    const: true
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                      - id
+                      - variant_id
+                      - lot_number
+                      - expiry_date
+                      - expiry_precision
+                      - recall_status
+                      - status
+                      - sellable_on_hand_quantity
+                      - active_reserved_quantity
+                      - available_quantity
+                      - non_sellable_on_hand_quantity
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        variant_id:
+                          type: string
+                          format: uuid
+                        lot_number:
+                          type: string
+                        expiry_date:
+                          type: string
+                          format: date
+                        expiry_precision:
+                          type: string
+                          enum:
+                          - day
+                          - month
+                        recall_status:
+                          type: string
+                          enum:
+                          - clear
+                          - recalled
+                        status:
+                          type: string
+                          enum:
+                          - active
+                          - inactive
+                          - exhausted
+                          - recalled
+                        sellable_on_hand_quantity:
+                          type: integer
+                          format: int64
+                          minimum: 0
+                        active_reserved_quantity:
+                          type: integer
+                          format: int64
+                          minimum: 0
+                        available_quantity:
+                          type: integer
+                          format: int64
+                          minimum: 0
+                        non_sellable_on_hand_quantity:
+                          type: integer
+                          format: int64
+                          minimum: 0
+                  pagination:
+                    type: object
+                    required:
+                    - limit
+                    properties:
+                      page:
+                        type: integer
+                        description: Current page, 1-based (offset pagination).
+                        example: 1
+                      limit:
+                        type: integer
+                        description: Page size actually applied, clamped into [1,100].
+                        example: 20
+                      total:
+                        type: integer
+                        format: int64
+                        description: Total number of records matching the query.
+                        example: 142
+                      total_pages:
+                        type: integer
+                        description: Total pages (offset pagination only).
+                        example: 8
+                      next_cursor:
+                        type: string
+                        description: Opaque, HMAC-signed cursor for the next page (cursor pagination only).
+                        example: eyJ0IjoiMjAyNi0wOS0xMVRUMTA6...
+                      prev_cursor:
+                        type: string
+                        description: Opaque, HMAC-signed cursor for the previous page (cursor pagination only).
+                      has_more:
+                        type: boolean
+                        description: Whether another page exists.
+                        example: true
+                  meta:
+                    type: object
+                    required:
+                    - request_id
+                    - timestamp
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                        description: Correlates a response to its request; echoed in the X-Request-ID header.
+                        example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp:
+                        type: string
+                        format: date-time
+                        description: Server time the response was produced, RFC 3339 UTC.
+                        example: 2026-09-14 16:00:00+00:00
+                      version:
+                        type: string
+                        description: API version tag of the responding surface, e.g. "v1".
+                        example: v1
+        '400':
+          description: 'The request was malformed: invalid JSON, a failed validation rule, an unparsable
+
+            UUID, or invalid query params. `error.code` distinguishes: VALIDATION_ERROR,
+
+            INVALID_UUID, INVALID_CURSOR, INVALID_QUERY.
+
+            '
+          headers:
+            X-Request-ID:
+              description: Correlates a response to its request; mirrors meta.request_id.
+              schema:
+                type: string
+                format: uuid
+                example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - error
+                - meta
+                properties:
+                  success:
+                    type: boolean
+                    const: false
+                  error:
+                    type: object
+                    required:
+                    - code
+                    - message
+                    properties:
+                      code:
+                        type: string
+                        description: Stable machine-readable error code. See docs/api/API.md catalogue.
+                        example: VALIDATION_ERROR
+                      message:
+                        type: string
+                        description: Short, human-readable summary. Never branch client logic on this free text.
+                        example: request validation failed
+                      details:
+                        type: array
+                        description: Field-level failures, present only for validation-style errors.
+                        items:
+                          type: object
+                          required:
+                          - field
+                          - rule
+                          properties:
+                            field:
+                              type: string
+                              description: JSON path of the offending field, dot-separated for nested fields.
+                              example: email
+                            rule:
+                              type: string
+                              description: The validation rule that failed (go-playground/validator tag).
+                              example: email
+                            message:
+                              type: string
+                              description: Human-readable explanation of the failure.
+                              example: must be a valid email address
+                            value:
+                              description: The rejected value (omitted when it would be unsafe to echo).
+                              example: not-an-email
+                  meta:
+                    type: object
+                    required:
+                    - request_id
+                    - timestamp
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                        description: Correlates a response to its request; echoed in the X-Request-ID header.
+                        example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp:
+                        type: string
+                        format: date-time
+                        description: Server time the response was produced, RFC 3339 UTC.
+                        example: 2026-09-14 16:00:00+00:00
+                      version:
+                        type: string
+                        description: API version tag of the responding surface, e.g. "v1".
+                        example: v1
+                description: Uniform error envelope. Success is always false; the payload lives under error.
+              examples:
+                validation:
+                  summary: A field failed its validation rule.
+                  value:
+                    success: false
+                    error:
+                      code: VALIDATION_ERROR
+                      message: request validation failed
+                      details:
+                      - field: email
+                        rule: email
+                        message: must be a valid email address
+                        value: not-an-email
+                    meta:
+                      request_id: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp: '2026-09-14T16:00:00Z'
+        '401':
+          description: 'Missing/invalid credentials. Codes: UNAUTHENTICATED, INVALID_CREDENTIALS, TOKEN_EXPIRED,
+
+            TOKEN_INVALID, TOKEN_REUSE_DETECTED. Two special non-fatal 401 codes (MFA_REQUIRED,
+
+            PASSWORD_CHANGE_REQUIRED) carry a single-use token in a header for the next stage — see
+
+            the bearerAuth description. Neither issues a session.
+
+            '
+          headers:
+            WWW-Authenticate:
+              description: Challenge indicating the scheme and error type.
+              schema:
+                type: string
+                example: Bearer realm="pharmaciano", error="invalid_token"
+            X-MFA-Challenge:
+              description: Present only when error.code is MFA_REQUIRED. Redeem at POST /auth/mfa/verify.
+              schema:
+                type: string
+            X-Password-Change-Token:
+              description: Present only when error.code is PASSWORD_CHANGE_REQUIRED. Redeem at POST /auth/password/force-change.
+              schema:
+                type: string
+            X-Request-ID:
+              description: Correlates a response to its request; mirrors meta.request_id.
+              schema:
+                type: string
+                format: uuid
+                example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - error
+                - meta
+                properties:
+                  success:
+                    type: boolean
+                    const: false
+                  error:
+                    type: object
+                    required:
+                    - code
+                    - message
+                    properties:
+                      code:
+                        type: string
+                        description: Stable machine-readable error code. See docs/api/API.md catalogue.
+                        example: VALIDATION_ERROR
+                      message:
+                        type: string
+                        description: Short, human-readable summary. Never branch client logic on this free text.
+                        example: request validation failed
+                      details:
+                        type: array
+                        description: Field-level failures, present only for validation-style errors.
+                        items:
+                          type: object
+                          required:
+                          - field
+                          - rule
+                          properties:
+                            field:
+                              type: string
+                              description: JSON path of the offending field, dot-separated for nested fields.
+                              example: email
+                            rule:
+                              type: string
+                              description: The validation rule that failed (go-playground/validator tag).
+                              example: email
+                            message:
+                              type: string
+                              description: Human-readable explanation of the failure.
+                              example: must be a valid email address
+                            value:
+                              description: The rejected value (omitted when it would be unsafe to echo).
+                              example: not-an-email
+                  meta:
+                    type: object
+                    required:
+                    - request_id
+                    - timestamp
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                        description: Correlates a response to its request; echoed in the X-Request-ID header.
+                        example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp:
+                        type: string
+                        format: date-time
+                        description: Server time the response was produced, RFC 3339 UTC.
+                        example: 2026-09-14 16:00:00+00:00
+                      version:
+                        type: string
+                        description: API version tag of the responding surface, e.g. "v1".
+                        example: v1
+                description: Uniform error envelope. Success is always false; the payload lives under error.
+              examples:
+                invalid-credentials:
+                  summary: Login failed because the email/password pair did not match.
+                  value:
+                    success: false
+                    error:
+                      code: INVALID_CREDENTIALS
+                      message: invalid email or password
+                    meta:
+                      request_id: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp: '2026-09-14T16:00:00Z'
+        '403':
+          description: 'The caller is not permitted to act on the target. Codes: FORBIDDEN, ACCOUNT_INACTIVE,
+
+            ACCOUNT_SUSPENDED, BRANCH_SCOPE_DENIED, TENANT_SCOPE_DENIED, CROSS_ORIGIN_REQUEST.
+
+            '
+          headers:
+            X-Request-ID:
+              description: Correlates a response to its request; mirrors meta.request_id.
+              schema:
+                type: string
+                format: uuid
+                example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - error
+                - meta
+                properties:
+                  success:
+                    type: boolean
+                    const: false
+                  error:
+                    type: object
+                    required:
+                    - code
+                    - message
+                    properties:
+                      code:
+                        type: string
+                        description: Stable machine-readable error code. See docs/api/API.md catalogue.
+                        example: VALIDATION_ERROR
+                      message:
+                        type: string
+                        description: Short, human-readable summary. Never branch client logic on this free text.
+                        example: request validation failed
+                      details:
+                        type: array
+                        description: Field-level failures, present only for validation-style errors.
+                        items:
+                          type: object
+                          required:
+                          - field
+                          - rule
+                          properties:
+                            field:
+                              type: string
+                              description: JSON path of the offending field, dot-separated for nested fields.
+                              example: email
+                            rule:
+                              type: string
+                              description: The validation rule that failed (go-playground/validator tag).
+                              example: email
+                            message:
+                              type: string
+                              description: Human-readable explanation of the failure.
+                              example: must be a valid email address
+                            value:
+                              description: The rejected value (omitted when it would be unsafe to echo).
+                              example: not-an-email
+                  meta:
+                    type: object
+                    required:
+                    - request_id
+                    - timestamp
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                        description: Correlates a response to its request; echoed in the X-Request-ID header.
+                        example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp:
+                        type: string
+                        format: date-time
+                        description: Server time the response was produced, RFC 3339 UTC.
+                        example: 2026-09-14 16:00:00+00:00
+                      version:
+                        type: string
+                        description: API version tag of the responding surface, e.g. "v1".
+                        example: v1
+                description: Uniform error envelope. Success is always false; the payload lives under error.
+              examples:
+                forbidden:
+                  summary: The caller lacks the required RBAC permission on the target.
+                  value:
+                    success: false
+                    error:
+                      code: FORBIDDEN
+                      message: you do not have permission to perform this action
+                    meta:
+                      request_id: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                      timestamp: '2026-09-14T16:00:00Z'
   /settings:
     get:
       operationId: settings.list
@@ -94624,6 +95195,65 @@ components:
         created_at:
           type: string
           format: date-time
+    InventoryBatchListItem:
+      type: object
+      required:
+      - id
+      - variant_id
+      - lot_number
+      - expiry_date
+      - expiry_precision
+      - recall_status
+      - status
+      - sellable_on_hand_quantity
+      - active_reserved_quantity
+      - available_quantity
+      - non_sellable_on_hand_quantity
+      properties:
+        id:
+          type: string
+          format: uuid
+        variant_id:
+          type: string
+          format: uuid
+        lot_number:
+          type: string
+        expiry_date:
+          type: string
+          format: date
+        expiry_precision:
+          type: string
+          enum:
+          - day
+          - month
+        recall_status:
+          type: string
+          enum:
+          - clear
+          - recalled
+        status:
+          type: string
+          enum:
+          - active
+          - inactive
+          - exhausted
+          - recalled
+        sellable_on_hand_quantity:
+          type: integer
+          format: int64
+          minimum: 0
+        active_reserved_quantity:
+          type: integer
+          format: int64
+          minimum: 0
+        available_quantity:
+          type: integer
+          format: int64
+          minimum: 0
+        non_sellable_on_hand_quantity:
+          type: integer
+          format: int64
+          minimum: 0
     CreateBrandRequest:
       type: object
       required:
