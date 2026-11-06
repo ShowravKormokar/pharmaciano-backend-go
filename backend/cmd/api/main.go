@@ -17,10 +17,11 @@ import (
 	"backend/internal/middleware"
 	auditmodule "backend/internal/modules/audit"
 	"backend/internal/modules/auth"
-	"backend/internal/modules/brand"
 	"backend/internal/modules/branch"
-	"backend/internal/modules/ledger"
+	"backend/internal/modules/brand"
 	"backend/internal/modules/customer"
+	"backend/internal/modules/inventory"
+	"backend/internal/modules/ledger"
 	"backend/internal/modules/masterdata"
 	"backend/internal/modules/medicine"
 	"backend/internal/modules/organization"
@@ -257,6 +258,10 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("medicine module init: %w", err)
 	}
+	inventoryHandler, err := inventory.New(pg, cfg.Pagination.CursorSigningKey, val, log, metrics)
+	if err != nil {
+		return fmt.Errorf("inventory module init: %w", err)
+	}
 
 	// --- Middleware container ---------------------------------------------------
 	// Inject the real authenticator (auth) and authorizer (rbac) so Protected
@@ -296,6 +301,7 @@ func run() error {
 		auditHandler,
 		userHandler,
 		medicineHandler,
+		inventoryHandler,
 	}
 
 	// --- Router -----------------------------------------------------------------
