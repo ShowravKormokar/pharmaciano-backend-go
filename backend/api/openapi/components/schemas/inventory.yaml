@@ -1,0 +1,53 @@
+# Safe inventory read projections. Cost and purchase valuation are intentionally omitted.
+
+InventoryBatchListItem:
+  type: object
+  required:
+    - id
+    - variant_id
+    - lot_number
+    - expiry_date
+    - expiry_precision
+    - recall_status
+    - status
+    - sellable_on_hand_quantity
+    - active_reserved_quantity
+    - available_quantity
+    - non_sellable_on_hand_quantity
+  properties:
+    id:
+      type: string
+      format: uuid
+    variant_id:
+      type: string
+      format: uuid
+    lot_number:
+      type: string
+    expiry_date:
+      type: string
+      format: date
+    expiry_precision:
+      type: string
+      enum: [day, month]
+    recall_status:
+      type: string
+      enum: [clear, recalled]
+    status:
+      type: string
+      enum: [active, inactive, exhausted, recalled]
+    sellable_on_hand_quantity:
+      type: integer
+      format: int64
+      minimum: 0
+    active_reserved_quantity:
+      type: integer
+      format: int64
+      minimum: 0
+    available_quantity:
+      type: integer
+      format: int64
+      minimum: 0
+    non_sellable_on_hand_quantity:
+      type: integer
+      format: int64
+      minimum: 0
