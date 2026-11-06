@@ -1,0 +1,73 @@
+# Inventory routes currently implemented by internal/modules/inventory/routes.go.
+
+/inventory/batches:
+  get:
+    operationId: inventory.batches.list
+    summary: List inventory batches
+    security:
+      - bearerAuth: []
+    description: |
+      Returns organization-owned batch identities with quantities aggregated only from
+      warehouses visible to the caller. Results use a signed cursor and never expose cost
+      layers. Requires inventory:view.
+    tags: [inventory]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/Cursor'
+      - $ref: '../components/parameters/pagination.yaml#/Limit'
+      - $ref: '../components/parameters/pagination.yaml#/BranchID'
+      - name: warehouse_id
+        in: query
+        description: Restrict results to one warehouse in the caller's organization and branch scope.
+        schema:
+          type: string
+          format: uuid
+      - name: variant_id
+        in: query
+        description: Restrict results to a medicine variant.
+        schema:
+          type: string
+          format: uuid
+      - name: status
+        in: query
+        schema:
+          type: string
+          enum: [active, inactive, exhausted, recalled]
+      - name: condition
+        in: query
+        description: Restrict balance totals to one stock condition.
+        schema:
+          type: string
+          enum: [sellable, quarantined, damaged, expired, recalled, in_transit]
+      - name: q
+        in: query
+        description: Case-insensitive lot-number prefix, up to 80 characters.
+        schema:
+          type: string
+          maxLength: 80
+    responses:
+      '200':
+        description: Cursor-paginated batch list.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [success, data, pagination, meta]
+              properties:
+                success:
+                  type: boolean
+                  const: true
+                data:
+                  type: array
+                  items:
+                    $ref: '../components/schemas/inventory.yaml#/InventoryBatchListItem'
+                pagination:
+                  $ref: '../components/schemas/common.yaml#/PaginationMeta'
+                meta:
+                  $ref: '../components/schemas/common.yaml#/Meta'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
