@@ -72,6 +72,8 @@ tags:
     description: Organization-owned commercial medicine brands.
   - name: medicines
     description: The organization-central medicine catalogue and its package variants and barcodes.
+  - name: inventory
+    description: Organization-owned batch identity and warehouse-scoped stock visibility.
   - name: customers
     description: Customer identity, branch visibility, and consent management.
   - name: masterdata
@@ -140,13 +142,17 @@ paths:
   /users/{id}/branches/{branch_id}:
     $ref: 'paths/users.yaml#/~1users~1{id}~1branches~1{branch_id}'
   /branches:
+    $ref: 'paths/branches.yaml#/~1branches'
+  /branches/{id}:
+    $ref: 'paths/branches.yaml#/~1branches~1{id}'
   /customers:
     $ref: 'paths/customers.yaml#/~1customers'
   /customers/{id}:
     $ref: 'paths/customers.yaml#/~1customers~1{id}'
-    $ref: 'paths/branches.yaml#/~1branches'
-  /branches/{id}:
-    $ref: 'paths/branches.yaml#/~1branches~1{id}'
+  /customers/{id}/consents:
+    $ref: 'paths/customers.yaml#/~1customers~1{id}~1consents'
+  /customers/{id}/branches:
+    $ref: 'paths/customers.yaml#/~1customers~1{id}~1branches'
   /branches/{id}/warehouses:
     $ref: 'paths/warehouses.yaml#/~1branches~1{id}~1warehouses'
   /organizations/current:
@@ -181,6 +187,8 @@ paths:
     $ref: 'paths/medicines.yaml#/~1medicines~1{id}~1barcodes~1{bc_id}'
   /medicines/{id}/price-history:
     $ref: 'paths/medicines.yaml#/~1medicines~1{id}~1price-history'
+  /inventory/batches:
+    $ref: 'paths/inventory.yaml#/~1inventory~1batches'
   /settings:
     $ref: 'paths/settings.yaml#/~1settings'
   /settings/bulk:
@@ -355,6 +363,8 @@ components:
       $ref: 'components/schemas/warehouse.yaml#/UpdateWarehouseRequest'
     Warehouse:
       $ref: 'components/schemas/warehouse.yaml#/Warehouse'
+    InventoryBatchListItem:
+      $ref: 'components/schemas/inventory.yaml#/InventoryBatchListItem'
     CreateBrandRequest:
       $ref: 'components/schemas/brand.yaml#/CreateBrandRequest'
     UpdateBrandRequest:
@@ -567,8 +577,4 @@ components:
     RateLimitedError:
       $ref: 'components/examples/error.yaml#/RateLimited'
     AccountLockedError:
-      $ref: 'components/examples/error.yaml#/AccountLocked'  /customers:
-  /customers/{id}/consents:
-    $ref: 'paths/customers.yaml#/~1customers~1{id}~1consents'
-  /customers/{id}/branches:
-    $ref: 'paths/customers.yaml#/~1customers~1{id}~1branches'
+      $ref: 'components/examples/error.yaml#/AccountLocked'
