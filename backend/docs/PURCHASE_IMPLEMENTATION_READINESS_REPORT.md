@@ -133,7 +133,7 @@ For the local development database, first diagnose and preserve the dirty versio
 | Transactional audit | `backend/internal/platform/audit/sink.go`, `backend/internal/middleware/audit.go`, `backend/migrations/000011_audit_partitioned.up.sql`. |
 | Durable operation identity/idempotency | `backend/internal/middleware/idempotency.go`, shared platform/database infrastructure, and a reviewed additive PostgreSQL schema. Keep Redis as best-effort replay assistance, not the source of truth. |
 | Transactional outbox/jobs | New shared PostgreSQL outbox persistence and an operational worker/dispatcher; the current `backend/internal/jobs/` files and `backend/cmd/worker/main.go` are stubs. |
-| Purchase module | `backend/internal/modules/purchase/{model.go,dto.go,handler.go,repository.go,routes.go,service.go,state_machine.go,*_test.go}`; current non-model files are placeholders. Add module composition in `backend/cmd/api/main.go`, permissions/role grants in `backend/internal/common/constants/constants.go` and `backend/internal/modules/rbac/seed.go`, and Purchase API definitions in `backend/api/openapi/` and Scalar bundle. |
+| Purchase module | At audit time, `backend/internal/modules/purchase/{model.go,dto.go,handler.go,repository.go,routes.go,service.go,state_machine.go,*_test.go}` contained model/DTO scaffolding and package-only placeholders. Add module composition in `backend/cmd/api/main.go`, permissions/role grants in `backend/internal/common/constants/constants.go` and `backend/internal/modules/rbac/seed.go`, and Purchase API definitions in `backend/api/openapi/` and Scalar bundle. |
 
 ## 9. Audit actions and change confirmation
 
@@ -142,3 +142,7 @@ For the local development database, first diagnose and preserve the dirty versio
 - Did not connect to staging or production.
 - Did not run `migrate`, `seed`, DDL, DML, `force`, rollback, or database repair commands.
 - Did not edit existing source, SQL, configuration, migration, or other worktree files. This report is the only file created for the audit.
+
+## 10. Post-audit implementation status
+
+On 2026-11-08, the Purchase package gained purchase-order transition validation, receipt-status derivation, and a tenant/branch-scoped PostgreSQL repository for draft creation, draft updates, reads, and listing. The repository targets the normalized `purchase_orders`/`purchase_order_lines`/`purchase_transitions` schema in `PURCHASE_CONTRACT.md`; it is not compatible with legacy migration `000008_purchase` and has no matching migration in the current repository. It is not wired to an API/service and does not provide mandatory audit/outbox or durable idempotency. Do not run these queries against a database until the migration lineage/schema has been resolved and the required transaction-aware integrations are available. Receipt, invoice, payment, and return posting remain unimplemented.
