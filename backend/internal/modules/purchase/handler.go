@@ -10,6 +10,7 @@ import (
 
 	"backend/internal/common/httpx"
 	errs "backend/internal/errors"
+	"backend/internal/platform/db"
 	"backend/internal/platform/validator"
 	"backend/pkg/pagination"
 )
@@ -26,24 +27,40 @@ type Handler struct {
 	log *zap.Logger
 }
 
-// NewHandler assembles the HTTP edge around the purchase service.
-func NewHandler(svc purchaseHTTPService, v *validator.Validator, log *zap.Logger) (*Handler, error) {
+func newHandler(svc purchaseHTTPService, v *validator.Validator, log *zap.Logger) (*Handler, error) {
 	if svc == nil {
 		return nil, fmt.Errorf("purchase handler: service is required")
 	}
 	return &Handler{svc: svc, val: v, log: log}, nil
 }
 
+// New assembles the read-only purchase-order API. Routes are mounted only
+// when the operator explicitly enables the feature after verifying the
+// normalized Purchase schema is installed.
+func New(database *db.DB, v *validator.Validator, log *zap.Logger) (*Handler, error) {
+	if database == nil {
+		return nil, fmt.Errorf("purchase handler: database is required")
+	}
+	service := NewService(NewRepository(database), database, nil)
+	return newHandler(service, v, log)
+}
+
 // List handles GET /purchases.
 func (h *Handler) List(c *gin.Context) {
+	c.Header("Cache-Control", "private, no-store")
 	allowed := map[string]struct{}{
 		"page": {}, "limit": {}, "sort": {}, "branch_id": {}, "supplier_id": {},
 		"order_status": {}, "receipt_status": {}, "invoice_status": {},
 		"closure_status": {}, "from": {}, "to": {}, "q": {},
 	}
-	for key := range c.Request.URL.Query() {
+	queryValues := c.Request.URL.Query()
+	for key, values := range queryValues {
 		if _, ok := allowed[key]; !ok {
 			httpx.Error(c, h.log, errs.Validation("unsupported purchase query parameter"))
+			return
+		}
+		if len(values) != 1 {
+			httpx.Error(c, h.log, errs.Validation("purchase query parameters must not be repeated"))
 			return
 		}
 	}
@@ -63,6 +80,7 @@ func (h *Handler) List(c *gin.Context) {
 
 // Get handles GET /purchases/:id.
 func (h *Handler) Get(c *gin.Context) {
+	c.Header("Cache-Control", "private, no-store")
 	id, err := parsePurchaseIDParam(c, "id")
 	if err != nil {
 		httpx.Error(c, h.log, err)
