@@ -1,4 +1,4 @@
-﻿package config
+package config
 
 import (
 	"fmt"
@@ -242,6 +242,10 @@ func applyDefaults(v *viper.Viper) {
 	v.SetDefault("cleanup.refresh_tokens_grace", 24*time.Hour)
 	v.SetDefault("cleanup.password_resets_grace", 24*time.Hour)
 	v.SetDefault("cleanup.mfa_challenges_grace", 24*time.Hour)
+
+	// Purchase reads target a normalized schema that is not yet part of the
+	// verified migration lineage. Keep the API unmounted unless explicitly enabled.
+	v.SetDefault("features.purchase_read_api", false)
 }
 
 // bindEnvVars maps env var names that don't map cleanly to dotted keys.
