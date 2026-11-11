@@ -133,6 +133,12 @@ func TestListPurchaseOrdersQueryNormalizeAndValidate(t *testing.T) {
 	if err := q.NormalizeAndValidate(); err == nil {
 		t.Fatal("invalid order status was accepted")
 	}
+
+	q.OrderStatus = nil
+	q.Sort = "purchase_no; DROP TABLE purchase_orders"
+	if err := q.NormalizeAndValidate(); err == nil {
+		t.Fatal("unsupported sort field was accepted")
+	}
 }
 
 func TestUpdatePurchaseOrderRequestIsEmpty(t *testing.T) {

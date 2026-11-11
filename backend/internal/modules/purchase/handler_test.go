@@ -40,14 +40,20 @@ func (s *purchaseHTTPServiceStub) List(_ context.Context, query *ListPurchaseOrd
 func newPurchaseHTTPTestRouter(t *testing.T, service *purchaseHTTPServiceStub) *gin.Engine {
 	t.Helper()
 	gin.SetMode(gin.TestMode)
-	handler, err := NewHandler(service, nil, zap.NewNop())
+	handler, err := newHandler(service, nil, zap.NewNop())
 	if err != nil {
-		t.Fatalf("NewHandler() error = %v", err)
+		t.Fatalf("newHandler() error = %v", err)
 	}
 	router := gin.New()
 	router.GET("/purchases", handler.List)
 	router.GET("/purchases/:id", handler.Get)
 	return router
+}
+
+func TestNewRequiresDatabase(t *testing.T) {
+	if _, err := New(nil, nil, zap.NewNop()); err == nil {
+		t.Fatal("New() accepted a nil database")
+	}
 }
 
 func TestPurchaseHandlerListBindsFiltersAndReturnsList(t *testing.T) {
@@ -86,6 +92,20 @@ func TestPurchaseHandlerListRejectsUnsupportedQueryParameters(t *testing.T) {
 	}
 }
 
+func TestPurchaseHandlerListRejectsRepeatedQueryParameters(t *testing.T) {
+	service := &purchaseHTTPServiceStub{}
+	router := newPurchaseHTTPTestRouter(t, service)
+	recorder := httptest.NewRecorder()
+	router.ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/purchases?page=1&page=2", nil))
+
+	if recorder.Code != http.StatusBadRequest {
+		t.Fatalf("List status = %d, want %d", recorder.Code, http.StatusBadRequest)
+	}
+	if service.gotQuery != nil {
+		t.Fatal("service was called for a repeated query parameter")
+	}
+}
+
 func TestPurchaseHandlerGetParsesIDAndReturnsOrder(t *testing.T) {
 	id := uuid.New()
 	service := &purchaseHTTPServiceStub{order: &PurchaseOrderResponse{ID: id, PurchaseNo: "PO-123"}}
@@ -101,6 +121,9 @@ func TestPurchaseHandlerGetParsesIDAndReturnsOrder(t *testing.T) {
 	}
 	if !strings.Contains(recorder.Body.String(), "PO-123") {
 		t.Fatalf("Get response does not contain the purchase order: %s", recorder.Body.String())
+	}
+	if got := recorder.Header().Get("Cache-Control"); got != "private, no-store" {
+		t.Fatalf("Get Cache-Control = %q, want private, no-store", got)
 	}
 }
 
