@@ -100,6 +100,9 @@ func (q *ListPurchaseOrdersQuery) NormalizeAndValidate() error {
 		return fmt.Errorf("purchase query is required")
 	}
 	q.Offset.Normalize()
+	if _, err := pagination.ParseSort(q.Sort, purchaseOrderSortColumns); err != nil {
+		return fmt.Errorf("invalid sort: %w", err)
+	}
 	if q.From != nil && q.To != nil && !q.From.Before(*q.To) {
 		return fmt.Errorf("from must be earlier than to")
 	}
