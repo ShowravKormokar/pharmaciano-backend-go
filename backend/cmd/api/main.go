@@ -25,6 +25,7 @@ import (
 	"backend/internal/modules/masterdata"
 	"backend/internal/modules/medicine"
 	"backend/internal/modules/organization"
+	purchasemodule "backend/internal/modules/purchase"
 	"backend/internal/modules/rbac"
 	"backend/internal/modules/settings"
 	"backend/internal/modules/user"
@@ -262,6 +263,14 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("inventory module init: %w", err)
 	}
+	var purchaseHandler router.ModuleRegistrar
+	if cfg.Features.PurchaseReadAPI {
+		purchaseHandler, err = purchasemodule.New(pg, val, log)
+		if err != nil {
+			return fmt.Errorf("purchase module init: %w", err)
+		}
+		log.Warn("purchase read API enabled; verify the normalized Purchase schema and migration lineage before serving traffic")
+	}
 
 	// --- Middleware container ---------------------------------------------------
 	// Inject the real authenticator (auth) and authorizer (rbac) so Protected
@@ -302,6 +311,9 @@ func run() error {
 		userHandler,
 		medicineHandler,
 		inventoryHandler,
+	}
+	if purchaseHandler != nil {
+		modules = append(modules, purchaseHandler)
 	}
 
 	// --- Router -----------------------------------------------------------------
