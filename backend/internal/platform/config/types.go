@@ -378,6 +378,7 @@ type FeatureFlags struct {
 	WebSocketNotifications bool `mapstructure:"websocket_notifications"`
 	LedgerAutopost         bool `mapstructure:"ledger_autopost"`
 	BranchTransfers        bool `mapstructure:"branch_transfers"`
+	PurchaseReadAPI        bool `mapstructure:"purchase_read_api"`
 }
 
 type AuditConfig struct {
