@@ -61,6 +61,7 @@ storage:
 features:
   ai_forecasting: false
   websocket_notifications: true
+  purchase_read_api: false
 
 backup:
   enabled: false
