@@ -259,6 +259,8 @@ features:
   websocket_notifications: true
   ledger_autopost: true
   branch_transfers: true
+  # Purchase reads require the normalized Purchase schema and stay disabled until verified.
+  purchase_read_api: false
 
 audit:
   enabled: true
