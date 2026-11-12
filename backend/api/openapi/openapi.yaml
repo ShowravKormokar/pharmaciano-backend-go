@@ -74,6 +74,8 @@ tags:
     description: The organization-central medicine catalogue and its package variants and barcodes.
   - name: inventory
     description: Organization-owned batch identity and warehouse-scoped stock visibility.
+  - name: purchases
+    description: Read-only purchase-order lookup; disabled until the normalized Purchase schema is verified.
   - name: customers
     description: Customer identity, branch visibility, and consent management.
   - name: masterdata
@@ -189,6 +191,10 @@ paths:
     $ref: 'paths/medicines.yaml#/~1medicines~1{id}~1price-history'
   /inventory/batches:
     $ref: 'paths/inventory.yaml#/~1inventory~1batches'
+  /purchases:
+    $ref: 'paths/purchases.yaml#/~1purchases'
+  /purchases/{id}:
+    $ref: 'paths/purchases.yaml#/~1purchases~1{id}'
   /settings:
     $ref: 'paths/settings.yaml#/~1settings'
   /settings/bulk:
