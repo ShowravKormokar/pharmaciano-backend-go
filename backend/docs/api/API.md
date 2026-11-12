@@ -143,7 +143,7 @@ Two layers:
 | `rate_login` | `POST /auth/login` | **5 attempts / 15 min** per email; **20 attempts / 15 min** per IP | 15 min | `email`, `ip` |
 | `rate_refresh` | `POST /auth/refresh` | **60 req/min** | 60 s | `user_id + device_fp` |
 | `rate_reset` | `POST /auth/password/reset*` | **3 req/hour** | 3600 s | `email + ip` |
-| `rate_pos_checkout` | `POST /sales/pos/checkout` | **30 req/min** | 60 s | `cashier_id` |
+| `pos_checkout` | `POST /sales/pos/checkout` | **30 req/min** | 60 s | `cashier_id` |
 | `rate_search` | `GET /medicines/search`, `GET /*` with `?q=` | **60 req/min** | 60 s | `user_id` |
 | `rate_export` | Any `/export` route | **5 req/hour** | 3600 s | `user_id` |
 | `rate_ai` | `POST /ai/*` | **20 req/hour** | 3600 s | `organization_id` |
@@ -542,22 +542,23 @@ Nested under purchases.
 ## 7.15 Sales (POS)
 
 Hot path. Cursor pagination on lists. Tight rate limits on checkout.
+These routes are proposed only; the Sale module is not currently mounted.
+Do not treat them as available until the Sale release gates pass.
 
 | Method & Path | Rate | Permission | Description |
 |---|---|---|---|
-| `POST   /api/v1/sales/pos/checkout` | `rate_pos_checkout` | `sales:create` | Atomic sale. Decrements stock (FEFO), posts ledger, generates invoice. **Requires `Idempotency-Key`**. |
+| `POST   /api/v1/sales/pos/checkout` | `pos_checkout` | `sales:create` | Proposed atomic sale. Decrements stock (FEFO), posts ledger, generates invoice. **Requires `Idempotency-Key`**. |
 | `POST   /api/v1/sales/pos/lookup` | `rate_auth_read` | `medicines:view` | Body: `{barcode\|sku\|name}`. Returns medicine + active batches sorted FEFO. |
 | `POST   /api/v1/sales/pos/apply-coupon` | `rate_auth_read` | `sales:create` | Preview discount for cart. |
 | `POST   /api/v1/sales/pos/calculate` | `rate_auth_read` | `sales:create` | Preview totals (tax, discount, coupon) without persisting. |
 | `POST   /api/v1/sales` | `rate_auth_write` | `sales:create` | Non-POS sale (wholesale). |
 | `GET    /api/v1/sales` | `rate_auth_read` | `sales:view` | Cursor list. `?branch_id=&cashier_id=&customer_id=&status=&payment_status=&from=&to=&q=invoice`. |
 | `GET    /api/v1/sales/{id}` | `rate_auth_read` | `sales:view` | Detail + items + payments. |
-| `PATCH  /api/v1/sales/{id}` | `rate_auth_write` | `sales:update` | Same-day, cashier-only, no stock change. |
-| `POST   /api/v1/sales/{id}/void` | `rate_auth_write` | `sales:void` | Same-day cancel. Reverses stock + ledger. |
-| `POST   /api/v1/sales/{id}/refund` | `rate_auth_write` | `sales:refund` | Money-back without restocking. |
+| `POST   /api/v1/sales/{id}/void` | `rate_auth_write` | `sales:void` | Controlled compensating void/reversal; coordinates Inventory and Ledger. |
+| `POST   /api/v1/sales/{id}/refund` | `rate_auth_write` | `sales:refund` | Tender-bound refund; does not itself restock. |
 | `GET    /api/v1/sales/{id}/invoice` | `rate_auth_read` | `sales:view` | Formatted invoice payload. |
 | `GET    /api/v1/sales/{id}/invoice/pdf` | `rate_auth_read` | `sales:view` | PDF stream. |
-| `POST   /api/v1/sales/{id}/payments` | `rate_auth_write` | `sales:update` | Add payment (partial/credit sale). |
+| `POST   /api/v1/sales/{id}/payments` | `rate_auth_write` | `sales:collect-payment` | Collect an authorized remaining or credit-sale balance. |
 | `GET    /api/v1/sales/{id}/payments` | `rate_auth_read` | `sales:view` | |
 | `GET    /api/v1/sales/export?format=csv\|xlsx` | `rate_export` | `sales:export` | Async job. |
 
