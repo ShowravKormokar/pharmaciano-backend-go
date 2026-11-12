@@ -1,0 +1,164 @@
+PurchaseOrder:
+  type: object
+  required:
+    - id
+    - branch_id
+    - supplier_id
+    - purchase_no
+    - order_status
+    - receipt_status
+    - invoice_status
+    - closure_status
+    - currency_code
+    - requested_by
+    - version
+    - created_at
+    - updated_at
+  properties:
+    id:
+      type: string
+      format: uuid
+    branch_id:
+      type: string
+      format: uuid
+    supplier_id:
+      type: string
+      format: uuid
+    purchase_no:
+      type: string
+    reference_no:
+      type: [string, 'null']
+    order_status:
+      type: string
+      enum: [draft, pending_approval, approved, ordered, rejected, cancelled]
+    receipt_status:
+      type: string
+      enum: [not_received, partially_received, fully_received]
+    invoice_status:
+      type: string
+      enum: [not_invoiced, partially_invoiced, fully_invoiced, disputed]
+    closure_status:
+      type: string
+      enum: [open, closed]
+    currency_code:
+      type: string
+    requested_by:
+      type: string
+      format: uuid
+    submitted_by:
+      type: [string, 'null']
+      format: uuid
+    submitted_at:
+      type: [string, 'null']
+      format: date-time
+    approved_by:
+      type: [string, 'null']
+      format: uuid
+    approved_at:
+      type: [string, 'null']
+      format: date-time
+    rejected_by:
+      type: [string, 'null']
+      format: uuid
+    rejected_at:
+      type: [string, 'null']
+      format: date-time
+    rejection_reason:
+      type: [string, 'null']
+    expected_delivery_at:
+      type: [string, 'null']
+      format: date-time
+    ordered_at:
+      type: [string, 'null']
+      format: date-time
+    cancelled_at:
+      type: [string, 'null']
+      format: date-time
+    closed_at:
+      type: [string, 'null']
+      format: date-time
+    notes:
+      type: [string, 'null']
+    version:
+      type: integer
+      format: int64
+      minimum: 1
+    created_at:
+      type: string
+      format: date-time
+    updated_at:
+      type: string
+      format: date-time
+    lines:
+      type: array
+      maxItems: 500
+      items:
+        $ref: '#/PurchaseOrderLine'
+
+PurchaseOrderLine:
+  type: object
+  required:
+    - id
+    - line_no
+    - medicine_id
+    - unit_id
+    - ordered_quantity
+    - accepted_quantity
+    - unit_price_minor
+    - discount_amount_minor
+    - tax_amount_minor
+    - line_total_minor
+    - product_name
+    - unit_name
+    - version
+  properties:
+    id:
+      type: string
+      format: uuid
+    line_no:
+      type: integer
+      format: int32
+      minimum: 1
+    medicine_id:
+      type: string
+      format: uuid
+    variant_id:
+      type: [string, 'null']
+      format: uuid
+    unit_id:
+      type: string
+      format: uuid
+    ordered_quantity:
+      type: integer
+      format: int64
+      minimum: 1
+    accepted_quantity:
+      type: integer
+      format: int64
+      minimum: 0
+    unit_price_minor:
+      type: integer
+      format: int64
+      minimum: 0
+    discount_amount_minor:
+      type: integer
+      format: int64
+      minimum: 0
+    tax_amount_minor:
+      type: integer
+      format: int64
+      minimum: 0
+    line_total_minor:
+      type: integer
+      format: int64
+      minimum: 0
+    product_name:
+      type: string
+    sku:
+      type: [string, 'null']
+    unit_name:
+      type: string
+    version:
+      type: integer
+      format: int64
+      minimum: 1

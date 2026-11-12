@@ -1,0 +1,146 @@
+# Read-only routes currently implemented by internal/modules/purchase/routes.go.
+# These paths are mounted only when features.purchase_read_api is explicitly enabled.
+
+/purchases:
+  get:
+    operationId: purchases.list
+    summary: List purchase orders
+    description: |
+      Returns purchase orders visible to the authenticated organization and effective
+      branch scope. Supports offset pagination and order, supplier, branch, status,
+      date, and text filters. Requires `purchases:view` and is limited by the
+      `auth_read` rate policy. This route is disabled unless
+      `FEATURES_PURCHASE_READ_API=true`; enable it only after verifying the normalized
+      Purchase schema and migration lineage in the target environment.
+    tags: [purchases]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/Page'
+      - $ref: '../components/parameters/pagination.yaml#/Limit'
+      - name: sort
+        in: query
+        description: |
+          Comma-separated fields from `purchase_no`, `created_at`, `updated_at`,
+          `expected_delivery_at`, and `order_status`; prefix with `-` for descending.
+          At most five fields are accepted.
+        schema:
+          type: string
+      - $ref: '../components/parameters/pagination.yaml#/BranchID'
+      - name: supplier_id
+        in: query
+        schema:
+          type: string
+          format: uuid
+      - name: order_status
+        in: query
+        schema:
+          type: string
+          enum: [draft, pending_approval, approved, ordered, rejected, cancelled]
+      - name: receipt_status
+        in: query
+        schema:
+          type: string
+          enum: [not_received, partially_received, fully_received]
+      - name: invoice_status
+        in: query
+        schema:
+          type: string
+          enum: [not_invoiced, partially_invoiced, fully_invoiced, disputed]
+      - name: closure_status
+        in: query
+        schema:
+          type: string
+          enum: [open, closed]
+      - name: from
+        in: query
+        description: Inclusive lower bound for order creation time.
+        schema:
+          type: string
+          format: date-time
+      - name: to
+        in: query
+        description: Exclusive upper bound for order creation time.
+        schema:
+          type: string
+          format: date-time
+      - $ref: '../components/parameters/pagination.yaml#/Q'
+    responses:
+      '200':
+        description: Scoped, paginated purchase orders.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [success, data, pagination, meta]
+              properties:
+                success:
+                  type: boolean
+                  const: true
+                data:
+                  type: array
+                  items:
+                    $ref: '../components/schemas/purchase.yaml#/PurchaseOrder'
+                pagination:
+                  $ref: '../components/schemas/common.yaml#/PaginationMeta'
+                meta:
+                  $ref: '../components/schemas/common.yaml#/Meta'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '429':
+        $ref: '../components/responses/error.yaml#/TooManyRequests'
+      '500':
+        $ref: '../components/responses/error.yaml#/InternalError'
+
+/purchases/{id}:
+  get:
+    operationId: purchases.get
+    summary: Get a purchase order
+    description: |
+      Returns a purchase order and its bounded order-line summary when the order
+      belongs to the caller's organization and effective branch scope. Requires
+      `purchases:view` and is limited by the `auth_read` rate policy. This route is
+      disabled unless `FEATURES_PURCHASE_READ_API=true`; enable it only after
+      verifying the normalized Purchase schema and migration lineage in the target
+      environment.
+    tags: [purchases]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - name: id
+        in: path
+        required: true
+        description: Purchase order UUID.
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: Scoped purchase order with order lines.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [success, data, meta]
+              properties:
+                success:
+                  type: boolean
+                  const: true
+                data:
+                  $ref: '../components/schemas/purchase.yaml#/PurchaseOrder'
+                meta:
+                  $ref: '../components/schemas/common.yaml#/Meta'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+      '429':
+        $ref: '../components/responses/error.yaml#/TooManyRequests'
+      '500':
+        $ref: '../components/responses/error.yaml#/InternalError'
