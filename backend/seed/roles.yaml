@@ -254,7 +254,6 @@ roles:
       - "inventory:view"
       - "sales:create"
       - "sales:view"
-      - "sales:update"
       - "sales_returns:create"
       - "sales_returns:view"
       - "customers:create"

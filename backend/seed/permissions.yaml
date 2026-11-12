@@ -310,16 +310,48 @@ permissions:
     description: "List and view sales, invoices."
     is_system: true
   - module: sales
-    action: update
-    description: "Edit a same-day sale (limited fields)."
+    action: manage-prices
+    description: "Manage effective-dated sale price books and prices."
+    is_system: true
+  - module: sales
+    action: override-discount
+    description: "Approve a sale discount override with reason and policy evidence."
     is_system: true
   - module: sales
     action: void
-    description: "Void a same-day sale (reverses stock + ledger)."
+    description: "Initiate a controlled compensating sale void or reversal."
     is_system: true
   - module: sales
     action: refund
-    description: "Refund without restocking."
+    description: "Initiate a tender-bound sale refund workflow."
+    is_system: true
+  - module: sales
+    action: collect-payment
+    description: "Collect an authorized remaining or credit-sale balance."
+    is_system: true
+  - module: sales
+    action: open-cash
+    description: "Open a cashier cash session."
+    is_system: true
+  - module: sales
+    action: close-cash
+    description: "Close and reconcile a cashier cash session."
+    is_system: true
+  - module: sales
+    action: cash-adjust
+    description: "Record an approved cash-session adjustment."
+    is_system: true
+  - module: sales
+    action: cash-reopen
+    description: "Reopen a closed cash session through an audited exception."
+    is_system: true
+  - module: sales
+    action: prescription-view
+    description: "View restricted sale prescription evidence."
+    is_system: true
+  - module: sales
+    action: prescription-review
+    description: "Review prescription evidence for regulated dispensing."
     is_system: true
   - module: sales
     action: export
@@ -335,7 +367,7 @@ permissions:
     is_system: true
   - module: sales_returns
     action: approve
-    description: "Approve return (restocks if applicable)."
+    description: "Approve and post a return with Inventory-validated disposition."
     is_system: true
   - module: sales_returns
     action: reject
