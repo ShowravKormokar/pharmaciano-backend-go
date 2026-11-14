@@ -311,6 +311,11 @@ func bindEnvVars(v *viper.Viper) {
 		"pagination.cursor_signing_key": "CURSOR_SIGNING_KEY",
 
 		"telemetry.health.expose_errors": "HEALTH_EXPOSE_ERRORS",
+
+		"rate_limit.enabled":                     "RATE_LIMIT_ENABLED",
+		"rate_limit.policies.pos_checkout.limit": "RATE_LIMIT_POS_CHECKOUT_RPM",
+		"idempotency.ttl":                        "IDEMPOTENCY_TTL",
+		"idempotency.key_max_length":             "IDEMPOTENCY_KEY_MAX_LENGTH",
 	}
 
 	for key, env := range binds {
