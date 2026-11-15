@@ -294,6 +294,22 @@ func seedRBAC(ctx context.Context, pool *pgxpool.Pool, data SeedData) error {
 		}
 	}
 
+	if _, err := pool.Exec(ctx, `
+		WITH retired AS MATERIALIZED (
+			SELECT id FROM permissions WHERE module = 'sales' AND action = 'update'
+		), marked AS (
+			UPDATE permissions p
+			SET deleted_at = now()
+			FROM retired r
+			WHERE p.id = r.id AND p.deleted_at IS NULL
+			RETURNING p.id
+		)
+		DELETE FROM role_permissions rp
+		USING retired
+		WHERE rp.permission_id = retired.id`); err != nil {
+		return fmt.Errorf("retire unsafe sales:update permission: %w", err)
+	}
+
 	for _, role := range data.Roles {
 		if strings.TrimSpace(role.Name) == "" {
 			continue
