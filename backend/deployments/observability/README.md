@@ -78,6 +78,13 @@ After startup, Grafana auto-provisions these dashboards:
 | **Business Metrics**  | `pharmaciano-business`         | Prometheus  | Sales, purchases, inventory alerts     |
 | **Audit Trail**       | `pharmaciano-audit`            | Loki        | Real-time audit event viewer           |
 
+Sale workflow collectors use only bounded `operation` and `outcome` labels:
+`sale_operations_total` and `sale_operation_duration_seconds`. They do not
+include tenant, sale, cashier, or customer identifiers. These collectors are
+instrumentation primitives only; Sale routes remain disabled until the
+transactional release gates pass, and no alert should interpret absent Sale
+series as healthy activity.
+
 ### Login
 
 - URL: http://localhost:3000
