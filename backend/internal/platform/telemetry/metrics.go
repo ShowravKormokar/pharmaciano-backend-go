@@ -67,6 +67,8 @@ type Metrics struct {
 
 	// Business
 	SalesCompletedTotal      *prometheus.CounterVec
+	SaleOperationsTotal      *prometheus.CounterVec
+	SaleOperationDuration    *prometheus.HistogramVec
 	PurchasesApprovedTotal   *prometheus.CounterVec
 	LowStockAlertsTotal      prometheus.Counter
 	ExpiryAlertsTotal        prometheus.Counter
@@ -380,6 +382,21 @@ func NewMetrics() *Metrics {
 		},
 		[]string{"branch_id"}, // bounded (dozens of branches) — never sale_id/user_id here
 	)
+	m.SaleOperationsTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "sale_operations_total",
+			Help: "Sale workflow operations by operation and outcome.",
+		},
+		[]string{"operation", "outcome"},
+	)
+	m.SaleOperationDuration = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "sale_operation_duration_seconds",
+			Help:    "Sale workflow operation duration.",
+			Buckets: []float64{0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10},
+		},
+		[]string{"operation"},
+	)
 	m.PurchasesApprovedTotal = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: "purchases_approved_total",
@@ -595,6 +612,7 @@ func NewMetrics() *Metrics {
 		m.AuditReadRequestsTotal, m.AuditSinkWritesTotal,
 		// Business / jobs / ai / mailer / storage
 		m.SalesCompletedTotal, m.PurchasesApprovedTotal, m.LowStockAlertsTotal, m.ExpiryAlertsTotal,
+		m.SaleOperationsTotal, m.SaleOperationDuration,
 		m.InventoryOperationsTotal,
 		m.MedicineOperationsTotal,
 		m.JobDuration, m.JobsProcessed, m.JobsFailed, m.JobQueueSize,

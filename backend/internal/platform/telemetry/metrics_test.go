@@ -6,6 +6,27 @@ import (
 	"testing"
 )
 
+func TestSaleMetricsAreRegistered(t *testing.T) {
+	metrics := NewMetrics()
+	metrics.SaleOperationsTotal.WithLabelValues("checkout", "failure").Inc()
+	metrics.SaleOperationDuration.WithLabelValues("checkout").Observe(0.1)
+
+	families, err := metrics.Registry.Gather()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	found := map[string]bool{}
+	for _, family := range families {
+		found[family.GetName()] = true
+	}
+	for _, name := range []string{"sale_operations_total", "sale_operation_duration_seconds"} {
+		if !found[name] {
+			t.Errorf("metric %q was not registered", name)
+		}
+	}
+}
+
 func TestMetricsHandlerAuth(t *testing.T) {
 	token := "metrics-test-token"
 	protected := NewMetrics().Handler(token)
