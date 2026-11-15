@@ -133,9 +133,9 @@ ALTER TABLE ledger_journals
   ADD COLUMN version BIGINT NOT NULL DEFAULT 1 CHECK (version > 0);
 
 UPDATE ledger_journals
-SET status = CASE WHEN status = 'reversed' THEN 'posted' ELSE status END,
-    posted_by = CASE WHEN status = 'draft' THEN NULL ELSE posted_by END,
-    posted_at = CASE WHEN status = 'draft' THEN NULL ELSE coalesce(posted_at, created_at) END,
+SET status = CASE WHEN ledger_journals.status = 'reversed' THEN 'posted' ELSE ledger_journals.status END,
+    posted_by = CASE WHEN ledger_journals.status = 'draft' THEN NULL ELSE ledger_journals.posted_by END,
+    posted_at = CASE WHEN ledger_journals.status = 'draft' THEN NULL ELSE coalesce(ledger_journals.posted_at, ledger_journals.created_at) END,
     period_id = p.id,
     currency_code = o.currency
 FROM ledger_periods p
