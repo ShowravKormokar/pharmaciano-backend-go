@@ -315,7 +315,7 @@ migrate-force:
 DOCKER_BASE := deployments/docker
 
 docker-up:
-	cd $(DOCKER_BASE) && docker compose up -d
+	cd $(DOCKER_BASE) && docker compose up -d --build
 
 docker-down:
 	cd $(DOCKER_BASE) && docker compose down
