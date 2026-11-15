@@ -498,6 +498,22 @@ type SaleRefund struct {
 	Version          int64        `db:"version" json:"version"`
 }
 
+type SaleRefundItem struct {
+	common.BaseModel
+
+	OrganizationID       uuid.UUID  `db:"organization_id" json:"organization_id"`
+	RefundID             uuid.UUID  `db:"refund_id" json:"refund_id"`
+	SaleLineID           uuid.UUID  `db:"sale_item_id" json:"sale_line_id"`
+	Quantity             int64      `db:"quantity" json:"quantity"`
+	RefundAmountMinor    int64      `db:"refund_amount_minor" json:"refund_amount_minor"`
+	Restocked            bool       `db:"restocked" json:"restocked"`
+	RestockCondition     *string    `db:"restock_condition" json:"restock_condition,omitempty"`
+	OriginalCostMinor    int64      `db:"original_cost_minor" json:"original_cost_minor"`
+	CurrencyCode         string     `db:"currency_code" json:"currency_code"`
+	InventoryMovementID  *uuid.UUID `db:"inventory_movement_id" json:"inventory_movement_id,omitempty"`
+	Version              int64      `db:"version" json:"version"`
+}
+
 // -----------------------------------------------------------------------------
 // Restricted prescription evidence: keep minimum necessary data
 // -----------------------------------------------------------------------------
