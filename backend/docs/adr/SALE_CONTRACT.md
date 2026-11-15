@@ -591,11 +591,15 @@ authority alongside Ledger.
     amounts, quantities, returns, or inventory effects to make them fit
     the new model. Report unmappable records and resolve them before
     cutover.
--   The migration tree currently contains both
-    `000023_backup_module` and `000023_ledger_contract`. Resolve the
-    duplicate version against deployed migration history and the
-    migration runner before adding or applying any Sale migration. Do
-    not blindly rename or renumber either file.
+-   The original `000023` collision is resolved in this checkout for the
+    observed local Docker database: `000023_backup_module` remains at
+    version 23 and the unapplied Ledger contract migration is numbered
+    `000027_ledger_contract`, after `000026_inventory_core`. The local
+    database was at version 25, clean, with backup metadata present and
+    Ledger-contract objects absent. This does not establish other
+    environments' histories: verify each deployed migration row and
+    actual schema before rollout. An environment that already applied
+    the Ledger contract at version 23 must not blindly run version 27.
 
 ## 5. Pricing, tax, discounts, and promotions
 
@@ -1519,19 +1523,15 @@ compensating operations with audit/approval.
 
 ## 25. Migration and rollout safety
 
--   Inspect actual migration loader, duplicate versions, migration
-    history, and every deployed environment before adding Sale
-    migrations.
+-   Inspect actual migration loader, migration history, and every
+    deployed environment before adding Sale migrations.
 -   Never renumber/rewrite an applied migration.
--   Resolve existing duplicate migration-version collisions from
-    deployed `schema_migrations`, dirty flags, checksums if available,
-    and actual schema objects.
--   This checkout already has two distinct migration pairs numbered
-    `000023` and migration files through `000026`. Resolve the
-    `000023` collision using the deployed schema and migration runner
-    before adding a Sale migration. A fresh-database migration test is
-    required after resolution; do not assume checked-in filename
-    ordering proves deployed compatibility.
+-   The original `000023` filename collision is locally resolved using
+    the observed Docker database: Backup remains version 23 and Ledger
+    contract is version 27, after Inventory version 26. Confirm this
+    mapping against each deployment's `schema_migrations` and actual
+    schema; do not assume the local history proves deployed
+    compatibility. A fresh-database migration test is still required.
 -   Migration `000009_sale_customer` already owns the legacy Sale table
     names. Implement the compatibility/cutover strategy in §4.5 before
     creating any normalized Sale tables or writing production data.
@@ -1565,7 +1565,7 @@ mutation is enabled.
 
 | Phase | Work | Required exit gate |
 |---|---|---|
-| 0. Repository and rollout gate | Resolve duplicate migration version `000023`; inspect deployed migration history/schema; inventory legacy Sale/Customer rows and `000026` Inventory links; decide initial BDT/cash-only checkout and legal invoice policy. | Approved compatibility plan; fresh and deployed-schema migration strategy proven; no unresolved data ownership or legal-numbering blocker. |
+| 0. Repository and rollout gate | Reconcile the local `000023`/`000027` migration mapping with deployed migration history/schema; inventory legacy Sale/Customer rows and `000026` Inventory links; decide initial BDT/cash-only checkout and legal invoice policy. | Approved compatibility plan; fresh and deployed-schema migration strategy proven; no unresolved data ownership or legal-numbering blocker. |
 | 1. Shared atomic-write prerequisites | Add the PostgreSQL durable Sale operation record/claim/replay path with mandatory `Idempotency-Key` (or explicitly reuse an existing platform store; do not build a parallel generic framework); implement an error-returning transaction-bound business-audit port and durable Outbox; add Inventory FEFO lock/consume, reservation, return, and exact cost-allocation ports; add Ledger-owned typed Sale posting/account mapping. Preserve `db.WithTx` caller context across all ports. | PostgreSQL integration test proves one outer transaction rolls back Sale, Inventory, Ledger, audit, and Outbox together. Redis outage, duplicate operation, and same-key/different-payload cases have deterministic outcomes. |
 | 2. Schema bridge and core Sale records | Add forward-only schema after migration numbering is repaired; define immutable sales, lines, multi-batch allocations, tenders, invoice, and transition history; backfill/bridge legacy data without dual authoritative writes. | Constraints enforce tenant/branch scope, operation uniqueness, quantity/totals, and immutability; legacy row reconciliation is measured and repeatable. |
 | 3. Read and calculation path | Implement scoped lookup/list/detail and server-side BDT quote calculation using owner-module product/unit and tax facts. Do not promise stock or price beyond documented quote validity. Start with no promotions unless their transactional quota path is ready. | DTO/scope tests and exact-money/tax golden tests; no client-supplied total, cost, batch, or cashier is trusted. |

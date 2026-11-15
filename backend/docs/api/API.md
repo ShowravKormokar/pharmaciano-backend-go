@@ -543,7 +543,11 @@ Nested under purchases.
 
 Hot path. Cursor pagination on lists. Tight rate limits on checkout.
 These routes are proposed only; the Sale module is not currently mounted.
-Do not treat them as available until the Sale release gates pass.
+They are not part of the generated OpenAPI contract and are not available
+to clients. Do not mount mutations until the PostgreSQL transaction,
+idempotency, Inventory, Ledger, audit, and outbox gates pass. Initial
+checkout must remain limited to the approved, locally settled BDT scope;
+unapproved tax, invoice, payment, and dispensing policies block release.
 
 | Method & Path | Rate | Permission | Description |
 |---|---|---|---|
@@ -572,7 +576,7 @@ Do not treat them as available until the Sale release gates pass.
 | `GET    /api/v1/sales/{sale_id}/returns` | `rate_auth_read` | `sales_returns:view` | Returns for a sale. |
 | `GET    /api/v1/sales-returns` | `rate_auth_read` | `sales_returns:view` | Global list. `?status=&from=&to=&branch_id=`. |
 | `GET    /api/v1/sales-returns/{id}` | `rate_auth_read` | `sales_returns:view` | Detail. |
-| `POST   /api/v1/sales-returns/{id}/approve` | `rate_auth_write` | `sales_returns:approve` | Restocks if `restockable=true`. |
+| `POST   /api/v1/sales-returns/{id}/approve` | `rate_auth_write` | `sales_returns:approve` | Proposed only. Approval is separate from disposition; medicine returns default to quarantine/inspection and never directly increase sellable stock. |
 | `POST   /api/v1/sales-returns/{id}/reject` | `rate_auth_write` | `sales_returns:reject` | Requires reason. |
 
 ---
