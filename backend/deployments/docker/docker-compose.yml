@@ -25,6 +25,7 @@ services:
       - "8080:8080"
     environment:
       APP_ENV: docker
+      FEATURES_ANALYTICS_READ_API: ${FEATURES_ANALYTICS_READ_API:-false}
       DB_HOST: postgres
       DB_PORT: 5432
       DB_NAME: pharmaciano
@@ -68,6 +69,7 @@ services:
       dockerfile: deployments/docker/worker.Dockerfile
     container_name: pharmaciano-worker
     restart: unless-stopped
+    stop_grace_period: 6m
     environment:
       APP_ENV: docker
       DB_HOST: postgres
@@ -78,6 +80,21 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      OUTBOX_ENABLED: ${OUTBOX_ENABLED:-false}
+      OUTBOX_POLL_INTERVAL: ${OUTBOX_POLL_INTERVAL:-500ms}
+      OUTBOX_DISPATCH_BATCH_SIZE: ${OUTBOX_DISPATCH_BATCH_SIZE:-100}
+      OUTBOX_LEASE_DURATION: ${OUTBOX_LEASE_DURATION:-1m}
+      OUTBOX_HANDLER_TIMEOUT: ${OUTBOX_HANDLER_TIMEOUT:-30s}
+      OUTBOX_MAX_ATTEMPTS: ${OUTBOX_MAX_ATTEMPTS:-10}
+      OUTBOX_RETRY_MIN: ${OUTBOX_RETRY_MIN:-1s}
+      OUTBOX_RETRY_MAX: ${OUTBOX_RETRY_MAX:-15m}
+      OUTBOX_MAX_PAYLOAD_BYTES: ${OUTBOX_MAX_PAYLOAD_BYTES:-65536}
+      ASYNQ_REDIS_DB: ${ASYNQ_REDIS_DB:-1}
+      ASYNQ_CONCURRENCY: ${ASYNQ_CONCURRENCY:-15}
+      ASYNQ_QUEUES_CRITICAL: ${ASYNQ_QUEUES_CRITICAL:-6}
+      ASYNQ_QUEUES_DEFAULT: ${ASYNQ_QUEUES_DEFAULT:-3}
+      ASYNQ_QUEUES_LOW: ${ASYNQ_QUEUES_LOW:-1}
+      ASYNQ_RETRY_MAX_RETRIES: ${ASYNQ_RETRY_MAX_RETRIES:-25}
       JWT_SECRET: ${JWT_SECRET:-4f8c2a9d7b6e3f1c9a2d4e7f8b1c3d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1}
       FIELD_ENCRYPTION_KEY: ${FIELD_ENCRYPTION_KEY:-q9X5zYV7kzZfQm3hV9x9pKf2m7hTn4z5u8vW1x2y3zA=}
       FIELD_ENCRYPTION_KEY_ID: ${FIELD_ENCRYPTION_KEY_ID:-fe-2026-07}
@@ -97,6 +114,12 @@ services:
     volumes:
       - worker-uploads:/root/data/uploads
       - worker-logs:/root/logs
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/readyz >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
 
   migrate:
     build:
