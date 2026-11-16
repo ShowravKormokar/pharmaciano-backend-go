@@ -28,6 +28,7 @@ type Config struct {
 	Database    DatabaseConfig     `mapstructure:"database"`
 	Redis       RedisConfig        `mapstructure:"redis"`
 	Asynq       AsynqConfig        `mapstructure:"asynq"`
+	Outbox      OutboxConfig       `mapstructure:"outbox"`
 	JWT         JWTConfig          `mapstructure:"jwt"`
 	Cookie      CookieConfig       `mapstructure:"refresh_cookie"`
 	Password    PasswordConfig     `mapstructure:"password"`
@@ -156,6 +157,18 @@ type AsynqConfig struct {
 		InitialDelay time.Duration `mapstructure:"initial_delay"`
 	} `mapstructure:"retry"`
 	DeadLetterTTL time.Duration `mapstructure:"dead_letter_ttl"`
+}
+
+type OutboxConfig struct {
+	Enabled           bool          `mapstructure:"enabled"`
+	PollInterval      time.Duration `mapstructure:"poll_interval"`
+	DispatchBatchSize int           `mapstructure:"dispatch_batch_size"`
+	LeaseDuration     time.Duration `mapstructure:"lease_duration"`
+	HandlerTimeout    time.Duration `mapstructure:"handler_timeout"`
+	MaxAttempts       int           `mapstructure:"max_attempts"`
+	RetryMin          time.Duration `mapstructure:"retry_min"`
+	RetryMax          time.Duration `mapstructure:"retry_max"`
+	MaxPayloadBytes   int           `mapstructure:"max_payload_bytes"`
 }
 
 type JWTConfig struct {
@@ -378,6 +391,7 @@ type FeatureFlags struct {
 	WebSocketNotifications bool `mapstructure:"websocket_notifications"`
 	LedgerAutopost         bool `mapstructure:"ledger_autopost"`
 	BranchTransfers        bool `mapstructure:"branch_transfers"`
+	AnalyticsReadAPI       bool `mapstructure:"analytics_read_api"`
 	PurchaseReadAPI        bool `mapstructure:"purchase_read_api"`
 }
 
