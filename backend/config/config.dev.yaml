@@ -25,6 +25,9 @@ redis:
   port: 6379
   db: 0
 
+outbox:
+  enabled: false
+
 jwt:
   algorithm: HS256
   access_token_ttl: 15m           # longer TTL for easier local debugging
@@ -61,6 +64,7 @@ storage:
 features:
   ai_forecasting: false
   websocket_notifications: true
+  analytics_read_api: false
   purchase_read_api: false
 
 backup:

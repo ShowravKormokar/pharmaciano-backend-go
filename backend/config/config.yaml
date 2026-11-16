@@ -87,6 +87,17 @@ redis:
   read_timeout: 3s
   write_timeout: 3s
 
+outbox:
+  enabled: false
+  poll_interval: 500ms
+  dispatch_batch_size: 100
+  lease_duration: 1m
+  handler_timeout: 30s
+  max_attempts: 10
+  retry_min: 1s
+  retry_max: 15m
+  max_payload_bytes: 65536
+
 asynq:
   redis_db: 1
   concurrency: 20
@@ -259,6 +270,7 @@ features:
   websocket_notifications: true
   ledger_autopost: true
   branch_transfers: true
+  analytics_read_api: false
   # Purchase reads require the normalized Purchase schema and stay disabled until verified.
   purchase_read_api: false
 
