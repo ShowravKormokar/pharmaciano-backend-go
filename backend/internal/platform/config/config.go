@@ -136,6 +136,7 @@ func Load(opts LoadOptions) (*Config, error) {
 
 	// ---- Apply defaults ----
 	applyDefaults(v)
+	applyAsynqQueueEnvironment(v)
 
 	// ---- Unmarshal ----
 	cfg := &Config{}
@@ -190,6 +191,16 @@ func applyDefaults(v *viper.Viper) {
 	v.SetDefault("redis.dial_timeout", 5*time.Second)
 	v.SetDefault("redis.read_timeout", 3*time.Second)
 	v.SetDefault("redis.write_timeout", 3*time.Second)
+
+	v.SetDefault("outbox.enabled", false)
+	v.SetDefault("outbox.poll_interval", 500*time.Millisecond)
+	v.SetDefault("outbox.dispatch_batch_size", 100)
+	v.SetDefault("outbox.lease_duration", time.Minute)
+	v.SetDefault("outbox.handler_timeout", 30*time.Second)
+	v.SetDefault("outbox.max_attempts", 10)
+	v.SetDefault("outbox.retry_min", time.Second)
+	v.SetDefault("outbox.retry_max", 15*time.Minute)
+	v.SetDefault("outbox.max_payload_bytes", 64*1024)
 
 	v.SetDefault("jwt.algorithm", "HS256")
 	v.SetDefault("jwt.access_token_ttl", 15*time.Minute)
@@ -246,6 +257,17 @@ func applyDefaults(v *viper.Viper) {
 	// Purchase reads target a normalized schema that is not yet part of the
 	// verified migration lineage. Keep the API unmounted unless explicitly enabled.
 	v.SetDefault("features.purchase_read_api", false)
+	// Analytics remains unmounted until its source, projection and outbox
+	// contracts are implemented and reconciled.
+	v.SetDefault("features.analytics_read_api", false)
+}
+
+func applyAsynqQueueEnvironment(v *viper.Viper) {
+	// Viper's Unmarshal does not overlay automatic environment values inside maps.
+	for queue := range v.GetStringMap("asynq.queues") {
+		key := "asynq.queues." + queue
+		v.Set(key, v.GetInt(key))
+	}
 }
 
 // bindEnvVars maps env var names that don't map cleanly to dotted keys.
@@ -271,6 +293,23 @@ func bindEnvVars(v *viper.Viper) {
 		"redis.port":     "REDIS_PORT",
 		"redis.password": "REDIS_PASSWORD",
 		"redis.db":       "REDIS_DB",
+
+		"outbox.enabled":             "OUTBOX_ENABLED",
+		"outbox.poll_interval":       "OUTBOX_POLL_INTERVAL",
+		"outbox.dispatch_batch_size": "OUTBOX_DISPATCH_BATCH_SIZE",
+		"outbox.lease_duration":      "OUTBOX_LEASE_DURATION",
+		"outbox.handler_timeout":     "OUTBOX_HANDLER_TIMEOUT",
+		"outbox.max_attempts":        "OUTBOX_MAX_ATTEMPTS",
+		"outbox.retry_min":           "OUTBOX_RETRY_MIN",
+		"outbox.retry_max":           "OUTBOX_RETRY_MAX",
+		"outbox.max_payload_bytes":   "OUTBOX_MAX_PAYLOAD_BYTES",
+
+		"asynq.redis_db":          "ASYNQ_REDIS_DB",
+		"asynq.concurrency":       "ASYNQ_CONCURRENCY",
+		"asynq.queues.critical":   "ASYNQ_QUEUES_CRITICAL",
+		"asynq.queues.default":    "ASYNQ_QUEUES_DEFAULT",
+		"asynq.queues.low":        "ASYNQ_QUEUES_LOW",
+		"asynq.retry.max_retries": "ASYNQ_RETRY_MAX_RETRIES",
 
 		"jwt.secret":           "JWT_SECRET",
 		"jwt.key_id":           "JWT_KEY_ID",
