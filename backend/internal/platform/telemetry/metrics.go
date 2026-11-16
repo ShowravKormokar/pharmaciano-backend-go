@@ -77,6 +77,24 @@ type Metrics struct {
 	// Medicine catalogue
 	MedicineOperationsTotal *prometheus.CounterVec // operation, outcome
 
+	// Analytics uses bounded labels only; never use tenant, user, customer,
+	// sale, event, or other per-record identifiers as labels.
+	AnalyticsProjectionEvents       *prometheus.CounterVec   // consumer, result
+	AnalyticsProjectionLag          *prometheus.GaugeVec     // consumer
+	AnalyticsProjectionFailures     *prometheus.CounterVec   // consumer, error_class
+	AnalyticsQueryDuration          *prometheus.HistogramVec // endpoint, result
+	AnalyticsCacheHits              *prometheus.CounterVec   // dataset
+	AnalyticsExportJobs             *prometheus.CounterVec   // dataset, status
+	AnalyticsExportDuration         *prometheus.HistogramVec // dataset
+	AnalyticsExportBytes            prometheus.Counter
+	AnalyticsReconciliationMismatch *prometheus.CounterVec // source, dimension, severity
+	AnalyticsWorkerQueueDepth       *prometheus.GaugeVec   // queue
+
+	// Outbox label values come from the finite handler registry, never payloads.
+	OutboxEventsTotal        *prometheus.CounterVec   // event_type, result
+	OutboxProcessingDuration *prometheus.HistogramVec // event_type, result
+	OutboxQueueDepth         *prometheus.GaugeVec     // event_type
+
 	// Jobs
 	JobDuration   *prometheus.HistogramVec
 	JobsProcessed *prometheus.CounterVec
@@ -592,6 +610,70 @@ func NewMetrics() *Metrics {
 		[]string{"driver", "op"},
 	)
 
+	m.AnalyticsProjectionEvents = prometheus.NewCounterVec(
+		prometheus.CounterOpts{Name: "analytics_projection_events_total", Help: "Analytics projection event outcomes."},
+		[]string{"consumer", "result"},
+	)
+	m.AnalyticsProjectionLag = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{Name: "analytics_projection_lag_seconds", Help: "Age of the latest successfully applied Analytics source event."},
+		[]string{"consumer"},
+	)
+	m.AnalyticsProjectionFailures = prometheus.NewCounterVec(
+		prometheus.CounterOpts{Name: "analytics_projection_failures_total", Help: "Analytics projection failures by bounded error class."},
+		[]string{"consumer", "error_class"},
+	)
+	m.AnalyticsQueryDuration = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "analytics_query_duration_seconds",
+			Help:    "Analytics API query duration.",
+			Buckets: []float64{0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10},
+		},
+		[]string{"endpoint", "result"},
+	)
+	m.AnalyticsCacheHits = prometheus.NewCounterVec(
+		prometheus.CounterOpts{Name: "analytics_cache_hits_total", Help: "Analytics cache lookups by dataset."},
+		[]string{"dataset"},
+	)
+	m.AnalyticsExportJobs = prometheus.NewCounterVec(
+		prometheus.CounterOpts{Name: "analytics_export_jobs_total", Help: "Analytics export jobs by dataset and terminal status."},
+		[]string{"dataset", "status"},
+	)
+	m.AnalyticsExportDuration = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "analytics_export_duration_seconds",
+			Help:    "Analytics export generation duration by dataset.",
+			Buckets: []float64{0.1, 0.5, 1, 2.5, 5, 10, 30, 60, 120, 300, 600},
+		},
+		[]string{"dataset"},
+	)
+	m.AnalyticsExportBytes = prometheus.NewCounter(
+		prometheus.CounterOpts{Name: "analytics_export_bytes_total", Help: "Total bytes in completed Analytics export artifacts."},
+	)
+	m.AnalyticsReconciliationMismatch = prometheus.NewCounterVec(
+		prometheus.CounterOpts{Name: "analytics_reconciliation_mismatches_total", Help: "Analytics reconciliation mismatches by source, dimension, and severity."},
+		[]string{"source", "dimension", "severity"},
+	)
+	m.AnalyticsWorkerQueueDepth = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{Name: "analytics_worker_queue_depth", Help: "Analytics work waiting by bounded queue name."},
+		[]string{"queue"},
+	)
+	m.OutboxEventsTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{Name: "outbox_events_total", Help: "Transactional outbox event delivery outcomes."},
+		[]string{"event_type", "result"},
+	)
+	m.OutboxProcessingDuration = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "outbox_processing_duration_seconds",
+			Help:    "Transactional outbox handler transaction duration.",
+			Buckets: []float64{0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 30, 60},
+		},
+		[]string{"event_type", "result"},
+	)
+	m.OutboxQueueDepth = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{Name: "outbox_queue_depth", Help: "Pending or leased outbox events by registered event type."},
+		[]string{"event_type"},
+	)
+
 	reg.MustRegister(
 		m.HTTPRequestsTotal, m.HTTPRequestDuration, m.HTTPResponseSize, m.HTTPInFlight,
 		m.DBQueryDuration, m.DBQueriesTotal,
@@ -615,6 +697,12 @@ func NewMetrics() *Metrics {
 		m.SaleOperationsTotal, m.SaleOperationDuration,
 		m.InventoryOperationsTotal,
 		m.MedicineOperationsTotal,
+		// Analytics — bounded labels only; never add tenant or record identifiers.
+		m.AnalyticsProjectionEvents, m.AnalyticsProjectionLag, m.AnalyticsProjectionFailures,
+		m.AnalyticsQueryDuration, m.AnalyticsCacheHits,
+		m.AnalyticsExportJobs, m.AnalyticsExportDuration, m.AnalyticsExportBytes,
+		m.AnalyticsReconciliationMismatch, m.AnalyticsWorkerQueueDepth,
+		m.OutboxEventsTotal, m.OutboxProcessingDuration, m.OutboxQueueDepth,
 		m.JobDuration, m.JobsProcessed, m.JobsFailed, m.JobQueueSize,
 		m.AICallsTotal, m.AICallDuration, m.AITokensUsed, m.AICostUSD,
 		m.MailSendTotal, m.MailSendDuration,
