@@ -666,23 +666,14 @@ Async pattern. Client polls or receives WebSocket event when ready.
 
 ## 7.22 Analytics
 
+**Status:** Planned, not implemented or mounted. The module remains disabled by default (`FEATURES_ANALYTICS_READ_API=false`). The initial release is limited to sales measures backed by a verified daily-sales projection; Inventory, valuation, profitability, customer ranking and export routes are not part of this release. See the [Analytics contract](../adr/ANALYTICS_CONTRACT.md) for source, freshness, privacy and rollout gates. Add routes to OpenAPI only after the stable response DTO and freshness metadata are frozen.
+
 | Method & Path | Rate | Permission | Description |
 |---|---|---|---|
-| `GET /api/v1/analytics/dashboard` | `rate_auth_read` | `analytics:view` | Today snapshot. `?branch_id=`. |
-| `GET /api/v1/analytics/sales/overview` | `rate_auth_read` | `analytics:view` | `?from=&to=&group_by=day\|week\|month&branch_id=`. |
-| `GET /api/v1/analytics/sales/by-branch` | `rate_auth_read` | `analytics:view` | Comparison across branches. SUPER_ADMIN. |
-| `GET /api/v1/analytics/sales/by-category` | `rate_auth_read` | `analytics:view` | |
-| `GET /api/v1/analytics/sales/by-medicine` | `rate_auth_read` | `analytics:view` | `?limit=20` top-N. |
-| `GET /api/v1/analytics/sales/by-cashier` | `rate_auth_read` | `analytics:view` | |
-| `GET /api/v1/analytics/sales/by-hour` | `rate_auth_read` | `analytics:view` | Peak hours. |
-| `GET /api/v1/analytics/inventory/turnover` | `rate_auth_read` | `analytics:view` | |
-| `GET /api/v1/analytics/inventory/valuation` | `rate_auth_read` | `analytics:view` | |
-| `GET /api/v1/analytics/inventory/aging` | `rate_auth_read` | `analytics:view` | Batch age buckets. |
-| `GET /api/v1/analytics/customers/top` | `rate_auth_read` | `analytics:view` | |
-| `GET /api/v1/analytics/products/top` | `rate_auth_read` | `analytics:view` | |
-| `GET /api/v1/analytics/products/slow-moving` | `rate_auth_read` | `analytics:view` | |
-| `GET /api/v1/analytics/profitability` | `rate_auth_read` | `analytics:view` | Margin by product/branch. |
-| `GET /api/v1/analytics/export?report=<name>&format=csv\|xlsx` | `rate_export` | `analytics:export` | Async job. |
+| `GET /api/v1/analytics/dashboard` | `auth_read` | `analytics:view` | Sales-only snapshot for the caller's authorized scope; every measure discloses projection freshness. |
+| `GET /api/v1/analytics/sales/overview` | `auth_read` | `analytics:view` | Bounded `from`, `to`, `group_by=day\|week\|month`, and optional authorized `branch_id`; BDT-only in the initial release. |
+
+The API and routes do not exist yet. Do not mount them until the daily-sales projection, event/replay semantics, range limits, business timezone, response schema, scope authorization, reconciliation, and freshness behavior are verified. No `SUPER_ADMIN` shortcut grants cross-branch data; derive access from the current principal's effective scope. Do not add a mutating export `GET`; exports remain blocked until the Report job/artifact owner and permission intersection are implemented and reviewed.
 
 ---
 
