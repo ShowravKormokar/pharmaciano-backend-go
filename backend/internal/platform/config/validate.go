@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"backend/internal/common/constants"
 )
 
 func (c *Config) Validate() error {
@@ -71,6 +73,38 @@ func (c *Config) Validate() error {
 	}
 	if _, err := net.LookupPort("tcp", strconv.Itoa(c.Redis.Port)); err != nil {
 		errs.add("redis.port invalid: %v", err)
+	}
+
+	// Transactional outbox worker. A lease must outlive a handler transaction
+	// so a second worker cannot reclaim work while the first is committing it.
+	if c.Outbox.Enabled {
+		if c.Asynq.Concurrency < 1 || c.Asynq.Queues[constants.QueueDefault] < 1 {
+			errs.add("asynq.concurrency and a positive default queue weight are required when outbox.enabled=true")
+		}
+		if c.Asynq.RedisDB < 0 || c.Asynq.Retry.MaxRetries < 0 {
+			errs.add("asynq.redis_db and asynq.retry.max_retries must be non-negative")
+		}
+		if c.Outbox.PollInterval <= 0 || c.Outbox.PollInterval > time.Minute {
+			errs.add("outbox.poll_interval must be > 0 and ≤ 1m")
+		}
+		if c.Outbox.DispatchBatchSize < 1 || c.Outbox.DispatchBatchSize > 1000 {
+			errs.add("outbox.dispatch_batch_size must be 1..1000")
+		}
+		if c.Outbox.HandlerTimeout <= 0 || c.Outbox.HandlerTimeout > 5*time.Minute {
+			errs.add("outbox.handler_timeout must be > 0 and ≤ 5m")
+		}
+		if c.Outbox.LeaseDuration <= c.Outbox.HandlerTimeout+10*time.Second {
+			errs.add("outbox.lease_duration must exceed outbox.handler_timeout by more than 10s")
+		}
+		if c.Outbox.MaxAttempts < 1 {
+			errs.add("outbox.max_attempts must be ≥ 1")
+		}
+		if c.Outbox.RetryMin <= 0 || c.Outbox.RetryMax < c.Outbox.RetryMin {
+			errs.add("outbox.retry_min/retry_max must be positive and retry_max ≥ retry_min")
+		}
+		if c.Outbox.MaxPayloadBytes < 1 || c.Outbox.MaxPayloadBytes > 1024*1024 {
+			errs.add("outbox.max_payload_bytes must be 1..1048576")
+		}
 	}
 
 	// JWT
