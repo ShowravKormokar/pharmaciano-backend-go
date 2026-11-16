@@ -1,4 +1,4 @@
-﻿package db
+package db
 
 import (
 	"context"
@@ -42,6 +42,12 @@ func (d *DB) FromCtx(ctx context.Context) Querier {
 		return tx
 	}
 	return d.pool
+}
+
+// InTransaction reports whether ctx carries a database transaction.
+func (d *DB) InTransaction(ctx context.Context) bool {
+	_, ok := ctx.Value(ctxKeyTx).(pgx.Tx)
+	return ok
 }
 
 // ReadFromCtx is like FromCtx but reads from the reader pool when there is
