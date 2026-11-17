@@ -1,4 +1,4 @@
-package config
+﻿package config
 
 import (
 	"fmt"
@@ -56,7 +56,7 @@ func Load(opts LoadOptions) (*Config, error) {
 		}
 	}
 	if !envLoaded {
-		// Not fatal – environment variables may already be set
+		// Not fatal â€“ environment variables may already be set
 	}
 
 	// ---- Determine environment ----
@@ -235,7 +235,7 @@ func applyDefaults(v *viper.Viper) {
 	v.SetDefault("security.referrer_policy", "strict-origin-when-cross-origin")
 	v.SetDefault("security.origin_check.enabled", true)
 
-	// Audit — durable Postgres store + optional Loki observability stream.
+	// Audit â€” durable Postgres store + optional Loki observability stream.
 	v.SetDefault("audit.enabled", true)
 	v.SetDefault("audit.partition_by", "month")
 	v.SetDefault("audit.retention_days", 365)
@@ -349,6 +349,8 @@ func bindEnvVars(v *viper.Viper) {
 
 		"pagination.cursor_signing_key": "CURSOR_SIGNING_KEY",
 
+		"features.analytics_read_api": "FEATURES_ANALYTICS_READ_API",
+
 		"telemetry.health.expose_errors": "HEALTH_EXPOSE_ERRORS",
 
 		"rate_limit.enabled":                     "RATE_LIMIT_ENABLED",
@@ -361,3 +363,4 @@ func bindEnvVars(v *viper.Viper) {
 		_ = v.BindEnv(key, env)
 	}
 }
+
