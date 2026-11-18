@@ -1,0 +1,150 @@
+﻿# Analytics-owned read projections (sales-first, gated).
+
+MoneyValue:
+  type: object
+  required: [currency, minor_units]
+  properties:
+    currency:
+      type: string
+      description: ISO currency code. Initial release is BDT-only.
+      example: BDT
+    minor_units:
+      type: integer
+      format: int64
+      description: Exact amount in integer minor units (paisa). Never a floating-point value.
+
+SalesTotals:
+  type: object
+  required:
+    - completed_sale_count
+    - gross_sales
+    - discount_total
+    - tax_total
+    - net_sales
+    - return_total
+    - units_sold
+  properties:
+    completed_sale_count:
+      type: integer
+      format: int64
+      minimum: 0
+    gross_sales:
+      $ref: '#/MoneyValue'
+    discount_total:
+      $ref: '#/MoneyValue'
+    tax_total:
+      $ref: '#/MoneyValue'
+    net_sales:
+      $ref: '#/MoneyValue'
+    return_total:
+      $ref: '#/MoneyValue'
+    units_sold:
+      type: integer
+      format: int64
+      description: Completed base-unit quantity net of returns (canonical base-unit identity).
+
+FreshnessMetadata:
+  type: object
+  required: [generated_at, projection_version, source_status, timezone]
+  properties:
+    generated_at:
+      type: string
+      format: date-time
+    data_as_of:
+      type: [string, 'null']
+      format: date-time
+    freshness_lag_seconds:
+      type: [integer, 'null']
+      format: int64
+      minimum: 0
+    projection_version:
+      type: integer
+      format: int32
+      minimum: 0
+    source_status:
+      type: string
+      enum: [current, delayed, rebuilding, degraded]
+      description: Missing or stale projection data is reported as degraded/unavailable, not as current zero.
+    timezone:
+      type: string
+      example: UTC
+    currency:
+      type: string
+      example: BDT
+
+DashboardResponse:
+  type: object
+  required: [business_date, totals, freshness]
+  properties:
+    branch_id:
+      type: [string, 'null']
+      format: uuid
+      description: Selected branch filter when a branch-scoped snapshot was requested.
+    business_date:
+      type: string
+      format: date
+    totals:
+      $ref: '#/SalesTotals'
+    freshness:
+      $ref: '#/FreshnessMetadata'
+
+SalesOverviewBucket:
+  type: object
+  required: [period_start, period_end, totals]
+  properties:
+    period_start:
+      type: string
+      format: date
+    period_end:
+      type: string
+      format: date
+    totals:
+      $ref: '#/SalesTotals'
+
+SalesOverviewResponse:
+  type: object
+  required: [from, to, group_by, buckets, freshness]
+  properties:
+    branch_id:
+      type: [string, 'null']
+      format: uuid
+      description: Selected branch filter when a branch-scoped overview was requested.
+    from:
+      type: string
+      format: date
+    to:
+      type: string
+      format: date
+    group_by:
+      type: string
+      enum: [day, week, month]
+    buckets:
+      type: array
+      items:
+        $ref: '#/SalesOverviewBucket'
+    freshness:
+      $ref: '#/FreshnessMetadata'
+
+DashboardEnvelope:
+  type: object
+  required: [success, data, meta]
+  properties:
+    success:
+      type: boolean
+      const: true
+    data:
+      $ref: '#/DashboardResponse'
+    meta:
+      $ref: 'common.yaml#/Meta'
+
+SalesOverviewEnvelope:
+  type: object
+  required: [success, data, meta]
+  properties:
+    success:
+      type: boolean
+      const: true
+    data:
+      $ref: '#/SalesOverviewResponse'
+    meta:
+      $ref: 'common.yaml#/Meta'

@@ -1,0 +1,118 @@
+﻿# Analytics read API (sales-first, gated).
+# Routes must remain unregistered until analytics projections/migrations, frozen
+# Sale outbox event contracts/producers, transactional consumer, reconciliation
+# gates, and features.analytics_read_api enablement are satisfied.
+
+/analytics/dashboard:
+  get:
+    operationId: analytics.dashboard.get
+    summary: Get sales dashboard snapshot
+    description: |
+      Returns a sales-only "today" dashboard snapshot for the caller's authorized
+      organization and effective branch scope. Tenant and branch scope are derived
+      from the authenticated principal; `branch_id` is an optional filter selector
+      intersected with effective scope and never grants broader access.
+      Requires `analytics:view`. Responses disclose projection freshness and must
+      not be treated as real-time source-of-truth reads. A missing projection is
+      reported as degraded/unavailable, never fabricated as current zero data.
+      Responses are private and not cacheable. This endpoint is gated and not
+      mounted until Analytics read prerequisites are satisfied.
+    tags: [analytics]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - name: branch_id
+        in: query
+        description: Optional branch filter within the caller's effective authorized scope.
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: Sales dashboard snapshot with freshness metadata.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/analytics.yaml#/DashboardEnvelope'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '429':
+        $ref: '../components/responses/error.yaml#/TooManyRequests'
+      '500':
+        $ref: '../components/responses/error.yaml#/InternalError'
+      '503':
+        $ref: '../components/responses/error.yaml#/InternalError'
+
+/analytics/sales/overview:
+  get:
+    operationId: analytics.salesOverview.get
+    summary: Get sales overview
+    description: |
+      Returns bounded, grouped additive sales aggregates over Analytics-owned
+      projections for the caller's authorized organization and effective branch
+      scope. `from` is inclusive, `to` is exclusive, and `from < to`. `group_by`
+      is allow-listed to day, week, or month. Initial release is BDT-only.
+      Tenant and branch scope are derived from the authenticated principal;
+      `branch_id` is an optional filter selector intersected with effective scope.
+      Requires `analytics:view`. Responses disclose projection freshness/version;
+      missing or stale projection state is reported as degraded/unavailable rather
+      than fabricated as current zero data. Responses are private and not cacheable.
+      This endpoint is gated and not mounted until Analytics read prerequisites
+      and reconciliation gates are satisfied.
+    tags: [analytics]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - name: branch_id
+        in: query
+        description: Optional branch filter within the caller's effective authorized scope.
+        schema:
+          type: string
+          format: uuid
+      - name: from
+        in: query
+        required: true
+        description: Inclusive range start (RFC3339 or YYYY-MM-DD, interpreted as UTC date).
+        schema:
+          type: string
+      - name: to
+        in: query
+        required: true
+        description: Exclusive range end (RFC3339 or YYYY-MM-DD, interpreted as UTC date); must be after `from`.
+        schema:
+          type: string
+      - name: group_by
+        in: query
+        description: Aggregation bucket. Defaults to `day`.
+        schema:
+          type: string
+          enum: [day, week, month]
+          default: day
+      - name: currency
+        in: query
+        description: Currency filter. Initial release accepts BDT only.
+        schema:
+          type: string
+          enum: [BDT]
+          default: BDT
+    responses:
+      '200':
+        description: Grouped sales overview buckets with freshness metadata.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/analytics.yaml#/SalesOverviewEnvelope'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '429':
+        $ref: '../components/responses/error.yaml#/TooManyRequests'
+      '500':
+        $ref: '../components/responses/error.yaml#/InternalError'
+      '503':
+        $ref: '../components/responses/error.yaml#/InternalError'
