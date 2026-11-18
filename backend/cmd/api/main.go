@@ -1,4 +1,4 @@
-package main
+﻿package main
 
 import (
 	"context"
@@ -51,7 +51,7 @@ func main() {
 
 // run wires everything and blocks until a shutdown signal (or a fatal server
 // error) arrives. Returning an error rather than calling log.Fatal lets every
-// deferred cleanup (flush spans, close pools, sync logs) actually run — os.Exit
+// deferred cleanup (flush spans, close pools, sync logs) actually run â€” os.Exit
 // would skip them.
 func run() error {
 	// Cancel the root context on SIGINT/SIGTERM so in-flight startup work and the
@@ -127,7 +127,7 @@ func run() error {
 	// --- Retention / cleanup worker -------------------------------------------
 	// Purges expired sessions, dead refresh tokens, used/expired password resets
 	// and MFA challenges in bounded batches. Bound to the root ctx so a graceful
-	// shutdown (signal → ctx.Done()) stops it before the server drains; the
+	// shutdown (signal â†’ ctx.Done()) stops it before the server drains; the
 	// deferred Wait gives an in-flight DELETE up to one second to finish.
 	retentionWorker := retention.New(pg.Pool(), retention.Config{
 		Enabled:             cfg.Cleanup.Enabled,
@@ -174,10 +174,10 @@ func run() error {
 		SaltLength:  cfg.Password.Argon2.SaltLength,
 	})
 
-	// Server-side pepper (ADR §6): mix a site secret into the password before
+	// Server-side pepper (ADR Â§6): mix a site secret into the password before
 	// Argon2id so a leaked database dump still does not unlock passwords offline.
 	// auth.New wraps this same hasher itself (buildPepperedHasher); the user module
-	// does not wrap, so it must receive the peppered wrapper here — otherwise a user
+	// does not wrap, so it must receive the peppered wrapper here â€” otherwise a user
 	// created through /users would be minted with an UNPEPPERED hash that the
 	// peppered login path rejects (pepperFor("") fails once a pepper is configured).
 	// Building the wrapper once and handing it to BOTH keeps every hash minted in
@@ -189,11 +189,11 @@ func run() error {
 		[]byte(cfg.Password.Pepper.Previous), cfg.Password.Pepper.PreviousID,
 	)
 
-	// --- Access-control modules (construction order: rbac → auth → user) --------
+	// --- Access-control modules (construction order: rbac â†’ auth â†’ user) --------
 	// These are built before the middleware container because two of them satisfy
 	// ports the middleware consumes (auth is the Authenticator, rbac the
-	// Authorizer). None of them need the container at construction — it is handed to
-	// RegisterRoutes later — so there is no cycle.
+	// Authorizer). None of them need the container at construction â€” it is handed to
+	// RegisterRoutes later â€” so there is no cycle.
 	//
 	// rbac owns the policy engine. auth borrows its ResolveAccess to snapshot the
 	// caller's role + permissions into each access token. user delegates role
@@ -205,7 +205,7 @@ func run() error {
 	// Plant the fixed permission/role catalogue (idempotent; self-manages its own
 	// transaction + advisory lock), then warm the enforcer snapshot synchronously so
 	// a policy-load failure aborts startup rather than surfacing later as blanket
-	// denials — the enforcer fails closed until the first Load succeeds.
+	// denials â€” the enforcer fails closed until the first Load succeeds.
 	if serr := rbacModule.Seeder.Seed(ctx); serr != nil {
 		return fmt.Errorf("rbac seed: %w", serr)
 	}
@@ -217,8 +217,8 @@ func run() error {
 	// cancelled at shutdown; interval 0 applies the enforcer's 30s default.
 	rbacModule.Enforcer.StartAutoReload(ctx, 0)
 
-	// auth returns an error (unlike the leaf modules) so a mis-secured JWT config —
-	// short/empty secret, non-positive TTL — fails the boot instead of minting
+	// auth returns an error (unlike the leaf modules) so a mis-secured JWT config â€”
+	// short/empty secret, non-positive TTL â€” fails the boot instead of minting
 	// forgeable or instantly-expired tokens.
 	//
 	// The MFA TOTP secret is stored encrypted at rest (users.mfa_secret_encrypted)
@@ -290,12 +290,12 @@ func run() error {
 	)
 
 	// --- Domain modules ---------------------------------------------------------
-	// Each module's New assembles its own repository → service → handler from the
+	// Each module's New assembles its own repository â†’ service â†’ handler from the
 	// shared Postgres pool, validator and logger, and exposes RegisterRoutes. The
 	// router mounts them under /api/v1 purely through the ModuleRegistrar interface,
 	// so it never imports these packages. auth and rbac are Modules whose
 	// RegisterRoutes delegates to their handler; user exposes its Handler directly.
-	// Listing order is cosmetic — the mounted paths do not overlap.
+	// Listing order is cosmetic â€” the mounted paths do not overlap.
 	modules := []router.ModuleRegistrar{
 		organization.New(pg, val, log),
 		branch.New(pg, val, log),
@@ -374,3 +374,5 @@ func run() error {
 	log.Info("server stopped cleanly")
 	return nil
 }
+
+
