@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -278,6 +279,38 @@ func (c *Config) Validate() error {
 		errs.add("backup.enabled cannot be true: the durable worker, authenticated encryption, private artifact storage, step-up authorization, and lifecycle controls are not implemented")
 	}
 
+	// Report routes and worker task are gated behind reports.enabled. When
+	// enabled, the limits must be sane and the artifact storage namespace valid.
+	if c.Report.Enabled {
+		if c.Report.DefaultPageSize <= 0 {
+			errs.add("report.default_page_size must be > 0")
+		}
+		if c.Report.MaxPageSize <= 0 || c.Report.DefaultPageSize > c.Report.MaxPageSize {
+			errs.add("report.max_page_size must be > 0 and >= report.default_page_size")
+		}
+		if c.Report.MaxExportRows <= 0 {
+			errs.add("report.max_export_rows must be > 0")
+		}
+		if c.Report.MaxExecutionSeconds <= 0 {
+			errs.add("report.max_execution_seconds must be > 0")
+		}
+		if c.Report.MaxFileSizeMB <= 0 {
+			errs.add("report.max_file_size_mb must be > 0")
+		}
+		if c.Report.MaxDateRangeDays <= 0 {
+			errs.add("report.max_date_range_days must be > 0")
+		}
+		if c.Report.MaxConcurrencyPerOrg <= 0 {
+			errs.add("report.max_concurrency_per_org must be > 0")
+		}
+		if c.Report.DefaultRetentionDays <= 0 {
+			errs.add("report.default_retention_days must be > 0")
+		}
+		if !reportNamespaceRe.MatchString(c.Report.StorageNamespace) {
+			errs.add("report.storage_namespace must match ^[a-zA-Z0-9_-]{1,64}$")
+		}
+	}
+
 	// Rate limit
 	if c.RateLimit.Enabled {
 		for name, p := range c.RateLimit.Policies {
@@ -347,6 +380,8 @@ func oneOf(v string, allowed ...string) bool {
 	}
 	return false
 }
+
+var reportNamespaceRe = regexp.MustCompile(`^[a-zA-Z0-9_-]{1,64}$`)
 
 // fmtSprintf is aliased so types.go can build DSN strings without importing
 var fmtSprintf = fmt.Sprintf
