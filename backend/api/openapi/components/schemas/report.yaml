@@ -1,0 +1,194 @@
+# Report API schemas (gated behind cfg.Report.Enabled; see REPORT_CONTRACT §5).
+# All response bodies are wrapped in the standard Envelope; list operations add
+# a pagination block.
+
+CatalogEntry:
+  type: object
+  description: A client-visible catalogue entry describing one registered report definition.
+  required: [code, version, title, formats, max_rows, max_runtime_seconds]
+  properties:
+    code:
+      type: string
+      example: sales
+    version:
+      type: integer
+      example: 1
+    title:
+      type: string
+      example: Sales Register
+    formats:
+      type: array
+      items:
+        type: string
+        enum: [csv, xlsx, pdf]
+      example: [csv]
+    max_rows:
+      type: integer
+      example: 100000
+    max_runtime_seconds:
+      type: integer
+      example: 300
+
+GenerateRequest:
+  type: object
+  description: Request body for POST /reports/generate.
+  required: [type, filters, format]
+  properties:
+    type:
+      type: string
+      description: Report definition code (e.g. "sales").
+      example: sales
+    filters:
+      $ref: '#/GenerateFilters'
+    format:
+      type: string
+      description: Output format. Supported values depend on the report definition.
+      example: csv
+
+GenerateFilters:
+  type: object
+  description: Strict, bounded filter shape for report generation.
+  required: [from, to]
+  properties:
+    from:
+      type: string
+      description: Inclusive range start (RFC3339 or YYYY-MM-DD, interpreted as UTC date).
+      example: "2026-01-01"
+    to:
+      type: string
+      description: Exclusive range end (RFC3339 or YYYY-MM-DD, interpreted as UTC date); must be after `from`.
+      example: "2026-01-31"
+    branch_ids:
+      type: array
+      items:
+        type: string
+        format: uuid
+      description: Optional branch selector within the caller's effective authorized scope.
+    warehouse_ids:
+      type: array
+      items:
+        type: string
+        format: uuid
+      description: Optional warehouse selector within the caller's effective authorized scope.
+
+GenerateResponse:
+  type: object
+  description: 202 Accepted body for POST /reports/generate.
+  required: [job_id, status_url, accepted_at]
+  properties:
+    job_id:
+      type: string
+      format: uuid
+      example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+    status_url:
+      type: string
+      format: uri
+      example: https://api.example.com/api/v1/reports/jobs/f47ac10b-58cc-4372-a567-0e02b2c3d479
+    accepted_at:
+      type: string
+      format: date-time
+      example: "2026-01-15T10:30:00Z"
+
+JobListItem:
+  type: object
+  description: A row of GET /reports/jobs.
+  required: [job_id, report_code, definition_version, format, status, created_at, queued_at, expires_at, download_available]
+  properties:
+    job_id:
+      type: string
+      format: uuid
+    report_code:
+      type: string
+      example: sales
+    definition_version:
+      type: integer
+      example: 1
+    format:
+      type: string
+      example: csv
+    status:
+      type: string
+      enum: [queued, running, retry_wait, succeeded, failed, cancelled, cancel_requested]
+      example: succeeded
+    created_at:
+      type: string
+      format: date-time
+    queued_at:
+      type: string
+      format: date-time
+    completed_at:
+      type: string
+      format: date-time
+    row_count:
+      type: integer
+    expires_at:
+      type: string
+      format: date-time
+    download_available:
+      type: boolean
+
+JobStatus:
+  type: object
+  description: Detailed status of a single report generation job (GET /reports/jobs/{id}).
+  required: [job_id, report_code, definition_version, format, status, created_at, queued_at, expires_at, download_available]
+  properties:
+    job_id:
+      type: string
+      format: uuid
+    report_code:
+      type: string
+      example: sales
+    definition_version:
+      type: integer
+      example: 1
+    format:
+      type: string
+      example: csv
+    status:
+      type: string
+      enum: [queued, running, retry_wait, succeeded, failed, cancelled, cancel_requested]
+      example: succeeded
+    created_at:
+      type: string
+      format: date-time
+    queued_at:
+      type: string
+      format: date-time
+    started_at:
+      type: string
+      format: date-time
+    completed_at:
+      type: string
+      format: date-time
+    progress:
+      type: integer
+      description: Coarse progress 0..100.
+      example: 100
+    row_count:
+      type: integer
+    size_bytes:
+      type: integer
+    expires_at:
+      type: string
+      format: date-time
+    failure_code:
+      type: string
+    failure_message:
+      type: string
+    download_available:
+      type: boolean
+    data_as_of:
+      type: string
+      format: date-time
+
+CancelResponse:
+  type: object
+  description: POST /reports/jobs/{id}/cancel response.
+  required: [job_id, status]
+  properties:
+    job_id:
+      type: string
+      format: uuid
+    status:
+      type: string
+      example: cancel_requested

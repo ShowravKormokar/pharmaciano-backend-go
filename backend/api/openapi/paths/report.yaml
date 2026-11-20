@@ -1,0 +1,205 @@
+# Report API (gated behind cfg.Report.Enabled; routes stay unmounted until
+# release gates pass, REPORT_CONTRACT §22 Phase 0 / Phase 1).
+# Report is a read-only consumer: it owns no business-domain tables and never
+# mutates Sale, Purchase, Inventory or Ledger records.
+
+/reports/catalog:
+  get:
+    operationId: reports.catalog.get
+    summary: List available report definitions
+    description: |
+      Returns the catalogue of registered report definitions and their
+      capabilities (supported formats, row limits, retention, permissions).
+      Requires `reports:view`. Responses are private and not cacheable.
+    tags: [reports]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+    responses:
+      '200':
+        description: Report catalogue entries.
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../components/schemas/report.yaml#/CatalogEntry'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '429':
+        $ref: '../components/responses/error.yaml#/TooManyRequests'
+      '500':
+        $ref: '../components/responses/error.yaml#/InternalError'
+
+/reports/generate:
+  post:
+    operationId: reports.generate.create
+    summary: Queue a report generation job
+    description: |
+      Validates filters, resolves tenant scope, creates an idempotent report
+      job, records a durable outbox event, and returns 202 Accepted with a
+      status URL. Requires `reports:export`. The `Idempotency-Key` header is
+      required; the same key plus identical request body replays the original
+      job instead of creating a duplicate.
+    tags: [reports]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/IdempotencyKey'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/report.yaml#/GenerateRequest'
+    responses:
+      '202':
+        description: Job accepted; polling URL returned.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/report.yaml#/GenerateResponse'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '409':
+        $ref: '../components/responses/error.yaml#/Conflict'
+      '429':
+        $ref: '../components/responses/error.yaml#/TooManyRequests'
+      '500':
+        $ref: '../components/responses/error.yaml#/InternalError'
+
+/reports/jobs:
+  get:
+    operationId: reports.jobs.list
+    summary: List the caller's report jobs
+    description: |
+      Returns paginated report generation jobs for the caller's organization,
+      tenant-scoped. Requires `reports:view`. Responses are private and not
+      cacheable.
+    tags: [reports]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/pagination.yaml#/Page'
+      - $ref: '../components/parameters/pagination.yaml#/Limit'
+    responses:
+      '200':
+        description: Paginated report job list.
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../components/schemas/report.yaml#/JobListItem'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '429':
+        $ref: '../components/responses/error.yaml#/TooManyRequests'
+      '500':
+        $ref: '../components/responses/error.yaml#/InternalError'
+
+/reports/jobs/{id}:
+  get:
+    operationId: reports.jobs.get
+    summary: Get report job status
+    description: |
+      Returns the status of a single report generation job, including progress,
+      failure details (if any), and download availability. Requires `reports:view`.
+    tags: [reports]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/path.yaml#/ID'
+    responses:
+      '200':
+        description: Report job status.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/report.yaml#/JobStatus'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+      '429':
+        $ref: '../components/responses/error.yaml#/TooManyRequests'
+      '500':
+        $ref: '../components/responses/error.yaml#/InternalError'
+
+/reports/jobs/{id}/cancel:
+  post:
+    operationId: reports.jobs.cancel
+    summary: Request cancellation of a report job
+    description: |
+      Marks a queued or running report job for cancellation. The worker honors
+      the cancel-requested flag at the next checkpoint. Requires `reports:export`.
+    tags: [reports]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/path.yaml#/ID'
+    responses:
+      '200':
+        description: Cancellation accepted.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/report.yaml#/CancelResponse'
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+      '409':
+        $ref: '../components/responses/error.yaml#/Conflict'
+      '429':
+        $ref: '../components/responses/error.yaml#/TooManyRequests'
+      '500':
+        $ref: '../components/responses/error.yaml#/InternalError'
+
+/reports/jobs/{id}/download:
+  get:
+    operationId: reports.jobs.download
+    summary: Download a completed report artifact
+    description: |
+      Streams a completed report artifact (CSV) to the caller. Requires
+      `reports:export`. The artifact is private, expires after the configured
+      retention window, and is checksum-verified before delivery.
+    tags: [reports]
+    parameters:
+      - $ref: '../components/parameters/pagination.yaml#/RequestId'
+      - $ref: '../components/parameters/path.yaml#/ID'
+    responses:
+      '200':
+        description: Report artifact file (CSV).
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      '400':
+        $ref: '../components/responses/error.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/error.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses/error.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses/error.yaml#/NotFound'
+      '429':
+        $ref: '../components/responses/error.yaml#/TooManyRequests'
+      '500':
+        $ref: '../components/responses/error.yaml#/InternalError'

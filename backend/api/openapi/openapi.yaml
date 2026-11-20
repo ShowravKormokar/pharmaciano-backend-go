@@ -88,6 +88,8 @@ tags:
     description: Authorized, tenant- and branch-scoped audit evidence reads.
   - name: analytics
     description: Sales-first analytics projections and freshness-aware read APIs (gated).
+  - name: reports
+    description: Asynchronous report generation, status, cancellation and artifact download (gated).
 
 # â”€â”€ Paths â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 paths:
@@ -219,6 +221,18 @@ paths:
     $ref: 'paths/analytics.yaml#/~1analytics~1dashboard'
   /analytics/sales/overview:
     $ref: 'paths/analytics.yaml#/~1analytics~1sales~1overview'
+  /reports/catalog:
+    $ref: 'paths/report.yaml#/~1reports~1catalog'
+  /reports/generate:
+    $ref: 'paths/report.yaml#/~1reports~1generate'
+  /reports/jobs:
+    $ref: 'paths/report.yaml#/~1reports~1jobs'
+  /reports/jobs/{id}:
+    $ref: 'paths/report.yaml#/~1reports~1jobs~1{id}'
+  /reports/jobs/{id}/cancel:
+    $ref: 'paths/report.yaml#/~1reports~1jobs~1{id}~1cancel'
+  /reports/jobs/{id}/download:
+    $ref: 'paths/report.yaml#/~1reports~1jobs~1{id}~1download'
   /master/product-categories:
     $ref: 'paths/masterdata.yaml#/~1master~1product-categories'
   /master/product-categories/{id}:
@@ -497,6 +511,21 @@ components:
       $ref: 'components/schemas/analytics.yaml#/DashboardEnvelope'
     AnalyticsSalesOverviewEnvelope:
       $ref: 'components/schemas/analytics.yaml#/SalesOverviewEnvelope'
+    # reports
+    CatalogEntry:
+      $ref: 'components/schemas/report.yaml#/CatalogEntry'
+    GenerateRequest:
+      $ref: 'components/schemas/report.yaml#/GenerateRequest'
+    GenerateFilters:
+      $ref: 'components/schemas/report.yaml#/GenerateFilters'
+    GenerateResponse:
+      $ref: 'components/schemas/report.yaml#/GenerateResponse'
+    JobListItem:
+      $ref: 'components/schemas/report.yaml#/JobListItem'
+    JobStatus:
+      $ref: 'components/schemas/report.yaml#/JobStatus'
+    CancelResponse:
+      $ref: 'components/schemas/report.yaml#/CancelResponse'
     # rbac
     CreateRoleRequest:
       $ref: 'components/schemas/rbac.yaml#/CreateRoleRequest'
