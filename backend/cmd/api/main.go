@@ -1,4 +1,4 @@
-﻿package main
+package main
 
 import (
 	"context"
@@ -27,6 +27,8 @@ import (
 	"backend/internal/modules/organization"
 	purchasemodule "backend/internal/modules/purchase"
 	"backend/internal/modules/rbac"
+	"backend/internal/modules/report"
+	reportports "backend/internal/modules/report/ports"
 	"backend/internal/modules/settings"
 	"backend/internal/modules/user"
 	"backend/internal/modules/warehouse"
@@ -34,8 +36,10 @@ import (
 	"backend/internal/platform/config"
 	"backend/internal/platform/db"
 	"backend/internal/platform/logger"
+	"backend/internal/platform/outbox"
 	"backend/internal/platform/redis"
 	"backend/internal/platform/retention"
+	"backend/internal/platform/storage"
 	"backend/internal/platform/telemetry"
 	"backend/internal/platform/validator"
 	"backend/internal/router"
@@ -316,6 +320,44 @@ func run() error {
 		modules = append(modules, purchaseHandler)
 	}
 
+	// --- Report module (gated behind cfg.Report.Enabled; routes stay unmounted
+	// until release gates pass, REPORT_CONTRACT §22) --------------------------
+	var reportHandler router.ModuleRegistrar
+	if cfg.Report.Enabled {
+		reportStore, err := storage.New(cfg.Storage, log, metrics)
+		if err != nil {
+			return fmt.Errorf("report storage init: %w", err)
+		}
+		outboxStore, err := outbox.NewStore(pg, cfg.Outbox.MaxPayloadBytes)
+		if err != nil {
+			return fmt.Errorf("report outbox store init: %w", err)
+		}
+		registry := report.NewRegistry()
+		registry.MustRegister(report.ReportDefinition{
+			Code:              "sales",
+			Version:           1,
+			Title:             "Sales Register",
+			Description:       "Finalized sale lines within a date range, grouped by branch.",
+			RequiredPerms:     []string{"reports:export"},
+			SourcePerms:       map[string][]string{"sales": {"sales:view"}},
+			Formats:           []string{report.FormatCSV},
+			MaxRows:           100000,
+			MaxBytes:          50 * 1024 * 1024,
+			MaxRuntimeSeconds: 300,
+			RetentionDays:     cfg.Report.DefaultRetentionDays,
+			ConsistencyMode:   report.ConsistencyRepeatableRead,
+			DateRange:         true,
+			BranchFilter:      true,
+			RendererVersion:   "csv-v1",
+		})
+		reportRepo := report.NewRepository(pg)
+		salesReader := reportports.NewSalesStore(pg)
+		reportSvc := report.NewService(reportRepo, salesReader, reportStore, outboxStore,
+			registry, cfg.Report, log, metrics)
+		reportHandler = report.NewHandler(reportSvc, val, log)
+		modules = append(modules, reportHandler)
+	}
+
 	// --- Router -----------------------------------------------------------------
 	engine := router.New(router.Deps{
 		Cfg:     cfg,
@@ -374,5 +416,3 @@ func run() error {
 	log.Info("server stopped cleanly")
 	return nil
 }
-
-

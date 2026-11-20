@@ -15,10 +15,14 @@ import (
 
 	"backend/internal/common/constants"
 	"backend/internal/jobs"
+	"backend/internal/jobs/handlers"
+	"backend/internal/modules/report"
+	reportports "backend/internal/modules/report/ports"
 	"backend/internal/platform/config"
 	"backend/internal/platform/db"
 	"backend/internal/platform/logger"
 	"backend/internal/platform/outbox"
+	"backend/internal/platform/storage"
 	"backend/internal/platform/telemetry"
 
 	"github.com/hibiken/asynq"
@@ -83,6 +87,45 @@ func run() error {
 		}
 
 		registry := outbox.NewRegistry()
+
+		// Report generation task handler (gated behind cfg.Report.Enabled;
+		// stays unregistered until release gates pass, REPORT_CONTRACT §22).
+		if cfg.Report.Enabled {
+			reportStore, serr := storage.New(cfg.Storage, loggr, metrics)
+			if serr != nil {
+				return fmt.Errorf("report storage init: %w", serr)
+			}
+			outboxStore, serr := outbox.NewStore(database, cfg.Outbox.MaxPayloadBytes)
+			if serr != nil {
+				return fmt.Errorf("report outbox store init: %w", serr)
+			}
+			reportRegistry := report.NewRegistry()
+			reportRegistry.MustRegister(report.ReportDefinition{
+				Code:              "sales",
+				Version:           1,
+				Title:             "Sales Register",
+				Description:       "Finalized sale lines within a date range, grouped by branch.",
+				RequiredPerms:     []string{"reports:export"},
+				SourcePerms:       map[string][]string{"sales": {"sales:view"}},
+				Formats:           []string{report.FormatCSV},
+				MaxRows:           100000,
+				MaxBytes:          50 * 1024 * 1024,
+				MaxRuntimeSeconds: 300,
+				RetentionDays:     cfg.Report.DefaultRetentionDays,
+				ConsistencyMode:   report.ConsistencyRepeatableRead,
+				DateRange:         true,
+				BranchFilter:      true,
+				RendererVersion:   "csv-v1",
+			})
+			reportRepo := report.NewRepository(database)
+			salesReader := reportports.NewSalesStore(database)
+			reportSvc := report.NewService(reportRepo, salesReader, reportStore, outboxStore,
+				reportRegistry, cfg.Report, loggr, metrics)
+			if rerr := registry.Register("report.requested",
+				handlers.NewReportTaskHandler(reportSvc, loggr)); rerr != nil {
+				return fmt.Errorf("report task handler registration: %w", rerr)
+			}
+		}
 		taskHandler, err := outbox.NewTaskHandler(database, cfg.Outbox, registry, loggr, metrics)
 		if err != nil {
 			return fmt.Errorf("outbox task handler init: %w", err)
