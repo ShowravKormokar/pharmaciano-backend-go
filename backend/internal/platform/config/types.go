@@ -53,6 +53,7 @@ type Config struct {
 	OrgDefaults OrgDefaults        `mapstructure:"organization_defaults"`
 	PProf       PProfConfig        `mapstructure:"pprof"`
 	Seed        SeedConfig         `mapstructure:"seed"`
+	Report      ReportConfig       `mapstructure:"report"`
 
 	raw *viper.Viper // used for hot-reload
 }
@@ -440,6 +441,23 @@ type PProfConfig struct {
 type SeedConfig struct {
 	AutoRunOnBoot   bool `mapstructure:"auto_run_on_boot"`
 	ResetBeforeSeed bool `mapstructure:"reset_before_seed"`
+}
+
+// ReportConfig controls the Report module. Routes and the worker task are
+// gated behind Enabled so the module stays unmounted until its release gates
+// pass (REPORT_CONTRACT §22 Phase 0 / Phase 1).
+type ReportConfig struct {
+	Enabled              bool   `mapstructure:"enabled"`
+	StorageNamespace     string `mapstructure:"storage_namespace"`
+	DefaultPageSize      int    `mapstructure:"default_page_size"`
+	MaxPageSize          int    `mapstructure:"max_page_size"`
+	MaxExportRows        int    `mapstructure:"max_export_rows"`
+	MaxExecutionSeconds  int    `mapstructure:"max_execution_seconds"`
+	MaxFileSizeMB        int    `mapstructure:"max_file_size_mb"`
+	MaxDateRangeDays     int    `mapstructure:"max_date_range_days"`
+	MaxConcurrencyPerOrg int    `mapstructure:"max_concurrency_per_org"`
+	DefaultRetentionDays int    `mapstructure:"default_retention_days"`
+	HMACKeyVersion       int    `mapstructure:"hmac_key_version"`
 }
 
 // Helper Accessors
