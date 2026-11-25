@@ -24,6 +24,7 @@ import (
 	"backend/internal/modules/ledger"
 	"backend/internal/modules/masterdata"
 	"backend/internal/modules/medicine"
+	"backend/internal/modules/notification"
 	"backend/internal/modules/organization"
 	purchasemodule "backend/internal/modules/purchase"
 	"backend/internal/modules/rbac"
@@ -319,6 +320,13 @@ func run() error {
 	if purchaseHandler != nil {
 		modules = append(modules, purchaseHandler)
 	}
+
+	// Notification module (always mounted).
+	notificationHandler, nerr := notification.New(pg, []byte(cfg.Pagination.CursorSigningKey), val, log)
+	if nerr != nil {
+		return fmt.Errorf("notification module init: %w", nerr)
+	}
+	modules = append(modules, notificationHandler)
 
 	// --- Report module (gated behind cfg.Report.Enabled; routes stay unmounted
 	// until release gates pass, REPORT_CONTRACT §22) --------------------------
