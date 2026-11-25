@@ -2,6 +2,8 @@ package notification
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"strconv"
@@ -293,17 +295,44 @@ func (r *Repository) CreateBroadcast(ctx context.Context, orgID uuid.UUID, creat
 	}
 	id := uuid.New()
 	now := time.Now().UTC()
-	return &NotificationBroadcast{
-		BaseModel:      common.BaseModel{ID: id, CreatedAt: now, UpdatedAt: now},
-		OrganizationID: orgID,
-		CreatorUserID:  creatorID,
-		Scope:          req.Scope,
-		TargetID:       req.TargetID,
-		Title:          req.Title,
-		Message:        req.Message,
-		Priority:       req.Priority,
-		ActionURL:      req.ActionURL,
-		Status:         BroadcastStatusPending,
-		RequestedAt:    now,
-	}, nil
+	idempotencyKey := now.UTC().Format(time.RFC3339Nano) + ":" + creatorID.String()
+	reqHash := sha256.Sum256([]byte(idempotencyKey))
+	hash := hex.EncodeToString(reqHash[:])
+
+	var broadcast NotificationBroadcast
+	const query = `
+		INSERT INTO notification_broadcasts (
+			id, organization_id, creator_user_id, scope, target_id, title, message,
+			priority, action_url, status, requested_at, idempotency_key, request_hash,
+			created_at, updated_at
+		)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $14)
+		RETURNING
+			id, organization_id, creator_user_id, scope, target_id, title, message,
+			priority, action_url, status, requested_at, started_at, finished_at,
+			audience_count, inserted_count, suppressed_count, failed_count,
+			idempotency_key, request_hash, failure_code, created_at, updated_at
+	`
+	err := r.db.FromCtx(ctx).QueryRow(ctx, query,
+		id, orgID, creatorID, string(req.Scope), req.TargetID, req.Title, req.Message,
+		string(req.Priority), req.ActionURL, BroadcastStatusPending, now,
+		idempotencyKey, hash, now,
+	).Scan(
+		&broadcast.ID, &broadcast.OrganizationID, &broadcast.CreatorUserID,
+		&broadcast.Scope, &broadcast.TargetID, &broadcast.Title, &broadcast.Message,
+		&broadcast.Priority, &broadcast.ActionURL, &broadcast.Status, &broadcast.RequestedAt,
+		&broadcast.StartedAt, &broadcast.FinishedAt, &broadcast.AudienceCount,
+		&broadcast.InsertedCount, &broadcast.SuppressedCount, &broadcast.FailedCount,
+		&broadcast.IdempotencyKey, &broadcast.RequestHash, &broadcast.FailureCode,
+		&broadcast.CreatedAt, &broadcast.UpdatedAt,
+	)
+	if err != nil {
+		return nil, errs.DatabaseError(err)
+	}
+	broadcast.BaseModel = common.BaseModel{
+		ID:        broadcast.ID,
+		CreatedAt: broadcast.CreatedAt,
+		UpdatedAt: broadcast.UpdatedAt,
+	}
+	return &broadcast, nil
 }
